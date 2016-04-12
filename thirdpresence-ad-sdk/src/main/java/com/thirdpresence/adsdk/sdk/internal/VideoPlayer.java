@@ -186,29 +186,25 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
             if (mListener != null) {
                 mListener.onError(VideoAd.ErrorCode.INVALID_STATE, "The ad unit is not initialised");
             }
-        } else {
+        } else if (mPlayerReady) {
+            mAdLoadingPending = false;
             if (!mAdLoading) {
                 mAdLoading = true;
-
-                if (mPlayerReady) {
-                    mLoadTimeoutTimer = new Timer();
-                    setTimeout(mLoadTimeoutTimer, mLoadTimeout, new Runnable() {
-                        @Override
-                        public void run() {
-                            if (mAdLoading) {
-                                if (mListener != null) {
-                                    mListener.onError(VideoAd.ErrorCode.NETWORK_TIMEOUT, "Timeout occured while loading an ad");
-                                }
+                mLoadTimeoutTimer = new Timer();
+                setTimeout(mLoadTimeoutTimer, mLoadTimeout, new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mAdLoading) {
+                            if (mListener != null) {
+                                mListener.onError(VideoAd.ErrorCode.NETWORK_TIMEOUT, "Timeout occured while loading an ad");
                             }
                         }
-                    });
-
-                    mAdLoadingPending = false;
-                    mWebView.loadAd();
-                } else {
-                    mAdLoadingPending = true;
-                }
+                    }
+                });
+                mWebView.loadAd();
             }
+        } else {
+            mAdLoadingPending = true;
         }
     }
 

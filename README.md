@@ -33,11 +33,11 @@ repositories {
 
 dependencies {
 	// SDK library
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.1.0@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.1.1@aar'
     // External dependencies
     compile 'com.google.android.gms:play-services:8.4.0'
     // mediation library, include if using MoPub SDK
-    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.1.0@aar'
+    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.1.1@aar'
 
 }
 ```
