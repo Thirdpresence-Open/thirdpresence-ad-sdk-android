@@ -71,11 +71,11 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      *
      * @param activity The container activity where the intertitial is displayed
      * @param environment Environment parameters
-     *                    @see VideoAd.Environment for details
+     *                    @see com.thirdpresence.adsdk.sdk.VideoAd.Environment for details
      *                    Mandatory parameters: KEY_ACCOUNT and KEY_PLACEMENT_ID
      *
      * @param params VideoAd parameters
-     *                  @see VideoAd.Parameters for details
+     *                  @see com.thirdpresence.adsdk.sdk.VideoAd.Parameters for details
      *
      * @param timeout Timeout for setting up the player in milliseconds
      *
