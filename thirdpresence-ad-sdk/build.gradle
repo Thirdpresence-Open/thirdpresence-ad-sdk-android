@@ -1,0 +1,128 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'com.github.dcendents.android-maven'
+
+group = 'com.thirdpresence.adsdk.sdk'
+
+def versionString = getVersionName()
+def buildNum = getBuildNumber()
+def fullVersionString = versionString + "." + buildNum
+def siteUrl = 'https://github.com/Thirdpresence-Open/thirdpresence-ad-sdk-android'
+def gitUrl = 'https://github.com/Thirdpresence-Open/thirdpresence-ad-sdk-android.git'
+
+version = fullVersionString
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.2"
+    useLibrary  'org.apache.http.legacy'
+    
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 23
+        versionCode buildNum
+        versionName versionString
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+configurations {
+    javadocDeps
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
+    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:appcompat-v7:23.2.1'
+    compile 'com.google.android.gms:play-services:8.4.0'
+    javadocDeps 'com.android.support:recyclerview-v7:23.2.1:sources'
+    javadocDeps 'com.android.support:support-annotations:23.1.1:sources'
+    javadocDeps 'com.google.android.gms:play-services:8.4.0'
+}
+
+
+
+bintray {
+    user = properties.getProperty("bintray.user")
+    key = properties.getProperty("bintray.apikey")
+
+    pkg {
+        repo = 'thirdpresence-ad-sdk-android'
+        name = 'com.thirdpresence.adsdk.sdk'
+        userOrg = "thirdpresence"
+
+        version {
+            name = fullVersionString
+            released  = new Date()
+            vcsTag = fullVersionString
+        }
+
+        licenses = ['Apache-2.0']
+        vcsUrl = gitUrl
+        websiteUrl = siteUrl
+        publish = true
+    }
+    configurations = ['archives']
+}
+
+install {
+    repositories.mavenInstaller {
+        pom {
+            project {
+                packaging 'aar'
+                name 'Thirdpresence Ad SDK for Android'
+                url siteUrl
+
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id 'maokkone'
+                        name 'Marko Okkonen'
+                        email 'merko.okkonen@thirdpresence.com'
+                    }
+                }
+                scm {
+                    connection gitUrl
+                    developerConnection gitUrl
+                    url siteUrl
+
+                }
+            }
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc(type: Javadoc, dependsOn: sourcesJar) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    classpath += configurations.javadocDeps
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
