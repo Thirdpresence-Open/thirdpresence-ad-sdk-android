@@ -15,10 +15,12 @@ It provides a VideoInterstitial ad unit implementation
 ## Integration to an application
 
 There are two options to integrate the SDK:
+
 1. Direct Integration
 2. Mediation with existing SDK (e.g. MoPub)
 
 Available mediation plugins:
+
 - MoPub interstitial
 - MoPub rewarded video
 
@@ -31,6 +33,8 @@ Check that jcenter is included in the repositories block and add required depend
 
 repositories {
     jcenter()
+    // Temporarily libraries are available only in bintray repository instead of jcenter
+    maven { url 'http://dl.bintray.com/thirdpresence/thirdpresence-ad-sdk-android' }
 }
 
 dependencies {
