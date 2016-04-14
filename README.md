@@ -1,14 +1,16 @@
 # Thirdpresence Ad SDK For Android
 
-Thirdpresence Ad SDK is based on WebView and Thirdpresence HTML5 player.  
+Thirdpresence Ad SDK is based on a WebView and the Thirdpresence HTML5 player.  
 
-It provides VideoInterstitial ad unit implementation
+It provides a VideoInterstitial ad unit implementation
 
 ## Minimum requirements
 
 - Android Studio
 - Android API level 15 (Android 4.0.3)
-- Googl Play Services 8.0.4 (see http://developer.android.com/google/play-services/setup.html)
+- Google Play Services 8.0.4 (optional)
+    - used for getting Google Advertising ID
+    - for more information, see http://developer.android.com/google/play-services/setup.html)
 
 ## Integration to an application
 
@@ -33,12 +35,11 @@ repositories {
 
 dependencies {
 	// SDK library
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.1.1@aar'
-    // External dependencies
-    compile 'com.google.android.gms:play-services:8.4.0'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.1.2@aar'
     // mediation library, include if using MoPub SDK
-    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.1.1@aar'
-
+    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.1.2@aar'
+    // External dependencies, optional but recommended
+    compile 'com.google.android.gms:play-services:8.4.0'
 }
 ```
 
@@ -56,9 +57,9 @@ dependencies {
 
 ### Direct integration:
 
-Quick guide to start showing ads:
+A quick guide to start showing ads on an application:
 
-Add Internet permission to AndroidManifest.xml if not already exist:
+Add Internet permission to AndroidManifest.xml if not already exists:
 <uses-permission android:name="android.permission.INTERNET"/> 
 
 Implement VideoAd.Listener interface:
@@ -104,6 +105,10 @@ Initialise the ad unit:
     params.put(VideoAd.Parameters.KEY_APP_VERSION, "<application version>");
     params.put(VideoAd.Parameters.KEY_APP_STORE_URL, "<market store URL>");
                
+    // When Google Play Services is available it is used to retrieves Google Advertiser ID.
+    // Otherwise device ID (e.g. ANDROID_ID) shall be passed from the app.
+    // params.put(VideoAd.Parameters.KEY_DEVICE_ID, "<ANDROID_ID>");
+
     mVideoInterstitial.init(activity, environment, params, VideoAd.);
 ```        
 Load an ad:
@@ -121,14 +126,14 @@ Close the ad unit and clean up:
     mVideoInterstitial = null;
 ```
 
-Check out Sample App for reference.
+Check out the Sample App for a reference. 
 
 ### MoPub mediation:
 
-- Login to MoPub console
-- Create Fullscreen Ad or Rewarded Video Ad ad unit
+- Login to the MoPub console
+- Create a Fullscreen Ad or Rewarded Video Ad ad unit
 - Add new Custom Native Network
-- Set Custom Event Class and Custom Event Class Data for the ad unit
+- Set Custom Event Class and Custom Event Class Data for the ad unit with following values:
 
 | Ad Unit | Custom Event Class | Custom Event Class Data |
 | --- | --- | --- |

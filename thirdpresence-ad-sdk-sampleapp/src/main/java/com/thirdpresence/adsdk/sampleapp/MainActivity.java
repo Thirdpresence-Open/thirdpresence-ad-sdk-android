@@ -48,6 +48,10 @@ public class MainActivity extends AppCompatActivity implements VideoAd.Listener 
                 params.put(VideoAd.Parameters.KEY_APP_VERSION, "1.0");
                 params.put(VideoAd.Parameters.KEY_APP_STORE_URL, "https://play.google.com/store/apps/details?id=com.thirdpresence.adsdk.sampleapp");
 
+                // When Google Play Services is available it is used to retrieves Google Advertiser ID.
+                // Otherwise device ID (e.g. ANDROID_ID) shall be passed from the app.
+                // params.put(VideoAd.Parameters.KEY_DEVICE_ID, "<ANDROID_ID>");
+
                 try {
                     mInterstitial.init(MainActivity.this, environment, params, VideoAd.DEFAULT_TIMEOUT);
                     Toast.makeText(MainActivity.this, "Initialized", Toast.LENGTH_SHORT).show();

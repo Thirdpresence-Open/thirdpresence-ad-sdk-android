@@ -52,7 +52,6 @@ dependencies {
     }
     compile project(':thirdpresence-ad-sdk')
     javadocDeps project(':thirdpresence-ad-sdk').fileTree(include: ['*.jar'], dir: 'build/libs')
-    javadocDeps 'com.google.android.gms:play-services:8.4.0'
     javadocDeps 'com.mopub:mopub-sdk:4.5.1:sources'
     javadocDeps 'com.google.android.exoplayer:exoplayer:r1.5.6:sources'
     javadocDeps 'com.mopub.volley:mopub-volley:1.1.0:sources'

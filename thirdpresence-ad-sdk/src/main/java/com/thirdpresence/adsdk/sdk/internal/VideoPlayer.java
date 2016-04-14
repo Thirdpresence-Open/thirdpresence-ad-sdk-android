@@ -2,21 +2,20 @@ package com.thirdpresence.adsdk.sdk.internal;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
-import com.google.android.gms.ads.identifier.AdvertisingIdClient;
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
-import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.thirdpresence.adsdk.sdk.VideoAd;
 
-import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -41,10 +40,10 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
     private long mInitTimeout = VideoAd.DEFAULT_TIMEOUT;
     private long mLoadTimeout = VideoAd.DEFAULT_TIMEOUT;
 
-    private Timer mInitTimeoutTimer = null;
-    private Timer mLoadTimeoutTimer = null;
+    private Timer mInitTimeoutTimer;
+    private Timer mLoadTimeoutTimer;
 
-    private AdvertisingIdClient.Info mAdInfo;
+    private String mDeviceId;
     private boolean mPlayerReady = false;
     private boolean mInitialised = false;
     private boolean mAdLoading = false;
@@ -274,7 +273,10 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
                     }
                 });
 
-                mParams.put(VideoAd.Parameters.KEY_DEVICE_ID, mAdInfo.getId());
+                if (!mParams.containsKey(VideoAd.Parameters.KEY_DEVICE_ID) && mDeviceId != null) {
+                    mParams.put(VideoAd.Parameters.KEY_DEVICE_ID, mDeviceId);
+                }
+
                 mParams.put(VideoAd.Parameters.KEY_AD_PLACEMENT, VideoAd.PLACEMENT_TYPE_INTERSTITIAL);
                 mWebView.initPlayer(mEnv, mParams);
             }
@@ -347,7 +349,6 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
 
     /**
      * AsyncTask for retrieve the advertising ID of the device
-     *
      */
     private class AdInfoRetriever extends AsyncTask<Void, Void, Void> {
         private Activity mActivity;
@@ -358,11 +359,20 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
         @Override
         protected Void doInBackground(Void... params) {
             try {
-                mAdInfo = AdvertisingIdClient.getAdvertisingIdInfo(mActivity);
-            } catch (IOException | GooglePlayServicesNotAvailableException | GooglePlayServicesRepairableException e) {
-                // Unrecoverable error connecting to Google Play services (e.g.,
-                // the old version of the service doesn't support getting AdvertisingId).
-                // ignore
+                // Using Google Play Services is optional
+                Class<?> cls = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
+                try {
+                    Method m = cls.getMethod("getAdvertisingIdInfo", Context.class);
+                    Object o = m.invoke(null, mActivity);
+                    m = o.getClass().getMethod("getId", null);
+                    mDeviceId = (String) m.invoke(o, null);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+
+            } catch (Exception e) {
+                mDeviceId = null;
             }
             mActivity.runOnUiThread(new Runnable() {
                 @Override
