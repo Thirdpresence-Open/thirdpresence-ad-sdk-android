@@ -1,8 +1,9 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'org.ajoberstar.grgit'
 
-group = 'com.thirdpresence.adsdk.sdk'
+group = 'com.thirdpresence.adsdk.mediation.admob'
 
 def versionString = getVersionName()
 def buildNum = getBuildNumber()
@@ -19,7 +20,7 @@ android {
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
     useLibrary  'org.apache.http.legacy'
-    
+
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 23
@@ -34,10 +35,6 @@ android {
     }
 }
 
-configurations {
-    javadocDeps
-}
-
 repositories {
     jcenter()
     flatDir{
@@ -45,12 +42,21 @@ repositories {
     }
 }
 
+configurations {
+    javadocDeps
+}
+
 dependencies {
     compile fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.2.1'
-    javadocDeps 'com.android.support:recyclerview-v7:23.2.1:sources'
+    compile project(':thirdpresence-ad-sdk')
+    compile 'com.google.android.gms:play-services:8.4.0'
+    javadocDeps project(':thirdpresence-ad-sdk').fileTree(include: ['*.jar'], dir: 'build/libs')
+    javadocDeps 'com.android.support:support-v4:23.1.1:sources'
     javadocDeps 'com.android.support:support-annotations:23.1.1:sources'
+    javadocDeps 'com.android.support:recyclerview-v7:23.1.1:sources'
+
 }
 
 bintray {
@@ -59,7 +65,7 @@ bintray {
 
     pkg {
         repo = 'thirdpresence-ad-sdk-android'
-        name = 'com.thirdpresence.adsdk.sdk'
+        name = 'com.thirdpresence.adsdk.mediation.admob'
         userOrg = "thirdpresence"
 
         version {
@@ -76,12 +82,13 @@ bintray {
     configurations = ['archives']
 }
 
+
 install {
     repositories.mavenInstaller {
         pom {
             project {
                 packaging 'aar'
-                name 'Thirdpresence Ad SDK for Android'
+                name 'Thirdpresence Ad SDK for Android - Admob mediation library'
                 url siteUrl
 
                 licenses {

@@ -1,1 +1,1 @@
-include ':thirdpresence-ad-sdk', ':thirdpresence-mopub-mediation', ':thirdpresence-ad-sdk-sampleapp'
+include ':thirdpresence-ad-sdk', ':thirdpresence-mopub-mediation', ':thirdpresence-ad-sdk-sampleapp', ':thirdpresence-admob-mediation'

@@ -18,6 +18,11 @@ public abstract class VideoAd {
         void onAdEvent(String eventName, String arg1, String arg2, String arg3);
 
         /**
+         * This callback is called when the player is ready to load ads
+         */
+        void onPlayerReady();
+
+        /**
          * This callback is called when an error occurs
          *
          * @param errorCode @see ErrorCode
@@ -89,9 +94,13 @@ public abstract class VideoAd {
          */
         public final static String AD_VIDEO_COMPLETE = "AdVideoComplete";
         /**
-         * Fallback ad displayed (Non-standard)
+         * Fallback ad displayed
          */
         public final static String AD_FALLBACK_DISPLAYED = "AdFallbackDisplayed";
+        /**
+         * Ad left the application, for example, due opening a landing page
+         */
+        public final static String AD_LEFT_APPLICATION = "AdLeftApplication";
 
     }
     /**
@@ -238,7 +247,7 @@ public abstract class VideoAd {
         }
     }
 
-    public final static long DEFAULT_TIMEOUT = 3000;
+    public final static long DEFAULT_TIMEOUT = 10000;
 
     private final String mPlacementType;
 
@@ -268,27 +277,27 @@ public abstract class VideoAd {
     /**
      * Inits the ad uit
      */
-    protected void init() {};
+    protected void init() {}
 
     /**
      * Closes the ad unit resets the ad unit
      */
-    protected void reset() {};
+    protected void reset() {}
 
     /**
      * Closes the ad unit and releases resources.
      */
-    protected void remove() {};
+    protected void remove() {}
 
     /**
      * Loads an ad. Listener.onAdEvent() is called with AD_LOADED eventName when the ad is loaded
      */
-    protected void loadAd() {};
+    protected void loadAd() {}
 
     /**
      * Display the ad view and starts playing the video
      */
-    protected void displayAd() {};
+    protected void displayAd() {}
 
     /**
      * Checks if an ad is loaded
@@ -297,5 +306,5 @@ public abstract class VideoAd {
      */
     protected boolean isAdLoaded() {
         return false;
-    };
+    }
 }

@@ -18,6 +18,16 @@ public class ThirdpresenceCustomEventHelper {
 
     private static final String SERVER = VideoAd.SERVER_TYPE_PRODUCTION;
     private static final String SDK_NAME = "mopub";
+    private static final String EXTRAS_KEY_ACCOUNT = "account";
+    private static final String EXTRAS_KEY_PLACEMENT_ID = "placementid";
+    private static final String EXTRAS_KEY_DISABLE_BACK = "disablebackbutton";
+
+    private static final String EXTRAS_KEY_APP_NAME = "appname";
+    private static final String EXTRAS_KEY_APP_VERSION = "appversion";
+    private static final String EXTRAS_KEY_APP_STORE_URL = "appstoreurl";
+    private static final String EXTRAS_KEY_SKIP_OFFSET = "skipoffset";
+
+
 
     private ThirdpresenceCustomEventHelper() {}
 
@@ -33,9 +43,9 @@ public class ThirdpresenceCustomEventHelper {
         env.put(VideoAd.Environment.KEY_EXT_SDK, SDK_NAME);
         env.put(VideoAd.Environment.KEY_EXT_SDK_VERSION, MoPub.SDK_VERSION);
         env.put(VideoAd.Environment.KEY_SERVER, SERVER);
-        env.put(VideoAd.Environment.KEY_ACCOUNT, serverExtras.get("account"));
-        env.put(VideoAd.Environment.KEY_PLACEMENT_ID, serverExtras.get("playerid"));
-        env.put(VideoAd.Environment.KEY_DISABLE_BACK_BUTTON, serverExtras.get("disablebackbutton"));
+        env.put(VideoAd.Environment.KEY_ACCOUNT, serverExtras.get(EXTRAS_KEY_ACCOUNT));
+        env.put(VideoAd.Environment.KEY_PLACEMENT_ID, serverExtras.get(EXTRAS_KEY_PLACEMENT_ID));
+        env.put(VideoAd.Environment.KEY_DISABLE_BACK_BUTTON, serverExtras.get(EXTRAS_KEY_DISABLE_BACK));
         return env;
     }
 
@@ -49,12 +59,12 @@ public class ThirdpresenceCustomEventHelper {
      */
     public static Map<String, String> setPlayerParameters(Context context, Map<String, String> serverExtras) {
         Map<String, String> params = new HashMap<>();
-        params.put(VideoAd.Parameters.KEY_PUBLISHER, serverExtras.get("appname"));
-        params.put(VideoAd.Parameters.KEY_APP_NAME, serverExtras.get("appname"));
-        params.put(VideoAd.Parameters.KEY_APP_VERSION, serverExtras.get("appversion"));
-        params.put(VideoAd.Parameters.KEY_APP_STORE_URL, serverExtras.get("appstoreurl"));
+        params.put(VideoAd.Parameters.KEY_PUBLISHER, serverExtras.get(EXTRAS_KEY_APP_NAME));
+        params.put(VideoAd.Parameters.KEY_APP_NAME, serverExtras.get(EXTRAS_KEY_APP_NAME));
+        params.put(VideoAd.Parameters.KEY_APP_VERSION, serverExtras.get(EXTRAS_KEY_APP_VERSION));
+        params.put(VideoAd.Parameters.KEY_APP_STORE_URL, serverExtras.get(EXTRAS_KEY_APP_STORE_URL));
         params.put(VideoAd.Parameters.KEY_BUNDLE_ID, context.getPackageName());
-        params.put(VideoAd.Parameters.KEY_SKIP_OFFSET, serverExtras.get("skipoffset"));
+        params.put(VideoAd.Parameters.KEY_SKIP_OFFSET, serverExtras.get(EXTRAS_KEY_SKIP_OFFSET));
         return params;
     }
 

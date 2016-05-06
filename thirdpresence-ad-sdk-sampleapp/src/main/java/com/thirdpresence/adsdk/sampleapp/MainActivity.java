@@ -101,6 +101,9 @@ public class MainActivity extends AppCompatActivity implements VideoAd.Listener 
     }
 
     @Override
+    public void onPlayerReady() {}
+
+    @Override
     public void onError(VideoAd.ErrorCode errorCode, String message) {
         Log.e("SampleApp", "Error occured: " + message);
         Toast.makeText(MainActivity.this, "Loading player failed", Toast.LENGTH_SHORT).show();

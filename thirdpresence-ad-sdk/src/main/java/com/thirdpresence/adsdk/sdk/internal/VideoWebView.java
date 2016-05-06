@@ -53,7 +53,6 @@ public class VideoWebView extends WebView {
 
     /**
      * Callback interface for WebView events.
-     *
      */
     public interface Listener {
 
@@ -87,7 +86,7 @@ public class VideoWebView extends WebView {
          * @param arg1 an event-specific argument
          * @param arg2 an event-specific argument
          * @param arg3 an event-specific argument
-         * @see VideoAd.Events
+         * @see com.thirdpresence.adsdk.sdk.VideoAd.Events
          *
          */
         void onAdEvent(String eventName, String arg1, String arg2, String arg3);
@@ -95,14 +94,12 @@ public class VideoWebView extends WebView {
         /**
          * Called when user tries to open URL. Typically occurs when an ad has a landing page and
          * user clicks the video. Typically the URL is opened in the browser or PlayStore app.
-         *
          */
         void onOpenURLIntercepted(String url);
     }
 
     /**
      * Implementation of the web interface that is used for receiving events from HTML5 player.
-     *
      */
     public class WebAppInterface {
         private Context mContext;
@@ -131,7 +128,6 @@ public class VideoWebView extends WebView {
 
     /**
      * Overridden WebViewClient to handle WebView errors
-     *
      */
     public class ThirdpresenceWebViewClient extends WebViewClient {
 
@@ -174,13 +170,11 @@ public class VideoWebView extends WebView {
 
     /**
      * Overridden WebChromeClient. Empty implementation for now.
-     *
      */
     public class ThirdpresenceWebChromeClient extends WebChromeClient {}
 
     /**
      * Constructor
-     *
      */
     @SuppressLint({"AddJavascriptInterface", "SetJavaScriptEnabled"})
     public VideoWebView(Context context) {
@@ -228,7 +222,6 @@ public class VideoWebView extends WebView {
 
     /**
      * Overridden destroy() method to verify that the webview is not used after destroyed.
-     *
      */
     @Override
     public void destroy() {
@@ -238,7 +231,6 @@ public class VideoWebView extends WebView {
 
     /**
      * Overridden dispatchKeyEventPreIme() to intercept BACK key.
-     *
      */
     @Override
     public boolean dispatchKeyEventPreIme(KeyEvent event) {
@@ -319,7 +311,6 @@ public class VideoWebView extends WebView {
 
     /**
      * Loads an ad
-     *
      */
     public void loadAd() {
         if (mPlayerPageLoaded) {
@@ -331,7 +322,6 @@ public class VideoWebView extends WebView {
 
     /**
      * Display an ad
-     *
      */
     public void displayAd() {
         if (mPlayerPageLoaded) {
@@ -345,6 +335,7 @@ public class VideoWebView extends WebView {
      * calls a function in the player JavaScript API
      *
      * @param function name of the JavaScript function
+     *
      */
     private void callJSFunction(String function) {
         loadUrl("javascript:" + function + "();");

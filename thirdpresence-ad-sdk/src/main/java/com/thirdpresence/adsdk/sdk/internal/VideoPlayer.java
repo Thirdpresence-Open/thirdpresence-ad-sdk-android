@@ -8,9 +8,9 @@ import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
 import android.widget.RelativeLayout;
 
 import com.thirdpresence.adsdk.sdk.VideoAd;
@@ -52,6 +52,8 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
     private boolean mAdDisplaying = false;
     private boolean mVideoClicked = false;
     private boolean mOrientationChanged = false;
+
+    private Object mWebAdTracker;
 
     private int mOriginalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
 
@@ -165,6 +167,10 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
                 mWebView = null;
             }
 
+            if (mWebAdTracker != null) {
+                mWebAdTracker = null;
+            }
+
             mActivity = null;
             mInitialised = false;
         }
@@ -242,6 +248,15 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      */
     public boolean isAdLoaded() {
         return mAdLoaded;
+    }
+
+    /**
+     * Checks if the player is ready
+     *
+     * @return true if ready, false otherwise
+     */
+    public boolean isPlayerReady() {
+        return mPlayerReady;
     }
 
     /**
@@ -360,27 +375,50 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
         protected Void doInBackground(Void... params) {
             try {
                 // Using Google Play Services is optional
-                Class<?> cls = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
-                try {
-                    Method m = cls.getMethod("getAdvertisingIdInfo", Context.class);
-                    Object o = m.invoke(null, mActivity);
-                    m = o.getClass().getMethod("getId", null);
-                    mDeviceId = (String) m.invoke(o, null);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-
+                Class<?> idClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
+                Method getIdInfoMethod = idClientClass.getMethod("getAdvertisingIdInfo", Context.class);
+                Object idInfo = getIdInfoMethod.invoke(null, mActivity);
+                Method getIdMethod = idInfo.getClass().getMethod("getId", (Class<?>[]) null);
+                mDeviceId = (String) getIdMethod.invoke(idInfo, (Object[]) null);
             } catch (Exception e) {
+                // Google Play Services not available
                 mDeviceId = null;
             }
             mActivity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    initPlayer();
+                    setAdTracker();
                 }
             });
             return null;
+        }
+    }
+
+    /**
+     * Setup MOAT Ad tracker if SDK available
+     */
+    private void setAdTracker() {
+        boolean success;
+        try {
+            // Using MOAT Ad tracker is optional
+            Class<?> factoryClass = Class.forName("com.moat.analytics.mobile.MoatFactory");
+            Method createMethod = factoryClass.getMethod("create", Activity.class);
+            Object factory = createMethod.invoke(null, mActivity);
+            Method createWebAdTrackerMethod = factory.getClass().getMethod("createWebAdTracker", WebView.class);
+            mWebAdTracker = createWebAdTrackerMethod.invoke(factory, mWebView);
+            Class<?> trackerClass = Class.forName("com.moat.analytics.mobile.WebAdTracker");
+            Method trackMethod = trackerClass.getMethod("track", (Class<?>[]) null);
+            success = (Boolean) trackMethod.invoke(mWebAdTracker, (Object[]) null);
+        } catch (Exception e) {
+            // MOAT SDK not available, will continue without tracking
+            success = true;
+        }
+
+        if (success) {
+            initPlayer();
+        }
+        else {
+            mListener.onError(VideoAd.ErrorCode.PLAYER_INIT_FAILED, "Setting up ad tracker failed");
         }
     }
 
@@ -393,6 +431,10 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
         if (mInitTimeoutTimer != null) {
             mInitTimeoutTimer.cancel();
             mInitTimeoutTimer = null;
+        }
+
+        if (mListener != null ) {
+            mListener.onPlayerReady();
         }
 
         if (mAdLoadingPending) {
@@ -428,8 +470,10 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
             mVideoClicked = true;
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             mActivity.startActivity(browserIntent);
+
+
         } catch (android.content.ActivityNotFoundException e) {
-            // ignore
+            mVideoClicked = false;
         }
     }
 
@@ -482,6 +526,12 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      */
     @Override
     public void onActivityPaused(Activity activity) {
+        if (activity == mActivity && mVideoClicked) {
+            if (mListener != null ) {
+                mListener.onAdEvent(VideoAd.Events.AD_LEFT_APPLICATION, null, null, null);
+            }
+        }
+
     }
 
     /**

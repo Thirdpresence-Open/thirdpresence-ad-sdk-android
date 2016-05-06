@@ -16,7 +16,7 @@ import java.util.Map;
  * @since   2016-03-31
  *
  */
-public class VideoInterstitial extends VideoAd{
+public class VideoInterstitial extends VideoAd {
 
     public final static long DEFAULT_TIMEOUT = 3000;
 
@@ -26,7 +26,7 @@ public class VideoInterstitial extends VideoAd{
      * Constructor
      */
     public VideoInterstitial() {
-        super(PLACEMENT_TYPE_INTERSTITIAL);
+        this(PLACEMENT_TYPE_INTERSTITIAL);
     }
 
     /**
@@ -103,5 +103,13 @@ public class VideoInterstitial extends VideoAd{
         return mVideoPlayer.isAdLoaded();
     }
 
+    /**
+     * Checks if the player is ready
+     *
+     * @return true if ready, false otherwise
+     */
+    public boolean isPlayerReady() {
+        return mVideoPlayer.isPlayerReady();
+    }
 
 }

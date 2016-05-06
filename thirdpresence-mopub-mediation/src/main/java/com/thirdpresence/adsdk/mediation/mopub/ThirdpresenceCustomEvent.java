@@ -70,13 +70,18 @@ public class ThirdpresenceCustomEvent extends CustomEventInterstitial implements
      */
     @Override
     public void onInvalidate() {
+        mAdLoaded = false;
         if (mVideoInterstitial != null) {
             mVideoInterstitial.remove();
             mVideoInterstitial.setListener(null);
             mVideoInterstitial = null;
-            mAdLoaded = false;
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void onPlayerReady() {}
 
     /**
      * {@inheritDoc}
@@ -98,18 +103,20 @@ public class ThirdpresenceCustomEvent extends CustomEventInterstitial implements
     public void onAdEvent(String eventName, String arg1, String arg2, String arg3) {
         if (mInterstitialListener != null ) {
             if (eventName.equals(VideoAd.Events.AD_LOADED)) {
-                    mAdLoaded = true;
-                    mInterstitialListener.onInterstitialLoaded();
+                mAdLoaded = true;
+                mInterstitialListener.onInterstitialLoaded();
             } else if (eventName.equals(VideoAd.Events.AD_VIDEO_COMPLETE)) {
-                    mInterstitialListener.onInterstitialShown();
+                mInterstitialListener.onInterstitialShown();
             } else if (eventName.equals(VideoAd.Events.AD_STOPPED)) {
-                    mAdLoaded = false;
+                mAdLoaded = false;
+                if (mVideoInterstitial != null) {
                     mVideoInterstitial.remove();
-                    mInterstitialListener.onInterstitialDismissed();
+                }
+                mInterstitialListener.onInterstitialDismissed();
             } else if (eventName.equals(VideoAd.Events.AD_ERROR)) {
-                    mInterstitialListener.onInterstitialFailed(MoPubErrorCode.NETWORK_NO_FILL);
+                mInterstitialListener.onInterstitialFailed(MoPubErrorCode.NETWORK_NO_FILL);
             } else if (eventName.equals(VideoAd.Events.AD_CLICKTHRU)) {
-                    mInterstitialListener.onInterstitialClicked();
+                mInterstitialListener.onInterstitialClicked();
             }
         }
     }

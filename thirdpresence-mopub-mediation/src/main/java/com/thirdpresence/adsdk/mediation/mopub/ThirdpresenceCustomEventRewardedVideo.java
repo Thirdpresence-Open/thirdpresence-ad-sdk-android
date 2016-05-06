@@ -32,6 +32,9 @@ public class ThirdpresenceCustomEventRewardedVideo extends CustomEventRewardedVi
 
     public class RewardedVideoListener implements CustomEventRewardedVideoListener {}
 
+    private static final String EXTRAS_KEY_REWARD_TITLE = "rewardtitle";
+    private static final String EXTRAS_KEY_REWARD_AMOUNT = "rewardamount";
+
     /**
      * From CustomEventRewardedVideoListener
      */
@@ -46,14 +49,14 @@ public class ThirdpresenceCustomEventRewardedVideo extends CustomEventRewardedVi
 
         mPlayerId = env.get(VideoAd.Environment.KEY_PLACEMENT_ID);
 
-        if (serverExtras.containsKey("rewardtitle")) {
-            mRewardTitle = serverExtras.get("rewardtitle");
+        if (serverExtras.containsKey(EXTRAS_KEY_REWARD_TITLE)) {
+            mRewardTitle = serverExtras.get(EXTRAS_KEY_REWARD_TITLE);
         } else {
             mRewardTitle = MoPubReward.NO_REWARD_LABEL;
         }
 
         try {
-            String reward = serverExtras.get("rewardamount");
+            String reward = serverExtras.get(EXTRAS_KEY_REWARD_AMOUNT);
             if (reward != null) {
                 mRewardAmount = Integer.parseInt(reward);
             }
@@ -75,10 +78,12 @@ public class ThirdpresenceCustomEventRewardedVideo extends CustomEventRewardedVi
     protected void loadWithSdkInitialized(@NonNull Activity activity, @NonNull Map<String, Object> localExtras, @NonNull Map<String, String> serverExtras) throws Exception {
         if (mInterstitial != null && mPlayerId != null) {
             mInterstitial.loadAd();
-        } else MoPubRewardedVideoManager.onRewardedVideoLoadFailure(
+        } else {
+            MoPubRewardedVideoManager.onRewardedVideoLoadFailure(
                 ThirdpresenceCustomEventRewardedVideo.class,
                 mPlayerId,
                 MoPubErrorCode.NETWORK_INVALID_STATE);
+        }
     }
 
     /**
@@ -144,34 +149,40 @@ public class ThirdpresenceCustomEventRewardedVideo extends CustomEventRewardedVi
     /**
      * {@inheritDoc}
      */
+    public void onPlayerReady() {}
+
+    /**
+     * {@inheritDoc}
+     */
     public void onAdEvent(String eventName, String arg1, String arg2, String arg3) {
         if (mPlayerId != null ) {
             if (eventName.equals(VideoAd.Events.AD_LOADED)) {
                 MoPubRewardedVideoManager.onRewardedVideoLoadSuccess(
-                        ThirdpresenceCustomEventRewardedVideo.class,
-                        mPlayerId);
+                    ThirdpresenceCustomEventRewardedVideo.class,
+                    mPlayerId);
             } else if (eventName.equals(VideoAd.Events.AD_VIDEO_START)) {
-
-                    MoPubRewardedVideoManager.onRewardedVideoStarted(
-                            ThirdpresenceCustomEventRewardedVideo.class,
-                            mPlayerId);
+                MoPubRewardedVideoManager.onRewardedVideoStarted(
+                    ThirdpresenceCustomEventRewardedVideo.class,
+                    mPlayerId);
             } else if (eventName.equals(VideoAd.Events.AD_VIDEO_COMPLETE)) {
-                    MoPubReward reward;
-                    reward = MoPubReward.success(mRewardTitle, mRewardAmount);
-                    MoPubRewardedVideoManager.onRewardedVideoCompleted(
-                            ThirdpresenceCustomEventRewardedVideo.class,
-                            null, // Can't deduce the zoneId from this object.
-                            reward);
+                MoPubReward reward;
+                reward = MoPubReward.success(mRewardTitle, mRewardAmount);
+                MoPubRewardedVideoManager.onRewardedVideoCompleted(
+                    ThirdpresenceCustomEventRewardedVideo.class,
+                    null, // Can't deduce the zoneId from this object.
+                    reward);
             } else if (eventName.equals(VideoAd.Events.AD_STOPPED)) {
+                if (mInterstitial != null) {
                     mInterstitial.remove();
-                    MoPubRewardedVideoManager.onRewardedVideoClosed(ThirdpresenceCustomEventRewardedVideo.class, mPlayerId);
-                    mPlayerId = null;
+                }
+                MoPubRewardedVideoManager.onRewardedVideoClosed(ThirdpresenceCustomEventRewardedVideo.class, mPlayerId);
+                mPlayerId = null;
             } else if (eventName.equals(VideoAd.Events.AD_ERROR)) {
-                    MoPubRewardedVideoManager.onRewardedVideoPlaybackError(ThirdpresenceCustomEventRewardedVideo.class, mPlayerId, MoPubErrorCode.VIDEO_PLAYBACK_ERROR);
+                MoPubRewardedVideoManager.onRewardedVideoPlaybackError(ThirdpresenceCustomEventRewardedVideo.class, mPlayerId, MoPubErrorCode.VIDEO_PLAYBACK_ERROR);
             } else if (eventName.equals(VideoAd.Events.AD_CLICKTHRU)) {
-                    MoPubRewardedVideoManager.onRewardedVideoClicked(
-                            ThirdpresenceCustomEventRewardedVideo.class,
-                            mPlayerId);
+                MoPubRewardedVideoManager.onRewardedVideoClicked(
+                    ThirdpresenceCustomEventRewardedVideo.class,
+                    mPlayerId);
 
             }
         }

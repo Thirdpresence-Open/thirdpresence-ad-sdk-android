@@ -37,6 +37,9 @@ android {
 
 repositories {
     jcenter()
+    flatDir{
+        dirs '../external'
+    }
 }
 
 configurations {
@@ -90,7 +93,7 @@ install {
         pom {
             project {
                 packaging 'aar'
-                name 'Thirdpresence Ad SDK for Android MoPub mediation library'
+                name 'Thirdpresence Ad SDK for Android - MoPub mediation library'
                 url siteUrl
 
                 licenses {
@@ -103,7 +106,7 @@ install {
                     developer {
                         id 'maokkone'
                         name 'Marko Okkonen'
-                        email 'merko.okkonen@thirdpresence.com'
+                        email 'marko.okkonen@thirdpresence.com'
                     }
                 }
                 scm {

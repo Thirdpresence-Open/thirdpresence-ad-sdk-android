@@ -1,5 +1,23 @@
 apply plugin: 'com.android.application'
 
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+def keyData;
+
+def file = properties.getProperty("keystore.file");
+if (file) {
+    keyData = {
+        storeFile project.rootProject.file(file)
+        storePassword properties.getProperty("keystore.password")
+        keyAlias properties.getProperty("keystore.key.alias")
+        keyPassword = properties.getProperty("keystore.key.password")
+    }
+}
+else {
+    println 'Signing properties are not set in. Define keystore.file, keystore.password, keystore.key.alias and keystore.key.password in local.properties';
+}
+
 android {
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
@@ -11,11 +29,29 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
+     signingConfigs {
+         if (keyData) {
+             release keyData
+         }
+    }
+
     buildTypes {
         release {
+            if (keyData) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+}
+
+repositories {
+    jcenter()
+    flatDir{
+        dirs '../external'
     }
 }
 
@@ -24,6 +60,9 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.2.1'
     compile 'com.android.support:design:23.2.1'
+    // Optional for getting Google Advertising ID
     compile 'com.google.android.gms:play-services:8.4.0'
+    // Optional for MOAT ad tracking
+    // compile(name:'TRDP-moat-mobile-app-kit-1.7.1', ext:'aar')
     compile project(path: ':thirdpresence-ad-sdk')
 }

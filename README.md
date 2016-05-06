@@ -23,11 +23,17 @@ Available mediation plugins:
 
 - MoPub interstitial
 - MoPub rewarded video
+- Admob interstitial
+- Admob rewarded video (not yet available from Admob)
 
 ### Adding library dependencies
 
 #### jCenter hosted library
- 
+
+[ ![Download](https://api.bintray.com/packages/thirdpresence/thirdpresence-ad-sdk-android/com.thirdpresence.adsdk.sdk/images/download.svg) ](https://bintray.com/thirdpresence/thirdpresence-ad-sdk-android/com.thirdpresence.adsdk.sdk/_latestVersion)
+[ ![Download](https://api.bintray.com/packages/thirdpresence/thirdpresence-ad-sdk-android/com.thirdpresence.adsdk.mediation.mopub/images/download.svg) ](https://bintray.com/thirdpresence/thirdpresence-ad-sdk-android/com.thirdpresence.adsdk.mediation.mopub/_latestVersion)
+[ ![Download](https://api.bintray.com/packages/thirdpresence/thirdpresence-ad-sdk-android/com.thirdpresence.adsdk.mediation.admob/images/download.svg) ](https://bintray.com/thirdpresence/thirdpresence-ad-sdk-android/com.thirdpresence.adsdk.mediation.admob/_latestVersion)
+
 Check that jcenter is included in the repositories block and add required dependencies to the dependencies block:
 ```
 
@@ -39,10 +45,12 @@ repositories {
 
 dependencies {
 	// SDK library
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.1.2@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.1.3@aar'
     // mediation library, include if using MoPub SDK
-    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.1.2@aar'
-    // External dependencies, optional but recommended
+    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.1.3@aar'
+    // mediation library, include if using Admob SDK
+    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-admob-mediation:1.1.3@aar'
+    // Google Play Services mandatory for Admob mediation, otherwise optional but recommended
     compile 'com.google.android.gms:play-services:8.4.0'
 }
 ```
@@ -56,7 +64,6 @@ dependencies {
 	- File -> New... -> New Module... -> Import .JAR/.AAR Package -> Next
 	- Select thirdpresence-ad-sdk-release.aar file and give name for the module -> Finish
 - Do the same for a mediation library if needed
-
 
 
 ### Direct integration:
@@ -141,8 +148,8 @@ Check out the Sample App for a reference.
 
 | Ad Unit | Custom Event Class | Custom Event Class Data |
 | --- | --- | --- |
-| Fullscreen Ad | ThirdpresenceCustomEvent | { "account":"REPLACE_ME", "playerid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME", "skipoffset":"REPLACE_ME"} |
-| Rewarded Video | ThirdpresenceCustomEventRewardedVideo | { "account":"REPLACE_ME", "playerid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME", "rewardtitle":"REPLACE_ME", "rewardamount":"REPLACE_ME"}  |
+| Fullscreen Ad | com.thirdpresence.adsdk.mediation.mopub.ThirdpresenceCustomEvent | { "account":"REPLACE_ME", "publisherid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME", "skipoffset":"REPLACE_ME"} |
+| Rewarded Video | com.thirdpresence.adsdk.mediation.mopub.ThirdpresenceCustomEventRewardedVideo | { "account":"REPLACE_ME", "publisherid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME", "rewardtitle":"REPLACE_ME", "rewardamount":"REPLACE_ME"}  |
 
 Replace placeholders with the actual data.
 
@@ -150,4 +157,25 @@ Replace placeholders with the actual data.
 - Select the segment where you want to enable the network
 - Enable the network you just created and set the CPM.
 - Test the integration with the MoPub sample app
+
+### Admob mediation:
+
+- Login to the Admob console
+- Create new Interstitial ad unit for video if not exists
+- In the ad units list, click "x ad source(s)" link on the Mediation column of the interstitial ad unit
+- Click New ad network button
+- Click "+ Custom event" button
+- Fill the form:
+    Class Name: com.thirdpresence.adsdk.mediation.admob.ThirdpresenceCustomEventInterstitial
+    Label: Thirdpresence
+    Parameter: account:REPLACE_ME,placementid:REPLACE_ME
+
+    **Replace REPLACE_ME placeholders with actual values!**
+
+- Click Continue button
+- Give eCPM for the Thirdpresence ad network
+- Save changes and the integration is ready
+
+
+
 
