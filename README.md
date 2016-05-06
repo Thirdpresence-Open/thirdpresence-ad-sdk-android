@@ -30,8 +30,13 @@ Available mediation plugins:
 
 #### jCenter hosted library
 
+Thirdpresence Ad SDK
 [ ![Download](https://api.bintray.com/packages/thirdpresence/thirdpresence-ad-sdk-android/com.thirdpresence.adsdk.sdk/images/download.svg) ](https://bintray.com/thirdpresence/thirdpresence-ad-sdk-android/com.thirdpresence.adsdk.sdk/_latestVersion)
+
+Mopub mediation
 [ ![Download](https://api.bintray.com/packages/thirdpresence/thirdpresence-ad-sdk-android/com.thirdpresence.adsdk.mediation.mopub/images/download.svg) ](https://bintray.com/thirdpresence/thirdpresence-ad-sdk-android/com.thirdpresence.adsdk.mediation.mopub/_latestVersion)
+
+Admob mediation
 [ ![Download](https://api.bintray.com/packages/thirdpresence/thirdpresence-ad-sdk-android/com.thirdpresence.adsdk.mediation.admob/images/download.svg) ](https://bintray.com/thirdpresence/thirdpresence-ad-sdk-android/com.thirdpresence.adsdk.mediation.admob/_latestVersion)
 
 Check that jcenter is included in the repositories block and add required dependencies to the dependencies block:
@@ -49,7 +54,7 @@ dependencies {
     // mediation library, include if using MoPub SDK
     compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.1.3@aar'
     // mediation library, include if using Admob SDK
-    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-admob-mediation:1.1.3@aar'
+    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.1.3@aar'
     // Google Play Services mandatory for Admob mediation, otherwise optional but recommended
     compile 'com.google.android.gms:play-services:8.4.0'
 }
@@ -166,11 +171,14 @@ Replace placeholders with the actual data.
 - Click New ad network button
 - Click "+ Custom event" button
 - Fill the form:
-    Class Name: com.thirdpresence.adsdk.mediation.admob.ThirdpresenceCustomEventInterstitial
-    Label: Thirdpresence
-    Parameter: account:REPLACE_ME,placementid:REPLACE_ME
 
-    **Replace REPLACE_ME placeholders with actual values!**
+| Field | Value |
+| --- | --- |
+| Class Name | com.thirdpresence.adsdk.mediation.admob.ThirdpresenceCustomEventInterstitial |
+| Label | Thirdpresence |
+| Parameter | account:REPLACE_ME,placementid:REPLACE_ME |
+
+**Replace REPLACE_ME placeholders with actual values!**
 
 - Click Continue button
 - Give eCPM for the Thirdpresence ad network
