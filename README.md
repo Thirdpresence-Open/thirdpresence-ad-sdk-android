@@ -25,6 +25,7 @@ Available mediation plugins:
 - MoPub rewarded video
 - Admob interstitial
 - Admob rewarded video (not yet available from Admob)
+- Unity interstitial
 
 ### Adding library dependencies
 
@@ -184,6 +185,6 @@ Replace placeholders with the actual data.
 - Give eCPM for the Thirdpresence ad network
 - Save changes and the integration is ready
 
+### Unity plugin:
 
-
-
+Integration instruction to be added
