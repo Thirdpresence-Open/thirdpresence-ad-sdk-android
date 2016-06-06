@@ -1,0 +1,3 @@
+/build
+/unity-package/**/Plugins/Android/*.aar
+/unity-package/ThirdpresenceAdSDK/Temp

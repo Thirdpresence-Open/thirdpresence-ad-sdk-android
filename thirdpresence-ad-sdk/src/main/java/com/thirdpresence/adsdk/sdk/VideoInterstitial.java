@@ -112,4 +112,8 @@ public class VideoInterstitial extends VideoAd {
         return mVideoPlayer.isPlayerReady();
     }
 
+    /**
+     * Switch the activity the player contains in
+     */
+    public void switchActivity(Activity newActivity) { mVideoPlayer.switchActivity(newActivity);}
 }

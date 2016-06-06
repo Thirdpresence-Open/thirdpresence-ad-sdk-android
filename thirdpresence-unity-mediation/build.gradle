@@ -1,0 +1,84 @@
+apply plugin: 'com.android.library'
+apply plugin: 'org.ajoberstar.grgit'
+
+group = 'com.thirdpresence.adsdk.mediation.unity'
+
+def versionString = getVersionName()
+def buildNum = getBuildNumber()
+def fullVersionString = versionString + "." + buildNum
+
+version = fullVersionString
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.2"
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 23
+        versionCode buildNum
+        versionName versionString
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+repositories {
+    jcenter()
+    flatDir{
+        dirs '../external'
+    }
+}
+
+configurations {
+    javadocDeps
+}
+
+dependencies {
+    compile 'com.android.support:appcompat-v7:23.+'
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
+    compile project(':thirdpresence-ad-sdk')
+    javadocDeps project(':thirdpresence-ad-sdk').fileTree(include: ['*.jar'], dir: 'build/libs')
+    javadocDeps 'com.android.support:support-annotations:23.1.1:sources'
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc(type: Javadoc, dependsOn: sourcesJar) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    classpath += configurations.javadocDeps
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+assembleRelease.doLast {
+    copy {
+        from(new File(project(':thirdpresence-ad-sdk').buildDir, 'outputs/aar')) {
+            include '*-release.aar'
+        }
+        from('build/outputs/aar') {
+            include '*-release.aar'
+        }
+        rename '(.+)-release(.+)', '$1$2'
+        into 'unity-package/ThirdpresenceAdSDK/Assets/Plugins/Android'
+    }
+}

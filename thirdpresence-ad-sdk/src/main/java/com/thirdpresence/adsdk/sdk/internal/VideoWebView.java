@@ -152,7 +152,17 @@ public class VideoWebView extends WebView {
         public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
             super.onReceivedHttpError(view, request, errorResponse);
             if (!mPlayerPageLoaded) {
-                mListener.onPlayerFailure(VideoAd.ErrorCode.PLAYER_INIT_FAILED, "Loading player failed");
+                String message = null;
+                if (errorResponse != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        message = errorResponse.getReasonPhrase();
+                    }
+                }
+                if (message == null) {
+                    message = "HTTP failure when loading the player";
+                }
+
+                mListener.onPlayerFailure(VideoAd.ErrorCode.PLAYER_INIT_FAILED, message);
             }
         }
 

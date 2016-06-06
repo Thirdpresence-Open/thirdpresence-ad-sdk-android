@@ -245,6 +245,10 @@ public abstract class VideoAd {
         ErrorCode(int errorCode) {
             this.errorCode = errorCode;
         }
+
+        public int getErrorCode() {
+            return errorCode;
+        }
     }
 
     public final static long DEFAULT_TIMEOUT = 10000;

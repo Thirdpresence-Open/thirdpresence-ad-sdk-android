@@ -1,0 +1,23 @@
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2008
+
+Project("{D4535388-4B4C-AC33-0C9B-94090FB7A5B4}") = "ThirdpresenceAdSDK", "Assembly-CSharp-firstpass.csproj", "{269543D7-6EFC-7FAE-15FA-238DFA64A12A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{269543D7-6EFC-7FAE-15FA-238DFA64A12A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{269543D7-6EFC-7FAE-15FA-238DFA64A12A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{269543D7-6EFC-7FAE-15FA-238DFA64A12A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{269543D7-6EFC-7FAE-15FA-238DFA64A12A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = Assembly-CSharp.csproj
+	EndGlobalSection
+EndGlobal

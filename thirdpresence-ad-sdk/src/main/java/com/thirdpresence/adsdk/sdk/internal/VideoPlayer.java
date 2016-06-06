@@ -95,6 +95,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
         mActivity = activity;
         mEnv = environment;
         mParams = params;
+        mInitTimeout = timeout;
         mLoadTimeout = timeout;
 
         mActivity.getApplication().registerActivityLifecycleCallbacks(this);
@@ -230,7 +231,16 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
                         mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                     }
                     mContainer.setVisibility(View.VISIBLE);
-                    mWebView.displayAd();
+
+                    mContainer.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (mWebView != null) {
+                                mWebView.displayAd();
+                            }
+                        }
+                    }, 100);
+
                 }
             } else {
                 mAdLoaded = false;
@@ -360,6 +370,21 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
             ret = defaultVal;
         }
         return ret;
+    }
+
+    /**
+     * This function moves the player container to new activity, in case the application
+     * does not allow playing the video in it's own activity.
+     */
+    public void switchActivity(Activity newActivity) {
+        ViewGroup vg = (ViewGroup)mContainer.getParent();
+        vg.setLayoutTransition(null);
+        vg.removeView(mContainer);
+        vg.invalidate();
+        ViewGroup root = (ViewGroup) newActivity.getWindow().getDecorView().getRootView();
+        root.addView(mContainer);
+
+        mActivity = newActivity;
     }
 
     /**
@@ -553,7 +578,9 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      */
     @Override
     public void onActivityDestroyed(Activity activity) {
-        close();
+        if (activity == mActivity) {
+            close();
+        }
     }
 
 }
