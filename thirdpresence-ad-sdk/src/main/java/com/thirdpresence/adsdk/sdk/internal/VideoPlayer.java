@@ -8,6 +8,7 @@ import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Looper;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
@@ -44,6 +45,8 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
     private Timer mLoadTimeoutTimer;
 
     private String mDeviceId;
+
+    private boolean mActivityRunning = false;
     private boolean mPlayerReady = false;
     private boolean mInitialised = false;
     private boolean mAdLoading = false;
@@ -90,9 +93,14 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
             throw new IllegalStateException("Already initialised");
         }
 
+        if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
+            throw new IllegalThreadStateException("init() is not called from UI thread");
+        }
+
         mInitialised = true;
 
         mActivity = activity;
+        mActivityRunning = true;
         mEnv = environment;
         mParams = params;
         mInitTimeout = timeout;
@@ -138,6 +146,10 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      * Resets the state and re-init the players
      */
     public void reset() {
+        if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
+            throw new IllegalThreadStateException("reset() is not called from UI thread");
+        }
+
         if (mContainer != null) {
             mContainer.setVisibility(View.GONE);
             resetState();
@@ -149,6 +161,11 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      * Closes the ad view and releases resources.
      */
     public void close() {
+
+        if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
+            throw new IllegalThreadStateException("close() is not called from UI thread");
+        }
+
         if (mActivity != null) {
             mActivity.getApplication().unregisterActivityLifecycleCallbacks(this);
 
@@ -188,6 +205,10 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      * Loads an ad. Listener.onAdEvent() is called with AD_LOADED eventName when the ad is loaded
      */
     public void loadAd() {
+        if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
+            throw new IllegalThreadStateException("loadAd() is not called from UI thread");
+        }
+
         if (mContainer == null || mWebView == null) {
             if (mListener != null) {
                 mListener.onError(VideoAd.ErrorCode.INVALID_STATE, "The ad unit is not initialised");
@@ -218,6 +239,15 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      * Display the ad view and starts playing the video
      */
     public void displayAd() {
+        if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
+            throw new IllegalThreadStateException("displayAd() is not called from UI thread");
+        }
+
+        if (!mActivityRunning) {
+            throw new IllegalStateException("Trying to display an ad while the containing activity is not running");
+        }
+
+
         if (mContainer != null && mWebView != null) {
             if (mAdLoaded) {
                 if (!mAdDisplaying) {
@@ -385,6 +415,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
         root.addView(mContainer);
 
         mActivity = newActivity;
+        mActivityRunning = true;
     }
 
     /**
@@ -533,6 +564,9 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      */
     @Override
     public void onActivityStarted(Activity activity) {
+        if (activity == mActivity) {
+            mActivityRunning = true;
+        }
     }
 
     /**
@@ -540,9 +574,12 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      */
     @Override
     public void onActivityResumed(Activity activity) {
-        if (activity == mActivity && mAdLoaded && mVideoClicked) {
-            mVideoClicked = false;
-            mWebView.displayAd();
+        if (activity == mActivity) {
+            mActivityRunning = true;
+            if (mAdLoaded && mVideoClicked) {
+                mVideoClicked = false;
+                mWebView.displayAd();
+            }
         }
     }
 
@@ -551,12 +588,15 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      */
     @Override
     public void onActivityPaused(Activity activity) {
-        if (activity == mActivity && mVideoClicked) {
-            if (mListener != null ) {
-                mListener.onAdEvent(VideoAd.Events.AD_LEFT_APPLICATION, null, null, null);
+        if (activity == mActivity) {
+            mActivityRunning = false;
+
+            if (mVideoClicked) {
+                if (mListener != null) {
+                    mListener.onAdEvent(VideoAd.Events.AD_LEFT_APPLICATION, null, null, null);
+                }
             }
         }
-
     }
 
     /**
@@ -564,6 +604,9 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      */
     @Override
     public void onActivityStopped(Activity activity) {
+        if (activity == mActivity) {
+            mActivityRunning = false;
+        }
     }
 
     /**
@@ -579,6 +622,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
     @Override
     public void onActivityDestroyed(Activity activity) {
         if (activity == mActivity) {
+            mActivityRunning = false;
             close();
         }
     }

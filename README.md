@@ -2,7 +2,7 @@
 
 Thirdpresence Ad SDK is based on a WebView and the Thirdpresence HTML5 player.  
 
-It provides a VideoInterstitial ad unit implementation
+It provides implementations for an interstitial video and rewarded video ad units. 
 
 ## Minimum requirements
 
@@ -51,11 +51,11 @@ repositories {
 
 dependencies {
 	// SDK library
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.1.3@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.2.1@aar'
     // mediation library, include if using MoPub SDK
-    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.1.3@aar'
+    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.2.1@aar'
     // mediation library, include if using Admob SDK
-    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.1.3@aar'
+    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.2.1@aar'
     // Google Play Services mandatory for Admob mediation, otherwise optional but recommended
     compile 'com.google.android.gms:play-services:8.4.0'
 }
@@ -187,4 +187,60 @@ Replace placeholders with the actual data.
 
 ### Unity plugin:
 
-Integration instruction to be added
+Thirdpresence Ad SDK Unity plugin is compatible with Unity 5 or newer.
+
+Get the Thirdpresence Ad SDK Unity plugin and import to your Unity project. 
+
+The plugin can be downloaded from:
+http://s3.amazonaws.com/thirdpresence-ad-tags/sdk/plugins/unity/1.2.1/thirdpresence-ad-sdk.unitypackage
+ 
+In order to start getting ads the ThirdpresenceAdsAndroid singleton object needs to be initialised first in a Unity script:
+``` 
+ #if UNITY_ANDROID
+ 	using TPR = ThirdpresenceAdsAndroid;
+ #endif
+
+		TPR.OnThirdpresenceInterstitialLoaded -= InterstitialLoaded;
+		TPR.OnThirdpresenceInterstitialLoaded += InterstitialLoaded;
+		TPR.OnThirdpresenceInterstitialFailed -= InterstitialFailed;
+		TPR.OnThirdpresenceInterstitialFailed += InterstitialFailed;
+
+		Dictionary<string, string> environment = new Dictionary<string, string>();
+		environment.Add ("account", "REPLACE_ME");
+		environment.Add ("placementid", "REPLACE_ME");
+		environment.Add ("sdk-name", "Unity" + Application.platform);
+		environment.Add ("sdk-version", Application.unityVersion);
+
+		Dictionary<string, string> playerParams = new Dictionary<string, string>();
+		playerParams.Add ("appname", Application.productName);
+		playerParams.Add ("appversion", Application.version);
+		playerParams.Add ("appstoreurl", "REPLACEME");
+		playerParams.Add ("bundleid", Application.bundleIdentifier);
+
+		long timeoutMs = 10000;
+
+		TPR.initInterstitial (environment, playerParams, timeoutMs);
+ 
+```
+**Replace REPLACE_ME placeholders with actual values!**
+
+Implement event handlers:
+``` 
+	private void InterstitialLoaded() {
+		// interstitial ad loaded
+		adLoaded = true;
+	}
+
+	private void InterstitialFailed(int errorCode, string errorText) {
+		// failed to load interstitial ad, do fallback
+	}
+```
+
+Once the ad has been loaded, the ad can be displayed on the desired moment:
+``` 
+    if (adLoaded) {
+        TPR.showInterstitial ();
+    }
+
+```
+

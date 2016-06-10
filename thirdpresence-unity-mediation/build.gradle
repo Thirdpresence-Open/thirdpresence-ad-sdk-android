@@ -70,6 +70,16 @@ artifacts {
     archives javadocJar
 }
 
+def unityeditor = properties.getProperty("unity.editor")
+def xvfb = properties.getProperty("unity.xvfb")
+
+if (xvfb != null) {
+    unityeditor = "$xvfb $unityeditor"
+}
+def unityPackageDir = "$projectDir/unity-package/export"
+def unityPackageBasename = "thirdpresence-ad-sdk"
+def unityPackageFile = "${unityPackageBasename}.unitypackage"
+
 assembleRelease.doLast {
     copy {
         from(new File(project(':thirdpresence-ad-sdk').buildDir, 'outputs/aar')) {
@@ -81,4 +91,21 @@ assembleRelease.doLast {
         rename '(.+)-release(.+)', '$1$2'
         into 'unity-package/ThirdpresenceAdSDK/Assets/Plugins/Android'
     }
+
+    delete fileTree(dir: 'unity-package/export' , include: '*')
+    delete fileTree(dir: 'unity-package/Thirdpresence/Assets' , include: '**/*.meta')
+
+    exec {
+        executable "bash"
+        args "-c", "$unityeditor -force-free -nographics -quit -batchmode -projectPath $projectDir/unity-package/ThirdpresenceAdSDK -exportPackage Assets/Plugins ../export/${unityPackageFile} -logFile $projectDir/unity-package/ThirdpresenceAdSDK/log.txt"
+    }
+
+    mkdir(new File("$unityPackageDir/$fullVersionString"));
+
+    copy {
+        from file("$unityPackageDir/${unityPackageFile}")
+        into "$unityPackageDir/$fullVersionString"
+    }
+
+    delete file("$unityPackageDir/${unityPackageFile}");
 }

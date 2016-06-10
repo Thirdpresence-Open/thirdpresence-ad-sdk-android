@@ -21,6 +21,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.thirdpresence.adsdk.sdk.BuildConfig;
 import com.thirdpresence.adsdk.sdk.VideoAd;
 
 import org.json.JSONObject;
@@ -209,7 +210,7 @@ public class VideoWebView extends WebView {
         webSettings.setAllowFileAccess(true);
         String userAgent = getUserAgent(context);
         webSettings.setUserAgentString(userAgent);
-
+        webSettings.setMediaPlaybackRequiresUserGesture(false);
         webSettings.setAllowFileAccess(false);
 
         /*
@@ -303,6 +304,14 @@ public class VideoWebView extends WebView {
         String account = environment.get(VideoAd.Environment.KEY_ACCOUNT);
         String playerId = environment.get(VideoAd.Environment.KEY_PLACEMENT_ID);
 
+        String versionString = BuildConfig.VERSION_NAME + "." + BuildConfig.VERSION_CODE;
+        if (environment.containsKey(VideoAd.Environment.KEY_EXT_SDK)) {
+            versionString += "," + environment.get(VideoAd.Environment.KEY_EXT_SDK);
+            if (environment.containsKey(VideoAd.Environment.KEY_EXT_SDK_VERSION)) {
+                versionString += "," + environment.get(VideoAd.Environment.KEY_EXT_SDK);
+            }
+        }
+
         if (account == null) {
             mListener.onPlayerFailure(VideoAd.ErrorCode.PLAYER_INIT_FAILED, "Cannot init the player. Account not set");
         } else if (playerId == null) {
@@ -313,6 +322,7 @@ public class VideoWebView extends WebView {
             String urlBase = PLAYER_URL_BASE.replace("[KEY_SERVER]", server);
             loadUrl(urlBase
                     + "env=" + server
+                    + "&adsdk=" + versionString
                     + "&cid=" + account
                     + "&playerid=" + playerId
                     + "&customization=" + customization);
