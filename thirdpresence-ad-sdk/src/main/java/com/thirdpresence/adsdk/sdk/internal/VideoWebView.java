@@ -1,6 +1,7 @@
 package com.thirdpresence.adsdk.sdk.internal;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -188,6 +189,7 @@ public class VideoWebView extends WebView {
      * Constructor
      */
     @SuppressLint({"AddJavascriptInterface", "SetJavaScriptEnabled"})
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     public VideoWebView(Context context) {
         super(context.getApplicationContext());
 
@@ -210,8 +212,11 @@ public class VideoWebView extends WebView {
         webSettings.setAllowFileAccess(true);
         String userAgent = getUserAgent(context);
         webSettings.setUserAgentString(userAgent);
-        webSettings.setMediaPlaybackRequiresUserGesture(false);
         webSettings.setAllowFileAccess(false);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
+            webSettings.setMediaPlaybackRequiresUserGesture(false);
+        }
 
         /*
          * Disabling file access and content access prevents advertising creatives from

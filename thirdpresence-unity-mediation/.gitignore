@@ -4,6 +4,7 @@
 /unity-package/ThirdpresenceAdSDK/Temp
 /unity-package/ThirdpresenceAdSDK/Library
 /unity-package/ThirdpresenceAdSDK/Obj
+/unity-package/export/*
 log.txt
 *.csproj
 *.unityproj

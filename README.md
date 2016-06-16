@@ -14,10 +14,11 @@ It provides implementations for an interstitial video and rewarded video ad unit
 
 ## Integration to an application
 
-There are two options to integrate the SDK:
+There are three different options to integrate the SDK to your application:
 
 1. Direct Integration
 2. Mediation with existing SDK (e.g. MoPub)
+3. Plugin for Unity
 
 Available mediation plugins:
 
@@ -25,7 +26,6 @@ Available mediation plugins:
 - MoPub rewarded video
 - Admob interstitial
 - Admob rewarded video (not yet available from Admob)
-- Unity interstitial
 
 ### Adding library dependencies
 
@@ -51,11 +51,11 @@ repositories {
 
 dependencies {
 	// SDK library
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.2.1@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.2.2@aar'
     // mediation library, include if using MoPub SDK
-    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.2.1@aar'
+    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.2.2@aar'
     // mediation library, include if using Admob SDK
-    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.2.1@aar'
+    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.2.2@aar'
     // Google Play Services mandatory for Admob mediation, otherwise optional but recommended
     compile 'com.google.android.gms:play-services:8.4.0'
 }
@@ -77,7 +77,10 @@ dependencies {
 A quick guide to start showing ads on an application:
 
 Add Internet permission to AndroidManifest.xml if not already exists:
+```
 <uses-permission android:name="android.permission.INTERNET"/> 
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
+```
 
 Implement VideoAd.Listener interface:
 ```
@@ -192,7 +195,7 @@ Thirdpresence Ad SDK Unity plugin is compatible with Unity 5 or newer.
 Get the Thirdpresence Ad SDK Unity plugin and import to your Unity project. 
 
 The plugin can be downloaded from:
-http://s3.amazonaws.com/thirdpresence-ad-tags/sdk/plugins/unity/1.2.1/thirdpresence-ad-sdk.unitypackage
+http://s3.amazonaws.com/thirdpresence-ad-tags/sdk/plugins/unity/1.2.2/thirdpresence-ad-sdk.unitypackage
  
 In order to start getting ads the ThirdpresenceAdsAndroid singleton object needs to be initialised first in a Unity script:
 ``` 

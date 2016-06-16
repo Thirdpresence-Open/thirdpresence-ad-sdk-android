@@ -7,3 +7,5 @@
 .DS_Store
 /build
 /captures
+unity-package/ThirdpresenceAdSDK/Assets/Plugins/Android/
+unity-package/export/
