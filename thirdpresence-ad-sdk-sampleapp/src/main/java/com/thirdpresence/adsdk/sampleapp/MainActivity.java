@@ -36,8 +36,8 @@ public class MainActivity extends AppCompatActivity implements VideoAd.Listener 
                 // Init the ad unit
 
                 HashMap<String, String> environment = new HashMap<>();
-                environment.put(VideoAd.Environment.KEY_ACCOUNT, "365scores");
-                environment.put(VideoAd.Environment.KEY_PLACEMENT_ID, "r6vnafvdi5");
+                environment.put(VideoAd.Environment.KEY_ACCOUNT, "sdk-demo");
+                environment.put(VideoAd.Environment.KEY_PLACEMENT_ID, "sa7nvltbrn");
 
                 environment.put(VideoAd.Environment.KEY_SERVER, VideoAd.SERVER_TYPE_PRODUCTION);
 
