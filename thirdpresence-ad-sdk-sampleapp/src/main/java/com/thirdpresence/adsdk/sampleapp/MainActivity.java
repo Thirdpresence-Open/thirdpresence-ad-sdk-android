@@ -38,11 +38,9 @@ public class MainActivity extends AppCompatActivity implements VideoAd.Listener 
                 HashMap<String, String> environment = new HashMap<>();
                 environment.put(VideoAd.Environment.KEY_ACCOUNT, "sdk-demo");
                 environment.put(VideoAd.Environment.KEY_PLACEMENT_ID, "sa7nvltbrn");
-
                 environment.put(VideoAd.Environment.KEY_SERVER, VideoAd.SERVER_TYPE_PRODUCTION);
 
                 HashMap<String, String> params = new HashMap<>();
-
                 params.put(VideoAd.Parameters.KEY_PUBLISHER, "Thirdpresence Sample App");
                 params.put(VideoAd.Parameters.KEY_APP_NAME, "Thirdpresence Sample App");
                 params.put(VideoAd.Parameters.KEY_APP_VERSION, "1.0");
@@ -103,7 +101,6 @@ public class MainActivity extends AppCompatActivity implements VideoAd.Listener 
     @Override
     public void onPlayerReady() {
         Log.d("SampleApp", "Player initialised");
-        mInterstitial.loadAd();
     }
 
     @Override

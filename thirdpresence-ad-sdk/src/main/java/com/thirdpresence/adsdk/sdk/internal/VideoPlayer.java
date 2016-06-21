@@ -181,6 +181,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
             }
             if (mWebView != null) {
                 mWebView.setListener(null);
+                mWebView.stopLoading();
                 mWebView.destroy();
                 mWebView = null;
             }
@@ -225,6 +226,8 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
                             if (mListener != null) {
                                 mListener.onError(VideoAd.ErrorCode.NETWORK_TIMEOUT, "Timeout occured while loading an ad");
                             }
+                            mWebView.stopLoading();
+                            mAdLoading = false;
                         }
                     }
                 });
