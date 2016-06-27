@@ -251,7 +251,9 @@ public abstract class VideoAd {
         }
     }
 
-    public final static long DEFAULT_TIMEOUT = 10000;
+    public final static long DEFAULT_TIMEOUT = 20000;
+
+    public final static String LOG_TAG = "TPRADSDK";
 
     private final String mPlacementType;
 

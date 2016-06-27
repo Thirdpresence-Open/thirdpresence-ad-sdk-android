@@ -14,12 +14,12 @@ import java.util.Map;
  * Unity plugin that allows to use Thirdpresence Ads in Unity apps.
  *
  */
-public class ThirdpresenceInterstitialAdapter implements VideoAd.Listener {
+public class ThirdpresenceInterstitialAdapter extends ThirdpresenceAdapterBase implements VideoAd.Listener {
 
     private static ThirdpresenceInterstitialAdapter mInstance = null;
     private VideoInterstitial mVideoInterstitial;
     private static boolean mAdLoaded = false;
-    private ThirdpresencePlayerActivity mPlayerActivity;
+
     private Activity mUnityActivity;
 
     /**
@@ -42,7 +42,7 @@ public class ThirdpresenceInterstitialAdapter implements VideoAd.Listener {
     /**
      * Gets singleton instance of the ThirdpresenceInterstitialAdapter
      */
-    public static synchronized ThirdpresenceInterstitialAdapter getInstance() {
+    public static synchronized ThirdpresenceAdapterBase getInstance() {
         if (mInstance == null) {
             mInstance = new ThirdpresenceInterstitialAdapter();
         }
@@ -77,8 +77,8 @@ public class ThirdpresenceInterstitialAdapter implements VideoAd.Listener {
         }
         mUnityActivity = activity;
 
-        Map<String, String> env = ThirdpresenceAdapterHelper.setEnvironment(environment);
-        Map<String, String> params = ThirdpresenceAdapterHelper.setPlayerParameters(playerParams);
+        Map<String, String> env = setEnvironment(environment);
+        Map<String, String> params = setPlayerParameters(playerParams);
 
         mVideoInterstitial = new VideoInterstitial();
         mVideoInterstitial.setListener(this);
@@ -92,18 +92,10 @@ public class ThirdpresenceInterstitialAdapter implements VideoAd.Listener {
     public void showInterstitial() {
         if (mAdLoaded && mVideoInterstitial != null) {
             Intent i = new Intent(mUnityActivity, ThirdpresencePlayerActivity.class);
+            i.putExtra(ThirdpresencePlayerActivity.ADAPTER_CLASS_EXTRAS_KEY, this.getClass().getName());
             mUnityActivity.startActivity(i);
         } else if (mInterstitialListener != null)  {
             mInterstitialListener.onInterstitialFailed(VideoAd.ErrorCode.INVALID_STATE.getErrorCode(), "An ad is not loaded");
-        }
-    }
-
-    /**
-     * Displays the interstitial ad. Called from ThirdpresencePlayerActivity
-     */
-    public void displayAd() {
-        if (mAdLoaded && mVideoInterstitial != null) {
-            mVideoInterstitial.displayAd();
         }
     }
 
@@ -117,18 +109,43 @@ public class ThirdpresenceInterstitialAdapter implements VideoAd.Listener {
             mVideoInterstitial.setListener(null);
             mVideoInterstitial = null;
         }
-        if (mPlayerActivity != null) {
-            mPlayerActivity.finish();
-            mPlayerActivity = null;
-        }
+        finishPlayerActivity();
+    }
 
+    /**
+     * Finish the player activity
+     */
+    public void finishPlayerActivity() {
+        removeAd();
+        super.finishPlayerActivity();
+    }
+
+    /**
+     * Displays the interstitial ad. Called from ThirdpresencePlayerActivity
+     */
+    public void displayAd() {
+        super.displayAd();
+        if (mAdLoaded && mVideoInterstitial != null) {
+            mVideoInterstitial.displayAd();
+        }
+    }
+
+    /**
+     * Removes the ad
+     */
+    public void removeAd() {
+        super.removeAd();
+        mAdLoaded = false;
+        if (mVideoInterstitial != null) {
+            mVideoInterstitial.remove();
+        }
     }
 
     /**
      * Sets the player activity.
      */
     public void setPlayerActivity(Activity activity) {
-        mPlayerActivity = (ThirdpresencePlayerActivity)activity;
+        super.setPlayerActivity(activity);
         mVideoInterstitial.switchActivity(activity);
     }
 
@@ -141,16 +158,7 @@ public class ThirdpresenceInterstitialAdapter implements VideoAd.Listener {
      * {@inheritDoc}
      */
     public void onError(VideoAd.ErrorCode errorCode, String message) {
-        mAdLoaded = false;
-        if (mVideoInterstitial != null) {
-            mVideoInterstitial.remove();
-        }
-
-        if (mPlayerActivity != null) {
-            mPlayerActivity.finish();
-            mPlayerActivity = null;
-        }
-
+        finishPlayerActivity();
         if (mInterstitialListener != null) {
             mInterstitialListener.onInterstitialFailed(VideoAd.ErrorCode.PLAYER_INIT_FAILED.getErrorCode(), message);
         }
@@ -164,19 +172,10 @@ public class ThirdpresenceInterstitialAdapter implements VideoAd.Listener {
             if (eventName.equals(VideoAd.Events.AD_LOADED)) {
                 mAdLoaded = true;
                 mInterstitialListener.onInterstitialLoaded();
-
             } else if (eventName.equals(VideoAd.Events.AD_VIDEO_COMPLETE)) {
                 mInterstitialListener.onInterstitialShown();
             } else if (eventName.equals(VideoAd.Events.AD_STOPPED)) {
-                mAdLoaded = false;
-                if (mVideoInterstitial != null) {
-                    mVideoInterstitial.remove();
-                }
-                if (mPlayerActivity != null) {
-                    mPlayerActivity.finish();
-                    mPlayerActivity = null;
-                }
-
+                finishPlayerActivity();
                 mInterstitialListener.onInterstitialDismissed();
             } else if (eventName.equals(VideoAd.Events.AD_ERROR)) {
                 mInterstitialListener.onInterstitialFailed(VideoAd.ErrorCode.NO_FILL.getErrorCode(), arg1);

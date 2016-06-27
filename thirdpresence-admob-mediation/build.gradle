@@ -33,6 +33,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    lintOptions {
+        abortOnError false
+    }
 }
 
 repositories {
@@ -51,11 +55,11 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.2.1'
     compile project(':thirdpresence-ad-sdk')
-    compile 'com.google.android.gms:play-services:8.4.0'
+    compile 'com.google.android.gms:play-services:9.0.2'
     javadocDeps project(':thirdpresence-ad-sdk').fileTree(include: ['*.jar'], dir: 'build/libs')
-    javadocDeps 'com.android.support:support-v4:23.1.1:sources'
-    javadocDeps 'com.android.support:support-annotations:23.1.1:sources'
-    javadocDeps 'com.android.support:recyclerview-v7:23.1.1:sources'
+    javadocDeps 'com.android.support:support-v4:23.2.1:sources'
+    javadocDeps 'com.android.support:support-annotations:23.2.1:sources'
+    javadocDeps 'com.android.support:recyclerview-v7:23.2.1:sources'
 
 }
 
@@ -124,6 +128,8 @@ task javadoc(type: Javadoc, dependsOn: sourcesJar) {
     source = android.sourceSets.main.java.srcDirs
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
     classpath += configurations.javadocDeps
+    exclude '**/BuildConfig.java'
+    failOnError = false
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {

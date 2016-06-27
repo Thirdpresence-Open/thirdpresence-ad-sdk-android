@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Ad SDK Sample App</string>
+    <string name="label_account_name">Account name</string>
+    <string name="label_placement_id">Placement id</string>
+    <string name="default_account_name">sdk-demo</string>
+    <string name="default_placement_id">sa7nvltbrn</string>
 </resources>

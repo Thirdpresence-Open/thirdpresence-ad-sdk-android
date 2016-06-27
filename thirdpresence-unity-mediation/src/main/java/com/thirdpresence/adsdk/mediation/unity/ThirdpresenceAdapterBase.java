@@ -1,16 +1,18 @@
 package com.thirdpresence.adsdk.mediation.unity;
 
+import android.app.Activity;
+
 import com.thirdpresence.adsdk.sdk.VideoAd;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
- * Helper class for creating environment data and player parameters
- *
+ * Created by okkonen on 27/06/16.
  */
-public class ThirdpresenceAdapterHelper {
+public class ThirdpresenceAdapterBase {
+
+    private ThirdpresencePlayerActivity mPlayerActivity;
 
     private static final String SERVER = VideoAd.SERVER_TYPE_PRODUCTION;
     private static final String EXTRAS_KEY_SDK_NAME = "sdk-name";
@@ -24,7 +26,44 @@ public class ThirdpresenceAdapterHelper {
     private static final String EXTRAS_KEY_SKIP_OFFSET = "skipoffset";
     private static final String EXTRAS_KEY_BUNDLE_ID = "bundleid";
 
-    private ThirdpresenceAdapterHelper() {}
+    public static synchronized ThirdpresenceAdapterBase getInstance() {
+        // Empty default implementation
+        return null;
+    }
+
+    /**
+     * Displays the interstitial ad. Called from ThirdpresencePlayerActivity
+     */
+    public void displayAd() {
+        // Empty default implementation.
+    }
+
+    /**
+     * Removes the ad. Called from ThirdpresencePlayerActivity
+     */
+    public void removeAd() {
+        // Empty default implementation.
+    }
+
+    /**
+     * Sets the player activity.
+     */
+    public void setPlayerActivity(Activity activity) {
+        mPlayerActivity = (ThirdpresencePlayerActivity)activity;
+    }
+
+    /**
+     * Finishes the player activity.
+     */
+    public void finishPlayerActivity() {
+        if (mPlayerActivity != null) {
+            if (!mPlayerActivity.isFinishing()) {
+                mPlayerActivity.finish();
+            }
+            mPlayerActivity = null;
+        }
+    }
+
 
     /**
      * Sets the environment data
@@ -60,5 +99,6 @@ public class ThirdpresenceAdapterHelper {
         params.put(VideoAd.Parameters.KEY_SKIP_OFFSET, extras.get(EXTRAS_KEY_SKIP_OFFSET));
         return params;
     }
-
 }
+
+

@@ -12,51 +12,20 @@ public delegate void ThirdpresenceInterstitialDismissed();
 public delegate void ThirdpresenceInterstitialFailed(int errorCode, string errorText);
 public delegate void ThirdpresenceInterstitialClicked();
 
+
+public delegate void ThirdpresenceRewardedVideoLoaded();
+public delegate void ThirdpresenceRewardedVideoShown();
+public delegate void ThirdpresenceRewardedVideoDismissed();
+public delegate void ThirdpresenceRewardedVideoFailed(int errorCode, string errorText);
+public delegate void ThirdpresenceRewardedVideoClicked();
+public delegate void ThirdpresenceRewardedVideoCompleted(string rewardTitle, int rewardAmount);
+public delegate void ThirdpresenceRewardedVideoAdLeftApplication();
+
 public class ThirdpresenceAdsAndroid
 {
-	public static event ThirdpresenceInterstitialLoaded OnThirdpresenceInterstitialLoaded;
-	public static event ThirdpresenceInterstitialShown OnThirdpresenceInterstitialShown;
-	public static event ThirdpresenceInterstitialDismissed OnThirdpresenceInterstitialDismissed;
-	public static event ThirdpresenceInterstitialFailed OnThirdpresenceInterstitialFailed;
-	public static event ThirdpresenceInterstitialClicked OnThirdpresenceInterstitialClicked;
-
-	private static AndroidJavaObject tprPlugin = null;
+	private static AndroidJavaObject interstitialPlugin = null;
+	private static AndroidJavaObject rewardedVideoPlugin = null;
 	private static AndroidJavaObject activityContext = null;
-
-	public class ThirdpresenceAdsAndroidListener : AndroidJavaProxy
-	{
-		public ThirdpresenceAdsAndroidListener () : base("com.thirdpresence.adsdk.mediation.unity.ThirdpresenceInterstitialAdapter$InterstitialListener") {}
-
-		public void onInterstitialLoaded() {
-			if (OnThirdpresenceInterstitialLoaded != null) {
-				OnThirdpresenceInterstitialLoaded ();
-			}
-		}
-
-		public void onInterstitialShown() {
-			if (OnThirdpresenceInterstitialShown != null) {
-				OnThirdpresenceInterstitialShown ();
-			}
-		}
-
-		public void onInterstitialDismissed() {
-			if (OnThirdpresenceInterstitialDismissed != null) {
-				OnThirdpresenceInterstitialDismissed ();
-			}
-		}
-
-		public void onInterstitialFailed(int errorCode, string errorText) {
-			if (OnThirdpresenceInterstitialFailed != null) {
-				OnThirdpresenceInterstitialFailed (errorCode, errorText);
-			}
-		}
-
-		public void onInterstitialClicked() {
-			if (OnThirdpresenceInterstitialClicked != null) {
-				OnThirdpresenceInterstitialClicked ();
-			}
-		}
-	}
 
 	static ThirdpresenceAdsAndroid()
 	{
@@ -66,17 +35,58 @@ public class ThirdpresenceAdsAndroid
 		using(AndroidJavaClass activityClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer")) {
 			activityContext = activityClass.GetStatic<AndroidJavaObject>("currentActivity");
 		}
-
-		using (var pluginClass = new AndroidJavaClass ("com.thirdpresence.adsdk.mediation.unity.ThirdpresenceInterstitialAdapter")) {
-			tprPlugin = pluginClass.CallStatic<AndroidJavaObject> ("getInstance");
-			tprPlugin.Call ("setListener", new ThirdpresenceAdsAndroidListener ());
-		}
 	}
+
+	public static event ThirdpresenceInterstitialLoaded OnThirdpresenceInterstitialLoaded;
+	public static event ThirdpresenceInterstitialShown OnThirdpresenceInterstitialShown;
+	public static event ThirdpresenceInterstitialDismissed OnThirdpresenceInterstitialDismissed;
+	public static event ThirdpresenceInterstitialFailed OnThirdpresenceInterstitialFailed;
+	public static event ThirdpresenceInterstitialClicked OnThirdpresenceInterstitialClicked;
+
+	public class InterstitialListener : AndroidJavaProxy
+    {
+        public InterstitialListener () : base("com.thirdpresence.adsdk.mediation.unity.ThirdpresenceInterstitialAdapter$InterstitialListener") {}
+
+        public void onInterstitialLoaded() {
+            if (OnThirdpresenceInterstitialLoaded != null) {
+                OnThirdpresenceInterstitialLoaded ();
+            }
+        }
+
+        public void onInterstitialShown() {
+            if (OnThirdpresenceInterstitialShown != null) {
+                OnThirdpresenceInterstitialShown ();
+            }
+        }
+
+        public void onInterstitialDismissed() {
+            if (OnThirdpresenceInterstitialDismissed != null) {
+                OnThirdpresenceInterstitialDismissed ();
+            }
+        }
+
+        public void onInterstitialFailed(int errorCode, string errorText) {
+            if (OnThirdpresenceInterstitialFailed != null) {
+                OnThirdpresenceInterstitialFailed (errorCode, errorText);
+            }
+        }
+
+        public void onInterstitialClicked() {
+            if (OnThirdpresenceInterstitialClicked != null) {
+                OnThirdpresenceInterstitialClicked ();
+            }
+        }
+    }
 	
 	public static void initInterstitial(Dictionary<string, string> environment, Dictionary<string, string> playerParams, long timeout) 
 	{
         if( Application.platform != RuntimePlatform.Android )
             return;
+
+		using (var pluginClass = new AndroidJavaClass ("com.thirdpresence.adsdk.mediation.unity.ThirdpresenceInterstitialAdapter")) {
+			interstitialPlugin = pluginClass.CallStatic<AndroidJavaObject> ("getInstance");
+			interstitialPlugin.Call ("setListener", new InterstitialListener ());
+		}
 
 		activityContext.Call ("runOnUiThread", new AndroidJavaRunnable (() => {
 			using (AndroidJavaObject envMap = new AndroidJavaObject ("java.util.HashMap")) {
@@ -87,7 +97,7 @@ public class ThirdpresenceAdsAndroid
 				using (AndroidJavaObject playerMap = new AndroidJavaObject ("java.util.HashMap")) {
 					foreach(KeyValuePair<string, string> entry in playerParams)
 						addToHashMap(playerMap, entry.Key, entry.Value);
-					tprPlugin.Call ("initInterstitial", activityContext, envMap, playerMap, timeout);
+					interstitialPlugin.Call ("initInterstitial", activityContext, envMap, playerMap, timeout);
 				}
 			}
 		}));
@@ -99,7 +109,7 @@ public class ThirdpresenceAdsAndroid
 			return;
 
 		activityContext.Call ("runOnUiThread", new AndroidJavaRunnable (() => {
-			tprPlugin.Call ("showInterstitial");
+			interstitialPlugin.Call ("showInterstitial");
 		}));
 	}
 
@@ -109,9 +119,111 @@ public class ThirdpresenceAdsAndroid
 			return;
 
 		activityContext.Call ("runOnUiThread", new AndroidJavaRunnable (() => {
-			tprPlugin.Call ("removeInterstitial");
+			interstitialPlugin.Call ("removeInterstitial");
 		}));
 	}
+
+	public static event ThirdpresenceRewardedVideoLoaded OnThirdpresenceRewardedVideoLoaded;
+	public static event ThirdpresenceRewardedVideoShown OnThirdpresenceRewardedVideoShown;
+	public static event ThirdpresenceRewardedVideoDismissed OnThirdpresenceRewardedVideoDismissed;
+	public static event ThirdpresenceRewardedVideoFailed OnThirdpresenceRewardedVideoFailed;
+	public static event ThirdpresenceRewardedVideoClicked OnThirdpresenceRewardedVideoClicked;
+    public static event ThirdpresenceRewardedVideoCompleted OnThirdpresenceRewardedVideoCompleted;
+    public static event ThirdpresenceRewardedVideoAdLeftApplication OnThirdpresenceRewardedAdLeftApplication;
+
+	public class RewardedVideoListener : AndroidJavaProxy
+	{
+		public RewardedVideoListener () : base("com.thirdpresence.adsdk.mediation.unity.ThirdpresenceRewardedVideoAdapter$RewardedVideoListener") {}
+
+		public void onRewardedVideoLoaded() {
+			if (OnThirdpresenceRewardedVideoLoaded != null) {
+				OnThirdpresenceRewardedVideoLoaded ();
+			}
+		}
+
+		public void onRewardedVideoShown() {
+			if (OnThirdpresenceRewardedVideoShown != null) {
+				OnThirdpresenceRewardedVideoShown ();
+			}
+		}
+
+		public void onRewardedVideoDismissed() {
+			if (OnThirdpresenceRewardedVideoDismissed != null) {
+				OnThirdpresenceRewardedVideoDismissed ();
+			}
+		}
+
+		public void onRewardedVideoFailed(int errorCode, string errorText) {
+			if (OnThirdpresenceRewardedVideoFailed != null) {
+				OnThirdpresenceRewardedVideoFailed (errorCode, errorText);
+			}
+		}
+
+		public void onRewardedVideoClicked() {
+			if (OnThirdpresenceRewardedVideoClicked != null) {
+				OnThirdpresenceRewardedVideoClicked ();
+			}
+		}
+
+        public void onRewardedVideoCompleted(string rewardTitle, int rewardAmount) {
+            if (OnThirdpresenceRewardedVideoCompleted != null) {
+                OnThirdpresenceRewardedVideoCompleted (rewardTitle, rewardAmount);
+            }
+        }
+
+        public void onRewardedVideoAdLeftApplication() {
+            if (OnThirdpresenceRewardedAdLeftApplication != null) {
+                OnThirdpresenceRewardedAdLeftApplication ();
+            }
+        }
+
+	}
+
+	public static void initRewardedVideo(Dictionary<string, string> environment, Dictionary<string, string> playerParams, long timeout)
+	{
+        if( Application.platform != RuntimePlatform.Android )
+            return;
+
+		using (var pluginClass = new AndroidJavaClass ("com.thirdpresence.adsdk.mediation.unity.ThirdpresenceRewardedVideoAdapter")) {
+			rewardedVideoPlugin = pluginClass.CallStatic<AndroidJavaObject> ("getInstance");
+			rewardedVideoPlugin.Call ("setListener", new RewardedVideoListener ());
+		}
+
+		activityContext.Call ("runOnUiThread", new AndroidJavaRunnable (() => {
+			using (AndroidJavaObject envMap = new AndroidJavaObject ("java.util.HashMap")) {
+
+				foreach(KeyValuePair<string, string> entry in environment)
+					addToHashMap(envMap, entry.Key, entry.Value);
+
+				using (AndroidJavaObject playerMap = new AndroidJavaObject ("java.util.HashMap")) {
+					foreach(KeyValuePair<string, string> entry in playerParams)
+						addToHashMap(playerMap, entry.Key, entry.Value);
+					rewardedVideoPlugin.Call ("initRewardedVideo", activityContext, envMap, playerMap, timeout);
+				}
+			}
+		}));
+	}
+
+    public static void showRewardedVideo()
+    {
+        if( Application.platform != RuntimePlatform.Android )
+            return;
+
+        activityContext.Call ("runOnUiThread", new AndroidJavaRunnable (() => {
+            rewardedVideoPlugin.Call ("showRewardedVideo");
+        }));
+    }
+
+    public static void removeRewardedVideo()
+    {
+        if( Application.platform != RuntimePlatform.Android )
+            return;
+
+        activityContext.Call ("runOnUiThread", new AndroidJavaRunnable (() => {
+            rewardedVideoPlugin.Call ("removeRewardedVideo");
+        }));
+    }
+
 
 	private static void addToHashMap(AndroidJavaObject map, String k, String v) {
 		IntPtr putMethod = AndroidJNIHelper.GetMethodID(

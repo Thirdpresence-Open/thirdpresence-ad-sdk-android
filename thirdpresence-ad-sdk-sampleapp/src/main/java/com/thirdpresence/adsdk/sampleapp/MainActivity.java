@@ -6,6 +6,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 import java.util.HashMap;
 
@@ -33,11 +34,19 @@ public class MainActivity extends AppCompatActivity implements VideoAd.Listener 
         initButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // Init the ad unit
+                // Remove previous interstitial first to allow re-init
+                mInterstitial.remove();
+
+                TextView accountField = (TextView) findViewById(R.id.accountField);
+                String mAccountName = accountField.getText().toString();
+
+                TextView placementField = (TextView) findViewById(R.id.placementField);
+                String mPlacementId = placementField.getText().toString();
 
                 HashMap<String, String> environment = new HashMap<>();
-                environment.put(VideoAd.Environment.KEY_ACCOUNT, "sdk-demo");
-                environment.put(VideoAd.Environment.KEY_PLACEMENT_ID, "sa7nvltbrn");
+
+                environment.put(VideoAd.Environment.KEY_ACCOUNT, mAccountName);
+                environment.put(VideoAd.Environment.KEY_PLACEMENT_ID, mPlacementId);
                 environment.put(VideoAd.Environment.KEY_SERVER, VideoAd.SERVER_TYPE_PRODUCTION);
 
                 HashMap<String, String> params = new HashMap<>();

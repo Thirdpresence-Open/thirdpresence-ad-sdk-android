@@ -18,7 +18,7 @@ import java.util.Map;
  */
 public class VideoInterstitial extends VideoAd {
 
-    public final static long DEFAULT_TIMEOUT = 3000;
+    public final static long DEFAULT_TIMEOUT = 10000;
 
     private final VideoPlayer mVideoPlayer = new VideoPlayer();
 

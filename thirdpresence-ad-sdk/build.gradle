@@ -54,7 +54,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.2.1'
     javadocDeps 'com.android.support:recyclerview-v7:23.2.1:sources'
-    javadocDeps 'com.android.support:support-annotations:23.1.1:sources'
+    javadocDeps 'com.android.support:support-annotations:23.2.1:sources'
 }
 
 bintray {
@@ -121,6 +121,8 @@ task javadoc(type: Javadoc, dependsOn: sourcesJar) {
     source = android.sourceSets.main.java.srcDirs
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
     classpath += configurations.javadocDeps
+    exclude '**/BuildConfig.java'
+    failOnError = false
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {

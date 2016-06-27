@@ -24,17 +24,18 @@
         android:layout_alignParentEnd="false"
         android:layout_alignParentStart="false"
         android:ellipsize="none"
-        android:id="@+id/textView" />
+        android:id="@+id/textView"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Init"
         android:id="@+id/initButton"
-        android:layout_below="@+id/textView"
+        android:layout_below="@+id/placementLabel"
         android:layout_alignParentLeft="false"
         android:layout_alignParentStart="false"
-        android:layout_marginTop="40dip" />
+        android:layout_marginTop="20dip" />
 
     <Button
         android:layout_width="wrap_content"
@@ -52,5 +53,50 @@
         android:layout_alignTop="@+id/loadButton"
         android:layout_alignParentRight="true"
         android:layout_alignParentLeft="false" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/accountField"
+        android:layout_alignParentLeft="false"
+        android:layout_alignParentStart="false"
+        android:text="@string/default_account_name"
+        android:layout_alignBaseline="@+id/accountLabel"
+        android:layout_toRightOf="@+id/accountLabel"
+        android:layout_marginLeft="5dp" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/placementField"
+        android:layout_alignParentStart="false"
+        android:text="@string/default_placement_id"
+        android:inputType="text"
+        android:layout_alignBaseline="@+id/placementLabel"
+        android:layout_alignLeft="@+id/accountField" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/label_account_name"
+        android:id="@+id/accountLabel"
+        android:layout_below="@+id/textView"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="20dp"
+        android:layout_alignParentStart="true"
+        android:labelFor="@id/accountField"
+        android:lines="1"
+        android:layout_toLeftOf="@+id/loadButton" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/label_placement_id"
+        android:id="@+id/placementLabel"
+        android:layout_below="@+id/accountLabel"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="20dp" />
 
 </RelativeLayout>

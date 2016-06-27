@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 /**
  *
  * ThirdpresencePlayerActivity is an activity that displays the player on Unity apps.
@@ -11,12 +14,27 @@ import android.view.View;
  */
 public class ThirdpresencePlayerActivity extends Activity {
 
+    public static final String ADAPTER_CLASS_EXTRAS_KEY = "adapter_class_key";
+    private ThirdpresenceAdapterBase mAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_thirdpresence_unity_plugin);
 
         hideNavigationBar();
+
+        String adapterClassName = this.getIntent().getStringExtra(ADAPTER_CLASS_EXTRAS_KEY);
+
+        try {
+            Class adapterClass = Class.forName(adapterClassName);
+            Method createMethod = adapterClass.getMethod("getInstance", null);
+            mAdapter = (ThirdpresenceAdapterBase) createMethod.invoke(null, null);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Adapter class not found");
+        }
 
         View decorView = getWindow().getDecorView();
         decorView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
@@ -33,8 +51,10 @@ public class ThirdpresencePlayerActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        ThirdpresenceInterstitialAdapter.getInstance().setPlayerActivity(this);
-        ThirdpresenceInterstitialAdapter.getInstance().displayAd();
+        if (mAdapter != null) {
+            mAdapter.setPlayerActivity(this);
+            mAdapter.displayAd();
+        }
     }
 
     @Override
@@ -46,9 +66,10 @@ public class ThirdpresencePlayerActivity extends Activity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (isFinishing()) {
-            ThirdpresenceInterstitialAdapter.getInstance().removeInterstitial();
+        if (isFinishing() && mAdapter != null) {
+            mAdapter.finishPlayerActivity();
         }
+        mAdapter = null;
     }
 
     private void hideNavigationBar() {

@@ -7,9 +7,11 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
+//import android.net.ConnectivityManager;
 import android.os.Build;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.WindowManager;
@@ -170,6 +172,10 @@ public class VideoWebView extends WebView {
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
+            if (!isConnected()) {
+                Log.e(VideoAd.LOG_TAG, "Device is not connected to Internet");
+            }
+
             if (mPlayerPageLoaded && !shallHandleURLInWebView(url)) {
                 if (mListener != null) {
                     mListener.onOpenURLIntercepted(url);
@@ -189,7 +195,6 @@ public class VideoWebView extends WebView {
      * Constructor
      */
     @SuppressLint({"AddJavascriptInterface", "SetJavaScriptEnabled"})
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     public VideoWebView(Context context) {
         super(context.getApplicationContext());
 
@@ -214,7 +219,7 @@ public class VideoWebView extends WebView {
         webSettings.setUserAgentString(userAgent);
         webSettings.setAllowFileAccess(false);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             webSettings.setMediaPlaybackRequiresUserGesture(false);
         }
 
@@ -399,6 +404,31 @@ public class VideoWebView extends WebView {
      */
     private boolean shallHandleURLInWebView(@NonNull String url) {
         return url.startsWith("javascript:") || url.startsWith("about:") || url.startsWith("blob:");
+    }
+
+    /**
+     * Checks whether the device is connected to Internet
+     *
+     * @return true if connection available
+     *
+     */
+    private boolean isConnected() {
+        boolean isConnected = false;
+        /*
+        if (mActivity != null) {
+            ConnectivityManager cm =
+                    (ConnectivityManager) mActivity.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+            if (cm != null) {
+                if (cm.getActiveNetworkInfo() != null
+                        && cm.getActiveNetworkInfo().isAvailable()
+                        && cm.getActiveNetworkInfo().isConnected()) {
+                    isConnected = true;
+                }
+            }
+        }
+        */
+        return isConnected;
     }
 
     /**

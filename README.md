@@ -18,14 +18,12 @@ There are three different options to integrate the SDK to your application:
 
 1. Direct Integration
 2. Mediation with existing SDK (e.g. MoPub)
-3. Plugin for Unity
+3. Plugin for Unity (interstitial and rewarded video)
 
 Available mediation plugins:
 
-- MoPub interstitial
-- MoPub rewarded video
-- Admob interstitial
-- Admob rewarded video (not yet available from Admob)
+- MoPub (supports interstitial and rewarded video)
+- Admob (supports interstitial, rewarded video not yet available from Admob)
 
 ### Adding library dependencies
 
@@ -42,20 +40,19 @@ Admob mediation
 
 Check that jcenter is included in the repositories block and add required dependencies to the dependencies block:
 ```
-
 repositories {
     jcenter()
-    // Temporarily libraries are available only in bintray repository instead of jcenter
-    maven { url 'http://dl.bintray.com/thirdpresence/thirdpresence-ad-sdk-android' }
+    // Backup repository if libraries not available from jcenter
+    // maven { url 'http://dl.bintray.com/thirdpresence/thirdpresence-ad-sdk-android' }
 }
 
 dependencies {
 	// SDK library
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.2.3@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.2.4@aar'
     // mediation library, include if using MoPub SDK
-    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.2.3@aar'
+    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.2.4@aar'
     // mediation library, include if using Admob SDK
-    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.2.3@aar'
+    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.2.4@aar'
     // Google Play Services mandatory for Admob mediation, otherwise optional but recommended
     compile 'com.google.android.gms:play-services:8.4.0'
 }
@@ -72,83 +69,107 @@ dependencies {
 - Do the same for a mediation library if needed
 
 
-### Direct integration:
+### Direct integration
 
 A quick guide to start showing ads on an application:
 
 Add Internet permission to AndroidManifest.xml if not already exists:
 ```
 <uses-permission android:name="android.permission.INTERNET"/> 
-<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
 ```
 
-Implement VideoAd.Listener interface:
+An example code for displaying an ad:
 ```
+public class MyActivity extends AppCompatActivity implements VideoAd.Listener {
+
+    private VideoInterstitial mVideoInterstitial;
+    private boolean mAdLoaded = false;
+    
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        ...
+        initAndLoadAd();
+    }
+    
+    // Initialise ad unit as soon as possible
+    private void initAndLoadAd() {
+        // Instantiate the ad unit
+        mVideoInterstitial = new VideoInterstitial();
+
+        // Set the listener   	 
+        mVideoInterstitial.setListener(this);
+
+        // The data needed for the ad unit and the player is passed with two Map objects        
+        Map<String, String> environment = new HashMap<>();
+       
+        // For the testing purposes use account name "sdk-demo" and placementid "sa7nvltbrn".
+        environment.put(VideoAd.Environment.KEY_ACCOUNT, "<Thirdpresence account>");
+        environment.put(VideoAd.Environment.KEY_PLACEMENT_ID, "<Thirdpresence placement id>");
+       
+        Map<String, String> params = new HashMap<>();
+       
+        params.put(VideoAd.Parameters.KEY_PUBLISHER, "<application name>");
+        params.put(VideoAd.Parameters.KEY_APP_NAME, "<application name>");
+        params.put(VideoAd.Parameters.KEY_APP_VERSION, "<application version>");
+        params.put(VideoAd.Parameters.KEY_APP_STORE_URL, "<market store URL>");
+                   
+        // When Google Play Services is available it is used to retrieves Google Advertiser ID.
+        // Otherwise device ID (e.g. ANDROID_ID) shall be passed from the app.
+        // params.put(VideoAd.Parameters.KEY_DEVICE_ID, "<ANDROID_ID>");
+    
+        // Initialise the interstitial and load an ad
+        mVideoInterstitial.init(activity, environment, params, VideoAd.DEFAULT_TIMEOUT);
+        mVideoInterstitial.loadAd();
+    }
+    
+    // Call displayAd() when the ad shall be shown
+    private void displayAd() {
+        if (mAdLoaded) {
+	        mVideoInterstitial.displayAd();
+	    }
+	}
+	
+	// Release reserved resources when the ad unit is no longer needed
+	private void cleanUp() {
+	    if (mVideoInterstitial != null) {
+		    mVideoInterstitial.remove();
+            mVideoInterstitial.setListener(null);
+            mVideoInterstitial = null;
+        }
+	}
+
+    // From VideoAd.Listener
     public void onError(VideoAd.ErrorCode errorCode, String message) {
-    	// Player error has occured
+        // Player error has occured
+        mAdLoaded = false;
         if (mVideoInterstitial != null) {
             mVideoInterstitial.remove();
         }
     }
-
+    
+    // From VideoAd.Listener
     public void onAdEvent(String eventName, String arg1, String arg2, String arg3) {
         if (eventName.equals(VideoAd.Events.AD_LOADED)) {
-        	// An ad is loaded
-      	} else if (eventName.equals(VideoAd.Events.AD_STOPPED))) {
+            mAdLoaded = true;
+        } else if (eventName.equals(VideoAd.Events.AD_STOPPED))) {
             // Ad stopped 
-            mVideoIntertitial.remove();
+            if (mVideoInterstitial != null) {
+                mVideoIntertitial.remove();
+            }
+            mAdLoaded = false;
         } else if (eventName.equals(VideoAd.Events.AD_ERROR)) {
             // Showing an ad has failed
+            mAdLoaded = false;
         } 
     }
+}
 ```
 
-Instantiate the ad unit:
-```
-    mVideoInterstitial = new VideoInterstitial();
-```
-Set the listener:  
-``` 	 
-    mVideoInterstitial.setListener(this);
-```
-Initialise the ad unit:
-```
-    Map<String, String> environment = new HashMap<>();
-   
-	environment.put(VideoAd.Environment.KEY_ACCOUNT, "<Thirdpresence account>");
-	environment.put(VideoAd.Environment.KEY_PLACEMENT_ID, "<Thirdpresence placement id>");
-   
-    Map<String, String> params = new HashMap<>();
-   
-    params.put(VideoAd.Parameters.KEY_PUBLISHER, "<application name>");
-    params.put(VideoAd.Parameters.KEY_APP_NAME, "<application name>");
-    params.put(VideoAd.Parameters.KEY_APP_VERSION, "<application version>");
-    params.put(VideoAd.Parameters.KEY_APP_STORE_URL, "<market store URL>");
-               
-    // When Google Play Services is available it is used to retrieves Google Advertiser ID.
-    // Otherwise device ID (e.g. ANDROID_ID) shall be passed from the app.
-    // params.put(VideoAd.Parameters.KEY_DEVICE_ID, "<ANDROID_ID>");
+Check out the Sample App code for a complete reference. 
 
-    mVideoInterstitial.init(activity, environment, params, VideoAd.);
-```        
-Load an ad:
-```        
-    mVideoInterstitial.loadAd();
-```
-Display the ad:
-```
-	mVideoInterstitial.displayAd();
-```
-Close the ad unit and clean up:
-```
-	mVideoInterstitial.remove();
-    mVideoInterstitial.setListener(null);
-    mVideoInterstitial = null;
-```
-
-Check out the Sample App for a reference. 
-
-### MoPub mediation:
+### MoPub mediation
 
 - Login to the MoPub console
 - Create a Fullscreen Ad or Rewarded Video Ad ad unit
@@ -160,14 +181,16 @@ Check out the Sample App for a reference.
 | Fullscreen Ad | com.thirdpresence.adsdk.mediation.mopub. ThirdpresenceCustomEvent | { "account":"REPLACE_ME", "placementid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME", "skipoffset":"REPLACE_ME"} |
 | Rewarded Video | com.thirdpresence.adsdk.mediation.mopub. ThirdpresenceCustomEventRewardedVideo | { "account":"REPLACE_ME", "placementid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME", "rewardtitle":"REPLACE_ME", "rewardamount":"REPLACE_ME"}  |
 
-Replace placeholders with the actual data.
+**Replace REPLACE_ME placeholders with actual values!**
+
+For the testing purposes use account name "sdk-demo" and placementid "sa7nvltbrn".
 
 - Go to Segments
 - Select the segment where you want to enable the network
 - Enable the network you just created and set the CPM.
 - Test the integration with the MoPub sample app
 
-### Admob mediation:
+### Admob mediation
 
 - Login to the Admob console
 - Create new Interstitial ad unit for video if not exists
@@ -184,66 +207,156 @@ Replace placeholders with the actual data.
 
 **Replace REPLACE_ME placeholders with actual values!**
 
+For the testing purposes use account name "sdk-demo" and placementid "sa7nvltbrn".
+
 - Click Continue button
 - Give eCPM for the Thirdpresence ad network
 - Save changes and the integration is ready
 
-### Unity plugin:
+### Unity plugin
 
-Thirdpresence Ad SDK Unity plugin is compatible with Unity 5 or newer.
+The Thirdpresence Ad SDK Unity plugin is compatible with Unity 5 or newer.
 
 Get the Thirdpresence Ad SDK Unity plugin and import to your Unity project. 
 
 The plugin can be downloaded from:
-http://s3.amazonaws.com/thirdpresence-ad-tags/sdk/plugins/unity/1.2.3/thirdpresence-ad-sdk.unitypackage
+http://s3.amazonaws.com/thirdpresence-ad-tags/sdk/plugins/unity/1.2.4/thirdpresence-ad-sdk.unitypackage
  
-In order to start getting ads the ThirdpresenceAdsAndroid singleton object needs to be initialised first in a Unity script:
+In order to start getting ads the ThirdpresenceAdsAndroid singleton object needs to be initialised in an Unity script:
 ``` 
  #if UNITY_ANDROID
  	using TPR = ThirdpresenceAdsAndroid;
  #endif
+  
+```
+The plugin supports interstitial and rewarded video ad units. 
 
-		TPR.OnThirdpresenceInterstitialLoaded -= InterstitialLoaded;
-		TPR.OnThirdpresenceInterstitialLoaded += InterstitialLoaded;
-		TPR.OnThirdpresenceInterstitialFailed -= InterstitialFailed;
-		TPR.OnThirdpresenceInterstitialFailed += InterstitialFailed;
+An example for loading and displaying an interstitial ad:
+``` 
+// Initialise ad unit as soon as the app is ready to load an ad
+private void initInterstitial() {
 
-		Dictionary<string, string> environment = new Dictionary<string, string>();
-		environment.Add ("account", "REPLACE_ME");
-		environment.Add ("placementid", "REPLACE_ME");
-		environment.Add ("sdk-name", "Unity" + Application.platform);
-		environment.Add ("sdk-version", Application.unityVersion);
-
-		Dictionary<string, string> playerParams = new Dictionary<string, string>();
-		playerParams.Add ("appname", Application.productName);
-		playerParams.Add ("appversion", Application.version);
-		playerParams.Add ("appstoreurl", "REPLACEME");
-		playerParams.Add ("bundleid", Application.bundleIdentifier);
-
-		long timeoutMs = 10000;
-
-		TPR.initInterstitial (environment, playerParams, timeoutMs);
+    // Subscribe to ad events and implement needed event handler methods.
+    // See a list below for a full list of available events.
+    TPR.OnThirdpresenceInterstitialLoaded -= InterstitialLoaded;
+    TPR.OnThirdpresenceInterstitialLoaded += InterstitialLoaded;
+    TPR.OnThirdpresenceInterstitialFailed -= InterstitialFailed;
+    TPR.OnThirdpresenceInterstitialFailed += InterstitialFailed;
  
-```
-**Replace REPLACE_ME placeholders with actual values!**
+    // Create dictionary objects that hold the data needed to initialise the ad unit and the player.
+    Dictionary<string, string> environment = new Dictionary<string, string>();
+    environment.Add ("account", "REPLACE_ME"); // For the testing purposes use account name "sdk-demo" 
+    environment.Add ("placementid", "REPLACE_ME"); // For the testing purposes use placement id "sa7nvltbrn". 
+    environment.Add ("sdk-name", "Unity" + Application.platform);
+    environment.Add ("sdk-version", Application.unityVersion);
+ 
+    Dictionary<string, string> playerParams = new Dictionary<string, string>();
+    playerParams.Add ("appname", Application.productName);
+    playerParams.Add ("appversion", Application.version);
+    playerParams.Add ("appstoreurl", "REPLACEME");
+    playerParams.Add ("bundleid", Application.bundleIdentifier);
+        
+    long timeoutMs = 10000;
 
-Implement event handlers:
-``` 
-	private void InterstitialLoaded() {
-		// interstitial ad loaded
-		adLoaded = true;
-	}
+    // Initialise the interstitial
+    TPR.initInterstitial (environment, playerParams, timeoutMs);
+}	
+    
+// When an ad is loaded the event handler method is called
+private void InterstitialLoaded() {
+    adLoaded = true;
+}
 
-	private void InterstitialFailed(int errorCode, string errorText) {
-		// failed to load interstitial ad, do fallback
-	}
-```
+// When an ad load is failed the error handler method is called
+private void InterstitialFailed(int errorCode, string errorText) {
+    // failed to load interstitial ad
+}
 
-Once the ad has been loaded, the ad can be displayed on the desired moment:
-``` 
+// Call showInterstitial when the ad shall be displayed 
+private void showAd() {
     if (adLoaded) {
         TPR.showInterstitial ();
     }
-
+}
 ```
+Following events are available for the interstitial ad unit:
+ 
+| Event | Description | 
+| --- | --- |
+| OnThirdpresenceInterstitialLoaded | Interstitial ad has been loaded |
+| OnThirdpresenceInterstitialShown | Interstitial ad has been displayed |
+| OnThirdpresenceInterstitialDismissed | Interstitial ad has been dismissed |
+| OnThirdpresenceInterstitialFailed | Interstitial ad has failed to load |
+| OnThirdpresenceInterstitialClicked | Interstitial ad has been clicked |
+
+An example for loading and displaying a rewarded video ad:
+``` 
+// Initialise ad unit as soon as the app is ready to load an ad
+private void initRewardedVideo() {
+
+    // Subscribe to ad events and implement needed event handler methods.
+    // See a list below for a full list of available events.
+    TPR.OnThirdpresenceRewardedVideoLoaded -= RewardedVideoLoaded;
+    TPR.OnThirdpresenceRewardedVideoLoaded += RewardedVideoLoaded;
+    TPR.OnThirdpresenceRewardedVideoFailed -= RewardedVideoFailed;
+    TPR.OnThirdpresenceRewardedVideoFailed += RewardedVideoFailed;
+    TPR.OnThirdpresenceRewardedVideoCompleted -= RewardedVideoCompleted;
+    TPR.OnThirdpresenceRewardedVideoCompleted += RewardedVideoCompleted;
+            
+    // Create dictionary objects that hold the data needed to initialise the ad unit and the player.
+    Dictionary<string, string> environment = new Dictionary<string, string>();
+    environment.Add ("account", "REPLACE_ME"); // For the testing purposes use account name "sdk-demo" 
+    environment.Add ("placementid", "REPLACE_ME"); // For the testing purposes use placement id "sa7nvltbrn". 
+    environment.Add ("sdk-name", "Unity" + Application.platform);
+    environment.Add ("sdk-version", Application.unityVersion);
+
+    // rewardtitle can be used as a virtual currency name. rewardamount is the amount of currency gained.
+    environment.Add ("rewardtitle", "my-money");
+    environment.Add ("rewardamount", "100");
+ 
+    Dictionary<string, string> playerParams = new Dictionary<string, string>();
+    playerParams.Add ("appname", Application.productName);
+    playerParams.Add ("appversion", Application.version);
+    playerParams.Add ("appstoreurl", "REPLACEME");
+    playerParams.Add ("bundleid", Application.bundleIdentifier);
+        
+    long timeoutMs = 10000;
+
+    // Initialise the interstitial
+    TPR.initInterstitial (environment, playerParams, timeoutMs);
+}	
+    
+// When an ad is loaded the event handler method is called
+private void RewardedVideoLoaded() {
+    adLoaded = true;
+}
+
+// When the ad load is failed the error handler method is called
+private void RewardedVideoFailed(int errorCode, string errorText) {
+    // failed to load interstitial ad
+}
+
+// When the user has watched the video the completed handler is called
+private void RewardedVideoCompleted(string rewardTitle, int rewardAmount) {
+    // User has earned the reward
+}
+
+// Call showInterstitial when the ad shall be displayed 
+private void showAd() {
+    if (adLoaded) {
+        TPR.showRewardedVideo ();
+    }
+}
+```
+Following events are available for the rewarded video ad unit:
+
+| Event | Description | 
+| --- | --- |
+| OnThirdpresenceRewardedVideoLoaded | Rewarded video ad has been loaded |
+| OnThirdpresenceRewardedVideoShown | Rewarded video ad has been displayed |
+| OnThirdpresenceRewardedVideoDismissed | Rewarded video ad has been dismissed |
+| OnThirdpresenceRewardedVideoFailed | Rewarded video ad has failed to load |
+| OnThirdpresenceRewardedVideoClicked | Rewarded video ad has been clicked |
+| OnThirdpresenceRewardedVideoCompleted | Rewarded video ad has been completed  |
+| OnThirdpresenceRewardedVideoAdLeftApplication | Rewarded video ad has opened an another app |
 
