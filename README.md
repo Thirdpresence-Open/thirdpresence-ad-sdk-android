@@ -169,16 +169,16 @@ Check out the Sample App code for a complete reference.
 ### MoPub mediation
 
 - Login to the MoPub console
-- Create a Fullscreen Ad or Rewarded Video Ad ad unit or use an existing add unit in one of your apps
+- Create a Fullscreen Ad or Rewarded Video Ad ad unit or use an existing ad unit in one of your apps
 - Create a new Custom Native Network (see detailed instructions here https://dev.twitter.com/mopub/ui-setup/network-setup-custom-native)
-- Set Custom Event Class and Custom Event Class Data for the ad unit with following values:
+- Set Custom Event Class and Custom Event Class Data for the ad unit as follows:
 
 | Ad Unit | Custom Event Class | Custom Event Class Data |
 | --- | --- | --- |
 | Fullscreen Ad | com.thirdpresence.adsdk.mediation.mopub. ThirdpresenceCustomEvent | { "account":"REPLACE_ME", "placementid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME", "skipoffset":"REPLACE_ME"} |
 | Rewarded Video | com.thirdpresence.adsdk.mediation.mopub. ThirdpresenceCustomEventRewardedVideo | { "account":"REPLACE_ME", "placementid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME", "rewardtitle":"REPLACE_ME", "rewardamount":"REPLACE_ME"}  |
 
-**Replace REPLACE_ME placeholders with actual values!**
+**Replace all the REPLACE_ME placeholders with actual values!**
 
 The Custom Event Method field should be left blank.
 
