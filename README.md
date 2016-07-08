@@ -10,20 +10,17 @@ It provides implementations for an interstitial video and rewarded video ad unit
 - Android API level 15 (Android 4.0.3)
 - Google Play Services 8.0.4 (optional)
     - used for getting Google Advertising ID
-    - for more information, see http://developer.android.com/google/play-services/setup.html)
+    - for more information, see http://developer.android.com/google/play-services/setup.html
 
 ## Integration to an application
 
-There are three different options to integrate the SDK to your application:
+There are three different ways to integrate the SDK with your app:
 
 1. Direct Integration
-2. Mediation with existing SDK (e.g. MoPub)
-3. Plugin for Unity (interstitial and rewarded video)
+2. Plugin for Mopub or Admob mediation (rewarded video not yet available from Admob) 
+3. Plugin for Unity3d
 
-Available mediation plugins:
-
-- MoPub (supports interstitial and rewarded video)
-- Admob (supports interstitial, rewarded video not yet available from Admob)
+In all cases, you will need to download the appropriate SDK/plugin, add it to your app project and compile a new version of the app.
 
 ### Adding library dependencies
 
@@ -73,14 +70,14 @@ dependencies {
 
 A quick guide to start showing ads on an application:
 
-Add Internet permission to AndroidManifest.xml if not already exists:
+Add Internet permission to AndroidManifest.xml if it doesn't already exist:
 ```
 <uses-permission android:name="android.permission.INTERNET"/> 
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
 ```
 
-An example code for displaying an ad:
+Example code for displaying an ad:
 ```
 public class MyActivity extends AppCompatActivity implements VideoAd.Listener {
 
@@ -172,8 +169,8 @@ Check out the Sample App code for a complete reference.
 ### MoPub mediation
 
 - Login to the MoPub console
-- Create a Fullscreen Ad or Rewarded Video Ad ad unit
-- Add new Custom Native Network
+- Create a Fullscreen Ad or Rewarded Video Ad ad unit or use an existing add unit in one of your apps
+- Create a new Custom Native Network (see detailed instructions here https://dev.twitter.com/mopub/ui-setup/network-setup-custom-native)
 - Set Custom Event Class and Custom Event Class Data for the ad unit with following values:
 
 | Ad Unit | Custom Event Class | Custom Event Class Data |
@@ -183,12 +180,14 @@ Check out the Sample App code for a complete reference.
 
 **Replace REPLACE_ME placeholders with actual values!**
 
-For the testing purposes use account name "sdk-demo" and placementid "sa7nvltbrn".
+The Custom Event Method field should be left blank.
 
-- Go to Segments
-- Select the segment where you want to enable the network
-- Enable the network you just created and set the CPM.
-- Test the integration with the MoPub sample app
+For testing purposes you can use the account name "sdk-demo" and placementid "sa7nvltbrn".
+
+- Go to the Segments tab on the Mopub console
+- Select the segment where you want to enable the Thirdpresence custom native network
+- Enable the network for this segment and set the CPM.
+- Test the integration with the MoPub sample app, remember to include the Thirdpresence plugin in your project.
 
 ### Admob mediation
 
