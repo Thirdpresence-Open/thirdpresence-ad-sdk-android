@@ -1,6 +1,8 @@
 package com.thirdpresence.adsdk.sdk;
 
 import android.app.Activity;
+
+import com.thirdpresence.adsdk.sdk.internal.TLog;
 import com.thirdpresence.adsdk.sdk.internal.VideoPlayer;
 import java.util.Map;
 
@@ -26,7 +28,7 @@ public class VideoInterstitial extends VideoAd {
      * Constructor
      */
     public VideoInterstitial() {
-        this(PLACEMENT_TYPE_INTERSTITIAL);
+        super(PLACEMENT_TYPE_INTERSTITIAL);
     }
 
     /**
@@ -63,6 +65,7 @@ public class VideoInterstitial extends VideoAd {
                      Map<String, String> params,
                      long timeout){
         super.init();
+        TLog.d("Initialising " + this.getPlacementType());
         mVideoPlayer.init(activity, environment, params, timeout);
     }
 
@@ -70,6 +73,7 @@ public class VideoInterstitial extends VideoAd {
      * Closes the ad unit and reset the player. Shall be called before loading a new ad.
      */
     public void reset() {
+        TLog.d("Reseting video player");
         mVideoPlayer.reset();
     }
 
@@ -77,6 +81,7 @@ public class VideoInterstitial extends VideoAd {
      * Closes the ad unit and releases resources. In order to load new ad init() shall be called
      */
     public void remove() {
+        TLog.d("Closing ad unit");
         mVideoPlayer.close();
     }
 
@@ -84,6 +89,7 @@ public class VideoInterstitial extends VideoAd {
      * Loads an ad. Listener.onAdEvent() is called with AD_LOADED eventName when the ad is loaded
      */
     public void loadAd() {
+        TLog.d("Loading an ad");
         mVideoPlayer.loadAd();
     }
 
@@ -91,6 +97,7 @@ public class VideoInterstitial extends VideoAd {
      * Display the ad view and starts playing the video
      */
     public void displayAd() {
+        TLog.d("Trying to display an ad");
         mVideoPlayer.displayAd();
     }
 
@@ -115,5 +122,7 @@ public class VideoInterstitial extends VideoAd {
     /**
      * Switch the activity the player contains in
      */
-    public void switchActivity(Activity newActivity) { mVideoPlayer.switchActivity(newActivity);}
+    public void switchActivity(Activity newActivity) {
+        TLog.d("Switching an activity");
+        mVideoPlayer.switchActivity(newActivity);}
 }

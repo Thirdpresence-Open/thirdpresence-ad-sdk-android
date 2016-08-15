@@ -212,6 +212,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
 
         if (mContainer == null || mWebView == null) {
             if (mListener != null) {
+                TLog.d("The ad unit is not initialised");
                 mListener.onError(VideoAd.ErrorCode.INVALID_STATE, "The ad unit is not initialised");
             }
         } else if (mPlayerReady) {
@@ -224,6 +225,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
                     public void run() {
                         if (mAdLoading) {
                             if (mListener != null) {
+                                TLog.d("Timeout occured while loading an ad");
                                 mListener.onError(VideoAd.ErrorCode.NETWORK_TIMEOUT, "Timeout occured while loading an ad");
                             }
                             mWebView.stopLoading();
@@ -278,6 +280,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
             } else {
                 mAdLoaded = false;
                 if (mListener != null ) {
+                    TLog.d("An ad not available yet");
                     mListener.onError(VideoAd.ErrorCode.AD_NOT_READY, "An ad not available yet.");
                 }
             }
@@ -310,10 +313,12 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
 
             if (!mEnv.containsKey(VideoAd.Environment.KEY_ACCOUNT)) {
                 if (mListener != null ) {
+                    TLog.d("Player failure: account not set");
                     mListener.onError(VideoAd.ErrorCode.PLAYER_INIT_FAILED, "Cannot init the player. Account not set");
                 }
             } else if (!mEnv.containsKey(VideoAd.Environment.KEY_ACCOUNT)) {
                 if (mListener != null ) {
+                    TLog.d("Player failure: placement id not set");
                     mListener.onError(VideoAd.ErrorCode.PLAYER_INIT_FAILED,  "Cannot init the player. Placement id not set");
                 }
             } else {
@@ -477,6 +482,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
             initPlayer();
         }
         else {
+            TLog.d("Setting ad tracker failed");
             mListener.onError(VideoAd.ErrorCode.PLAYER_INIT_FAILED, "Setting up ad tracker failed");
         }
     }
@@ -506,6 +512,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      */
     @Override
     public void onNetworkError(int statusCode, String description) {
+        TLog.d("Network failure " + statusCode + ":" + description);
         mListener.onError(VideoAd.ErrorCode.NETWORK_FAILURE, description);
     }
 
@@ -514,6 +521,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      */
     @Override
     public void onPlayerFailure(VideoAd.ErrorCode errorCode, String errorText) {
+        TLog.d("Player failure " + errorCode + ":" + errorText);
         close();
         if (mListener != null ) {
             mListener.onError(VideoAd.ErrorCode.PLAYER_INIT_FAILED, errorText);
@@ -541,7 +549,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      */
     @Override
     public void onAdEvent(String eventName, String arg1, String arg2, String arg3) {
-
+        TLog.d("An ad event occurred: " + eventName + ":" + arg1 + ":" + arg2 + ":" + arg3);
         if (eventName.equals(VideoAd.Events.AD_LOADED)) {
             if (mLoadTimeoutTimer != null) {
                 mLoadTimeoutTimer.cancel();

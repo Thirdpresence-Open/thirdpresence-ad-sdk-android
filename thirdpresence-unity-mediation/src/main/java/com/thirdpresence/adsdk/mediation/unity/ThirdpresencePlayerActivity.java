@@ -27,9 +27,9 @@ public class ThirdpresencePlayerActivity extends Activity {
         String adapterClassName = this.getIntent().getStringExtra(ADAPTER_CLASS_EXTRAS_KEY);
 
         try {
-            Class adapterClass = Class.forName(adapterClassName);
-            Method createMethod = adapterClass.getMethod("getInstance", null);
-            mAdapter = (ThirdpresenceAdapterBase) createMethod.invoke(null, null);
+            Class<?> adapterClass = Class.forName(adapterClassName);
+            Method createMethod = adapterClass.getMethod("getInstance");
+            mAdapter = (ThirdpresenceAdapterBase) createMethod.invoke(null);
 
         } catch (Exception e) {
             e.printStackTrace();

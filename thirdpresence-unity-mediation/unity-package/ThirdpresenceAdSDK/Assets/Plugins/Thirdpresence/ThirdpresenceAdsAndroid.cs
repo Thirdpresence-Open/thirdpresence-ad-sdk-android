@@ -48,24 +48,28 @@ public class ThirdpresenceAdsAndroid
         public InterstitialListener () : base("com.thirdpresence.adsdk.mediation.unity.ThirdpresenceInterstitialAdapter$InterstitialListener") {}
 
         public void onInterstitialLoaded() {
+			interstitialLoaded = true;
             if (OnThirdpresenceInterstitialLoaded != null) {
                 OnThirdpresenceInterstitialLoaded ();
             }
         }
 
         public void onInterstitialShown() {
+			interstitialLoaded = false;
             if (OnThirdpresenceInterstitialShown != null) {
                 OnThirdpresenceInterstitialShown ();
             }
         }
 
         public void onInterstitialDismissed() {
+			interstitialLoaded = false;
             if (OnThirdpresenceInterstitialDismissed != null) {
                 OnThirdpresenceInterstitialDismissed ();
             }
         }
 
         public void onInterstitialFailed(int errorCode, string errorText) {
+			interstitialLoaded = false;
             if (OnThirdpresenceInterstitialFailed != null) {
                 OnThirdpresenceInterstitialFailed (errorCode, errorText);
             }
@@ -77,8 +81,8 @@ public class ThirdpresenceAdsAndroid
             }
         }
     }
-	
-	public static void initInterstitial(Dictionary<string, string> environment, Dictionary<string, string> playerParams, long timeout) 
+
+	public static void InitInterstitial(Dictionary<string, string> environment, Dictionary<string, string> playerParams, long timeout) 
 	{
         if( Application.platform != RuntimePlatform.Android )
             return;
@@ -92,18 +96,18 @@ public class ThirdpresenceAdsAndroid
 			using (AndroidJavaObject envMap = new AndroidJavaObject ("java.util.HashMap")) {
 
 				foreach(KeyValuePair<string, string> entry in environment)
-					addToHashMap(envMap, entry.Key, entry.Value);
+					AddToHashMap(envMap, entry.Key, entry.Value);
 
 				using (AndroidJavaObject playerMap = new AndroidJavaObject ("java.util.HashMap")) {
 					foreach(KeyValuePair<string, string> entry in playerParams)
-						addToHashMap(playerMap, entry.Key, entry.Value);
+						AddToHashMap(playerMap, entry.Key, entry.Value);
 					interstitialPlugin.Call ("initInterstitial", activityContext, envMap, playerMap, timeout);
 				}
 			}
 		}));
 	}
 		
-	public static void showInterstitial()
+	public static void ShowInterstitial()
 	{
 		if( Application.platform != RuntimePlatform.Android )
 			return;
@@ -113,14 +117,24 @@ public class ThirdpresenceAdsAndroid
 		}));
 	}
 
-	public static void removeInterstitial()
+	public static void RemoveInterstitial()
 	{
 		if( Application.platform != RuntimePlatform.Android )
 			return;
 
+		interstitialLoaded = false;
 		activityContext.Call ("runOnUiThread", new AndroidJavaRunnable (() => {
 			interstitialPlugin.Call ("removeInterstitial");
 		}));
+	}
+
+	private static bool interstitialLoaded = false;
+	public static bool InterstitialLoaded
+	{
+		get
+		{
+			return interstitialLoaded;
+		}
 	}
 
 	public static event ThirdpresenceRewardedVideoLoaded OnThirdpresenceRewardedVideoLoaded;
@@ -136,24 +150,28 @@ public class ThirdpresenceAdsAndroid
 		public RewardedVideoListener () : base("com.thirdpresence.adsdk.mediation.unity.ThirdpresenceRewardedVideoAdapter$RewardedVideoListener") {}
 
 		public void onRewardedVideoLoaded() {
+			rewardedVideoLoaded = true;
 			if (OnThirdpresenceRewardedVideoLoaded != null) {
 				OnThirdpresenceRewardedVideoLoaded ();
 			}
 		}
 
 		public void onRewardedVideoShown() {
+			rewardedVideoLoaded = false;
 			if (OnThirdpresenceRewardedVideoShown != null) {
 				OnThirdpresenceRewardedVideoShown ();
 			}
 		}
 
 		public void onRewardedVideoDismissed() {
+			rewardedVideoLoaded = false;
 			if (OnThirdpresenceRewardedVideoDismissed != null) {
 				OnThirdpresenceRewardedVideoDismissed ();
 			}
 		}
 
 		public void onRewardedVideoFailed(int errorCode, string errorText) {
+			rewardedVideoLoaded = false;
 			if (OnThirdpresenceRewardedVideoFailed != null) {
 				OnThirdpresenceRewardedVideoFailed (errorCode, errorText);
 			}
@@ -179,7 +197,7 @@ public class ThirdpresenceAdsAndroid
 
 	}
 
-	public static void initRewardedVideo(Dictionary<string, string> environment, Dictionary<string, string> playerParams, long timeout)
+	public static void InitRewardedVideo(Dictionary<string, string> environment, Dictionary<string, string> playerParams, long timeout)
 	{
         if( Application.platform != RuntimePlatform.Android )
             return;
@@ -193,18 +211,18 @@ public class ThirdpresenceAdsAndroid
 			using (AndroidJavaObject envMap = new AndroidJavaObject ("java.util.HashMap")) {
 
 				foreach(KeyValuePair<string, string> entry in environment)
-					addToHashMap(envMap, entry.Key, entry.Value);
+					AddToHashMap(envMap, entry.Key, entry.Value);
 
 				using (AndroidJavaObject playerMap = new AndroidJavaObject ("java.util.HashMap")) {
 					foreach(KeyValuePair<string, string> entry in playerParams)
-						addToHashMap(playerMap, entry.Key, entry.Value);
+						AddToHashMap(playerMap, entry.Key, entry.Value);
 					rewardedVideoPlugin.Call ("initRewardedVideo", activityContext, envMap, playerMap, timeout);
 				}
 			}
 		}));
 	}
 
-    public static void showRewardedVideo()
+    public static void ShowRewardedVideo()
     {
         if( Application.platform != RuntimePlatform.Android )
             return;
@@ -214,18 +232,25 @@ public class ThirdpresenceAdsAndroid
         }));
     }
 
-    public static void removeRewardedVideo()
+    public static void RemoveRewardedVideo()
     {
         if( Application.platform != RuntimePlatform.Android )
             return;
 
+		rewardedVideoLoaded = false;
         activityContext.Call ("runOnUiThread", new AndroidJavaRunnable (() => {
             rewardedVideoPlugin.Call ("removeRewardedVideo");
         }));
     }
 
+	private static bool rewardedVideoLoaded = false;
+	public static bool RewardedVideoLoaded {
+		get {
+			return rewardedVideoLoaded;
+		}
+	}
 
-	private static void addToHashMap(AndroidJavaObject map, String k, String v) {
+	private static void AddToHashMap(AndroidJavaObject map, String k, String v) {
 		IntPtr putMethod = AndroidJNIHelper.GetMethodID(
 			map.GetRawClass(), "put",
 			"(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");

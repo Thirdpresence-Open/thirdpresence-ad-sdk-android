@@ -1,5 +1,7 @@
 package com.thirdpresence.adsdk.sdk;
 
+import android.util.Log;
+
 /**
  * <h1>RewardedVideo</h1>
  *

@@ -12,6 +12,7 @@ import java.util.HashMap;
 
 import com.thirdpresence.adsdk.sdk.VideoAd;
 import com.thirdpresence.adsdk.sdk.VideoInterstitial;
+import com.thirdpresence.adsdk.sdk.internal.TLog;
 import com.thirdpresence.sampleapp.R;
 
 public class MainActivity extends AppCompatActivity implements VideoAd.Listener {
@@ -25,6 +26,9 @@ public class MainActivity extends AppCompatActivity implements VideoAd.Listener 
 
         Toolbar myToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(myToolbar);
+
+        // Enable console logs for the SDK
+        TLog.enabled = true;
 
         // Create VideoInterstitial object
         mInterstitial = new VideoInterstitial();
@@ -43,6 +47,9 @@ public class MainActivity extends AppCompatActivity implements VideoAd.Listener 
                 TextView placementField = (TextView) findViewById(R.id.placementField);
                 String mPlacementId = placementField.getText().toString();
 
+                TextView vastTagField = (TextView) findViewById(R.id.vastTagField);
+                String vastTag = vastTagField.getText().toString();
+
                 HashMap<String, String> environment = new HashMap<>();
 
                 environment.put(VideoAd.Environment.KEY_ACCOUNT, mAccountName);
@@ -54,6 +61,11 @@ public class MainActivity extends AppCompatActivity implements VideoAd.Listener 
                 params.put(VideoAd.Parameters.KEY_APP_NAME, "Thirdpresence Sample App");
                 params.put(VideoAd.Parameters.KEY_APP_VERSION, "1.0");
                 params.put(VideoAd.Parameters.KEY_APP_STORE_URL, "https://play.google.com/store/apps/details?id=com.thirdpresence.adsdk.sampleapp");
+
+                // This is used to test external VAST tags with the player
+                if (vastTag != null && vastTag.length() > 0) {
+                    params.put(VideoAd.Parameters.KEY_VAST_URL, vastTag);
+                }
 
                 // When Google Play Services is available it is used to retrieves Google Advertiser ID.
                 // Otherwise device ID (e.g. ANDROID_ID) shall be passed from the app.

@@ -10,20 +10,17 @@ It provides implementations for an interstitial video and rewarded video ad unit
 - Android API level 15 (Android 4.0.3)
 - Google Play Services 8.0.4 (optional)
     - used for getting Google Advertising ID
-    - for more information, see http://developer.android.com/google/play-services/setup.html)
+    - for more information, see http://developer.android.com/google/play-services/setup.html
 
 ## Integration to an application
 
-There are three different options to integrate the SDK to your application:
+There are three different ways to integrate the SDK with your app:
 
 1. Direct Integration
-2. Mediation with existing SDK (e.g. MoPub)
-3. Plugin for Unity (interstitial and rewarded video)
+2. Plugin for Mopub or Admob mediation (rewarded video not yet available from Admob) 
+3. Plugin for Unity3d
 
-Available mediation plugins:
-
-- MoPub (supports interstitial and rewarded video)
-- Admob (supports interstitial, rewarded video not yet available from Admob)
+In all cases, you will need to download the appropriate SDK/plugin, add it to your app project and compile a new version of the app.
 
 ### Adding library dependencies
 
@@ -48,11 +45,11 @@ repositories {
 
 dependencies {
 	// SDK library
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.2.4@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.2.5@aar'
     // mediation library, include if using MoPub SDK
-    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.2.4@aar'
+    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.2.5@aar'
     // mediation library, include if using Admob SDK
-    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.2.4@aar'
+    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.2.5    @aar'
     // Google Play Services mandatory for Admob mediation, otherwise optional but recommended
     compile 'com.google.android.gms:play-services:8.4.0'
 }
@@ -73,14 +70,14 @@ dependencies {
 
 A quick guide to start showing ads on an application:
 
-Add Internet permission to AndroidManifest.xml if not already exists:
+Add Internet permission to AndroidManifest.xml if it doesn't already exist:
 ```
 <uses-permission android:name="android.permission.INTERNET"/> 
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
 ```
 
-An example code for displaying an ad:
+Example code for displaying an ad:
 ```
 public class MyActivity extends AppCompatActivity implements VideoAd.Listener {
 
@@ -172,23 +169,25 @@ Check out the Sample App code for a complete reference.
 ### MoPub mediation
 
 - Login to the MoPub console
-- Create a Fullscreen Ad or Rewarded Video Ad ad unit
-- Add new Custom Native Network
-- Set Custom Event Class and Custom Event Class Data for the ad unit with following values:
+- Create a Fullscreen Ad or Rewarded Video Ad ad unit or use an existing ad unit in one of your apps
+- Create a new Custom Native Network (see detailed instructions here https://dev.twitter.com/mopub/ui-setup/network-setup-custom-native)
+- Set Custom Event Class and Custom Event Class Data for the ad unit as follows:
 
 | Ad Unit | Custom Event Class | Custom Event Class Data |
 | --- | --- | --- |
 | Fullscreen Ad | com.thirdpresence.adsdk.mediation.mopub. ThirdpresenceCustomEvent | { "account":"REPLACE_ME", "placementid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME", "skipoffset":"REPLACE_ME"} |
 | Rewarded Video | com.thirdpresence.adsdk.mediation.mopub. ThirdpresenceCustomEventRewardedVideo | { "account":"REPLACE_ME", "placementid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME", "rewardtitle":"REPLACE_ME", "rewardamount":"REPLACE_ME"}  |
 
-**Replace REPLACE_ME placeholders with actual values!**
+**Replace all the REPLACE_ME placeholders with actual values!**
 
-For the testing purposes use account name "sdk-demo" and placementid "sa7nvltbrn".
+The Custom Event Method field should be left blank.
 
-- Go to Segments
-- Select the segment where you want to enable the network
-- Enable the network you just created and set the CPM.
-- Test the integration with the MoPub sample app
+For testing purposes you can use the account name "sdk-demo" and placementid "sa7nvltbrn".
+
+- Go to the Segments tab on the Mopub console
+- Select the segment where you want to enable the Thirdpresence custom native network
+- Enable the network for this segment and set the CPM.
+- Test the integration with the MoPub sample app, remember to include the Thirdpresence plugin in your project.
 
 ### Admob mediation
 
@@ -220,7 +219,7 @@ The Thirdpresence Ad SDK Unity plugin is compatible with Unity 5 or newer.
 Get the Thirdpresence Ad SDK Unity plugin and import to your Unity project. 
 
 The plugin can be downloaded from:
-http://s3.amazonaws.com/thirdpresence-ad-tags/sdk/plugins/unity/1.2.4/thirdpresence-ad-sdk.unitypackage
+http://s3.amazonaws.com/thirdpresence-ad-tags/sdk/plugins/unity/1.2.5/thirdpresence-ad-sdk.unitypackage
  
 In order to start getting ads the ThirdpresenceAdsAndroid singleton object needs to be initialised in an Unity script:
 ``` 
@@ -264,7 +263,7 @@ private void initInterstitial() {
     
 // When an ad is loaded the event handler method is called
 private void InterstitialLoaded() {
-    adLoaded = true;
+    // interstitial loaded
 }
 
 // When an ad load is failed the error handler method is called
@@ -274,7 +273,8 @@ private void InterstitialFailed(int errorCode, string errorText) {
 
 // Call showInterstitial when the ad shall be displayed 
 private void showAd() {
-    if (adLoaded) {
+    // InterstitialLoaded property can be used to check if the ad is loaded
+    if (TPR.InterstitialLoaded) {
         TPR.showInterstitial ();
     }
 }
@@ -322,18 +322,17 @@ private void initRewardedVideo() {
         
     long timeoutMs = 10000;
 
-    // Initialise the interstitial
-    TPR.initInterstitial (environment, playerParams, timeoutMs);
+    // Initialise the rewarded video
+    TPR.initRewardedVideo (environment, playerParams, timeoutMs);
 }	
     
 // When an ad is loaded the event handler method is called
 private void RewardedVideoLoaded() {
-    adLoaded = true;
 }
 
 // When the ad load is failed the error handler method is called
 private void RewardedVideoFailed(int errorCode, string errorText) {
-    // failed to load interstitial ad
+    // failed to load rewarded video ad
 }
 
 // When the user has watched the video the completed handler is called
@@ -341,9 +340,10 @@ private void RewardedVideoCompleted(string rewardTitle, int rewardAmount) {
     // User has earned the reward
 }
 
-// Call showInterstitial when the ad shall be displayed 
+// Call showRewardedVideo when the ad shall be displayed 
 private void showAd() {
-    if (adLoaded) {
+    // RewardedVideoLoaded property can be used to check if the ad is loaded
+    if (TPR.RewardedVideoLoaded) {
         TPR.showRewardedVideo ();
     }
 }

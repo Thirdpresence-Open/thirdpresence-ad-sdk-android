@@ -11,7 +11,6 @@ import android.graphics.PixelFormat;
 import android.os.Build;
 
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.WindowManager;
@@ -173,7 +172,7 @@ public class VideoWebView extends WebView {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
             if (!isConnected()) {
-                Log.e(VideoAd.LOG_TAG, "Device is not connected to Internet");
+                TLog.e("Device is not connected to Internet");
             }
 
             if (mPlayerPageLoaded && !shallHandleURLInWebView(url)) {

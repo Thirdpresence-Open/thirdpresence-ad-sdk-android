@@ -193,7 +193,10 @@ public abstract class VideoAd {
          * Advertising ID (automatically determined)
          */
         public final static String KEY_DEVICE_ID = "deviceid";
-
+        /**
+         * Publisher name.
+         */
+        public final static String KEY_VAST_URL = "vast_url";
     }
 
     /**
@@ -252,8 +255,6 @@ public abstract class VideoAd {
     }
 
     public final static long DEFAULT_TIMEOUT = 20000;
-
-    public final static String LOG_TAG = "TPRADSDK";
 
     private final String mPlacementType;
 
