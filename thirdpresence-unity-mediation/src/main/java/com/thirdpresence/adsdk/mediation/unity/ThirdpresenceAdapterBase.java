@@ -25,6 +25,8 @@ public class ThirdpresenceAdapterBase {
     private static final String EXTRAS_KEY_APP_STORE_URL = "appstoreurl";
     private static final String EXTRAS_KEY_SKIP_OFFSET = "skipoffset";
     private static final String EXTRAS_KEY_BUNDLE_ID = "bundleid";
+    private static final String EXTRAS_KEY_USER_GENDER = "gender";
+    private static final String EXTRAS_KEY_USER_YOB = "yob";
 
     public static synchronized ThirdpresenceAdapterBase getInstance() {
         // Empty default implementation
@@ -97,6 +99,8 @@ public class ThirdpresenceAdapterBase {
         params.put(VideoAd.Parameters.KEY_APP_STORE_URL, extras.get(EXTRAS_KEY_APP_STORE_URL));
         params.put(VideoAd.Parameters.KEY_BUNDLE_ID, extras.get(EXTRAS_KEY_BUNDLE_ID));
         params.put(VideoAd.Parameters.KEY_SKIP_OFFSET, extras.get(EXTRAS_KEY_SKIP_OFFSET));
+        params.put(VideoAd.Parameters.KEY_USER_GENDER, extras.get(EXTRAS_KEY_USER_GENDER));
+        params.put(VideoAd.Parameters.KEY_USER_YOB, extras.get(EXTRAS_KEY_USER_YOB));
         return params;
     }
 }

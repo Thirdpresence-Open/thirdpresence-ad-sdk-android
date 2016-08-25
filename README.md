@@ -45,11 +45,11 @@ repositories {
 
 dependencies {
 	// SDK library
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.2.5@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.3.0@aar'
     // mediation library, include if using MoPub SDK
-    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.2.5@aar'
+    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.3.0@aar'
     // mediation library, include if using Admob SDK
-    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.2.5@aar'
+    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.3.0@aar'
     // Google Play Services mandatory for Admob mediation, otherwise optional but recommended
     compile 'com.google.android.gms:play-services:8.4.0'
 }
@@ -70,12 +70,23 @@ dependencies {
 
 A quick guide to start showing ads on an application:
 
-Add Internet permission to AndroidManifest.xml if it doesn't already exist:
+Add required permissions to AndroidManifest.xml if it doesn't already exist.
+The location permission is an optional, but highly recommended in order to get higher fill rate.
 ```
 <uses-permission android:name="android.permission.INTERNET"/> 
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
 ```
+
+Beginning in Android 6.0 (API level 23), users grant permissions to apps while the app is running, not when they install the app. 
+Thirdpresence Ad SDK does not request permissions from user, but the app shall do it when it is most convenient for user. 
+See details from Google Android documentation:
+https://developer.android.com/training/permissions/requesting.html
+
+Notice: The SDK closes the ad unit if the current activity (given in init() call) is stopped. Therefore the ad unit should be initialised and the ad displayed within the same activity. 
+This constraint will be removed in the coming release.
 
 Example code for displaying an ad:
 ```
@@ -111,6 +122,13 @@ public class MyActivity extends AppCompatActivity implements VideoAd.Listener {
         params.put(VideoAd.Parameters.KEY_APP_NAME, "<application name>");
         params.put(VideoAd.Parameters.KEY_APP_VERSION, "<application version>");
         params.put(VideoAd.Parameters.KEY_APP_STORE_URL, "<market store URL>");
+          
+        // In order to get more targeted ads you shall provide user's gender and year of birth
+        // You can use e.g. Google+ API or Facebook Graph API
+        // https://developers.google.com/android/reference/com/google/android/gms/plus/model/people/package-summary
+        // https://developers.facebook.com/docs/android/graph/
+        params.put(VideoAd.Parameters.KEY_USER_GENDER, "male");
+        params.put(VideoAd.Parameters.KEY_USER_YOB, "1970");
                    
         // When Google Play Services is available it is used to retrieves Google Advertiser ID.
         // Otherwise device ID (e.g. ANDROID_ID) shall be passed from the app.
@@ -153,7 +171,9 @@ public class MyActivity extends AppCompatActivity implements VideoAd.Listener {
         } else if (eventName.equals(VideoAd.Events.AD_STOPPED))) {
             // Ad stopped 
             if (mVideoInterstitial != null) {
-                mVideoIntertitial.remove();
+                // reset() closes the ad unit and it will re-init the player automatically.
+                // Use remove() if no more ads will be displayed.
+                mVideoIntertitial.reset();
             }
             mAdLoaded = false;
         } else if (eventName.equals(VideoAd.Events.AD_ERROR)) {
@@ -175,14 +195,14 @@ Check out the Sample App code for a complete reference.
 
 | Ad Unit | Custom Event Class | Custom Event Class Data |
 | --- | --- | --- |
-| Fullscreen Ad | com.thirdpresence.adsdk.mediation.mopub. ThirdpresenceCustomEvent | { "account":"REPLACE_ME", "placementid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME", "skipoffset":"REPLACE_ME"} |
-| Rewarded Video | com.thirdpresence.adsdk.mediation.mopub. ThirdpresenceCustomEventRewardedVideo | { "account":"REPLACE_ME", "placementid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME", "rewardtitle":"REPLACE_ME", "rewardamount":"REPLACE_ME"}  |
+| Fullscreen Ad | com.thirdpresence.adsdk.mediation.mopub. ThirdpresenceCustomEvent | { "account":"REPLACE_ME", "placementid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME", "gender":"REPLACE_ME", "yob":"REPLACE_ME" } |
+| Rewarded Video | com.thirdpresence.adsdk.mediation.mopub. ThirdpresenceCustomEventRewardedVideo | { "account":"REPLACE_ME", "placementid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME", "rewardtitle":"REPLACE_ME", "rewardamount":"REPLACE_ME", "gender":"REPLACE_ME", "yob":"REPLACE_ME" }  |
 
 **Replace all the REPLACE_ME placeholders with actual values!**
 
 The Custom Event Method field should be left blank.
-
 For testing purposes you can use the account name "sdk-demo" and placementid "sa7nvltbrn".
+Provide user's gender and yob (year of birth) to get more targeted ads. Leave them empty if not available.
 
 - Go to the Segments tab on the Mopub console
 - Select the segment where you want to enable the Thirdpresence custom native network
@@ -202,11 +222,12 @@ For testing purposes you can use the account name "sdk-demo" and placementid "sa
 | --- | --- |
 | Class Name | com.thirdpresence.adsdk.mediation.admob.ThirdpresenceCustomEventInterstitial |
 | Label | Thirdpresence |
-| Parameter | account:REPLACE_ME,placementid:REPLACE_ME |
+| Parameter | account:REPLACE_ME,placementid:REPLACE_ME,gender:REPLACE_ME,yob:REPLACE_ME |
 
 **Replace REPLACE_ME placeholders with actual values!**
 
 For the testing purposes use account name "sdk-demo" and placementid "sa7nvltbrn".
+Provide user's gender and yob (year of birth) to get more targeted ads. Leave them empty if not available.
 
 - Click Continue button
 - Give eCPM for the Thirdpresence ad network
@@ -219,7 +240,7 @@ The Thirdpresence Ad SDK Unity plugin is compatible with Unity 5 or newer.
 Get the Thirdpresence Ad SDK Unity plugin and import to your Unity project. 
 
 The plugin can be downloaded from:
-http://s3.amazonaws.com/thirdpresence-ad-tags/sdk/plugins/unity/1.2.5/thirdpresence-ad-sdk.unitypackage
+http://s3.amazonaws.com/thirdpresence-ad-tags/sdk/plugins/unity/1.3.0/thirdpresence-ad-sdk.unitypackage
  
 In order to start getting ads the ThirdpresenceAdsAndroid singleton object needs to be initialised in an Unity script:
 ``` 
@@ -254,7 +275,11 @@ private void initInterstitial() {
     playerParams.Add ("appversion", Application.version);
     playerParams.Add ("appstoreurl", "REPLACEME");
     playerParams.Add ("bundleid", Application.bundleIdentifier);
-        
+            
+    // In order to get more targeted ads you shall provide user's gender and year of birth
+    playerParams.Add ("gender", "male");
+    playerParams.Add ("yob", "1975");
+                
     long timeoutMs = 10000;
 
     // Initialise the interstitial
@@ -319,7 +344,11 @@ private void initRewardedVideo() {
     playerParams.Add ("appversion", Application.version);
     playerParams.Add ("appstoreurl", "REPLACEME");
     playerParams.Add ("bundleid", Application.bundleIdentifier);
-        
+                        
+    // In order to get more targeted ads you shall provide user's gender and year of birth
+    playerParams.Add ("gender", "male");
+    playerParams.Add ("yob", "1975");
+    
     long timeoutMs = 10000;
 
     // Initialise the rewarded video

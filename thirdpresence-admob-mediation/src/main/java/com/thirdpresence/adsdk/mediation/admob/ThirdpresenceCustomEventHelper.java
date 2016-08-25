@@ -25,6 +25,8 @@ public class ThirdpresenceCustomEventHelper {
     private static final String PARAM_NAME_PLACEMENT_ID = "placementid";
     private static final String PARAM_NAME_DISABLE_BACK = "disablebackbutton";
     private static final String PARAM_NAME_SKIP_OFFSET = "skipoffset";
+    private static final String PARAM_NAME_USER_GENDER = "gender";
+    private static final String PARAM_NAME_USER_YOB = "yob";
 
     private static final String GOOGLE_PLAY_URL_BASE = "http://play.google.com/store/apps/details?id=";
 
@@ -88,6 +90,14 @@ public class ThirdpresenceCustomEventHelper {
 
         if (params.containsKey(PARAM_NAME_SKIP_OFFSET)) {
             playerParams.put(VideoAd.Parameters.KEY_SKIP_OFFSET, params.get(PARAM_NAME_SKIP_OFFSET));
+        }
+
+        if (params.containsKey(PARAM_NAME_USER_GENDER)) {
+            playerParams.put(VideoAd.Parameters.KEY_USER_GENDER, params.get(PARAM_NAME_USER_GENDER));
+        }
+
+        if (params.containsKey(PARAM_NAME_USER_YOB)) {
+            playerParams.put(VideoAd.Parameters.KEY_USER_YOB, params.get(PARAM_NAME_USER_YOB));
         }
 
         return playerParams;

@@ -1,5 +1,11 @@
 package com.thirdpresence.adsdk.sdk;
 
+import android.Manifest;
+import android.app.Activity;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Build;
+
 public abstract class VideoAd {
 
     /**
@@ -140,13 +146,21 @@ public abstract class VideoAd {
          * Force ad placement to portrait orientation
          */
         public final static String KEY_FORCE_PORTRAIT = "forceportrait";
-
+        /**
+         * Force secure HTTP requests
+         */
+        public final static String KEY_FORCE_SECURE_HTTP = "forcehttps";
     }
 
     /**
      * Production server
      */
     public final static String SERVER_TYPE_PRODUCTION = "production";
+
+    /**
+     * Staging server
+     */
+    public final static String SERVER_TYPE_STAGING = "staging";
 
     /**
      * Parameters contains keys for available parameters that can be passed to player
@@ -197,6 +211,36 @@ public abstract class VideoAd {
          * Publisher name.
          */
         public final static String KEY_VAST_URL = "vast_url";
+        /**
+         * Location: latitude
+         */
+        public final static String KEY_GEO_LAT = "geo_lat";
+        /**
+         * Location: longitude
+         */
+        public final static String KEY_GEO_LON = "geo_lon";
+        /**
+         * Location: country
+         */
+        public final static String KEY_GEO_COUNTRY = "country";
+        /**
+         * Location: region
+         */
+        public final static String KEY_GEO_REGION = "region";
+        /**
+         * Location: city
+         */
+        public final static String KEY_GEO_CITY = "city";
+        /**
+         * User Gender
+         */
+        public final static String KEY_USER_GENDER = "gender";
+        /**
+         * User year of birth
+         */
+        public final static String KEY_USER_YOB = "yob";
+
+
     }
 
     /**
@@ -313,5 +357,25 @@ public abstract class VideoAd {
      */
     protected boolean isAdLoaded() {
         return false;
+    }
+
+    /**
+     * Helper function for parsing boolean from a string
+     *
+     * @param booleanString string that contains boolean
+     * @param defaultVal defaultVal if boolean cannot be parse
+     * @return boolean parsed from the string or defaultVal
+     *
+     */
+    public static boolean parseBoolean(String booleanString, boolean defaultVal) {
+        boolean ret = defaultVal;
+        try {
+            if (booleanString != null) {
+                ret = Boolean.parseBoolean(booleanString);
+            }
+        } catch (NumberFormatException e) {
+            ret = defaultVal;
+        }
+        return ret;
     }
 }

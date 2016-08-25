@@ -26,7 +26,8 @@ public class ThirdpresenceCustomEventHelper {
     private static final String EXTRAS_KEY_APP_VERSION = "appversion";
     private static final String EXTRAS_KEY_APP_STORE_URL = "appstoreurl";
     private static final String EXTRAS_KEY_SKIP_OFFSET = "skipoffset";
-
+    private static final String EXTRAS_KEY_USER_GENDER = "gender";
+    private static final String EXTRAS_KEY_USER_YOB = "yob";
 
 
     private ThirdpresenceCustomEventHelper() {}
@@ -65,6 +66,9 @@ public class ThirdpresenceCustomEventHelper {
         params.put(VideoAd.Parameters.KEY_APP_STORE_URL, serverExtras.get(EXTRAS_KEY_APP_STORE_URL));
         params.put(VideoAd.Parameters.KEY_BUNDLE_ID, context.getPackageName());
         params.put(VideoAd.Parameters.KEY_SKIP_OFFSET, serverExtras.get(EXTRAS_KEY_SKIP_OFFSET));
+        params.put(VideoAd.Parameters.KEY_USER_GENDER, serverExtras.get(EXTRAS_KEY_USER_GENDER));
+        params.put(VideoAd.Parameters.KEY_USER_YOB, serverExtras.get(EXTRAS_KEY_USER_YOB));
+
         return params;
     }
 

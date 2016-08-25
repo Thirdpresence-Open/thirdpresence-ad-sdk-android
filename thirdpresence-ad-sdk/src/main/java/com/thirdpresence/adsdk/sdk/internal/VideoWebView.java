@@ -49,7 +49,7 @@ public class VideoWebView extends WebView {
     private boolean mDeadlockCleared = false;
 
     private final static String JS_API_NAME = "ThirdpresenceNative";
-    private final static String PLAYER_URL_BASE = "http://d1c13tt6n7tja5.cloudfront.net/tags/[KEY_SERVER]/sdk/LATEST/sdk_player.v3.html?";
+    private final static String PLAYER_URL_BASE = "//d1c13tt6n7tja5.cloudfront.net/tags/[KEY_SERVER]/sdk/LATEST/sdk_player.v3.html?";
 
     private final static String EVENT_NAME_PLAYER_READY = "PlayerReady";
     private final static String EVENT_NAME_PLAYER_ERROR = "PlayerError";
@@ -217,6 +217,9 @@ public class VideoWebView extends WebView {
         String userAgent = getUserAgent(context);
         webSettings.setUserAgentString(userAgent);
         webSettings.setAllowFileAccess(false);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             webSettings.setMediaPlaybackRequiresUserGesture(false);
@@ -328,13 +331,18 @@ public class VideoWebView extends WebView {
         } else if (customization == null) {
             mListener.onPlayerFailure(VideoAd.ErrorCode.PLAYER_INIT_FAILED, "Cannot init the player. Invalid customization parameters");
         } else {
-            String urlBase = PLAYER_URL_BASE.replace("[KEY_SERVER]", server);
-            loadUrl(urlBase
-                    + "env=" + server
-                    + "&adsdk=" + versionString
-                    + "&cid=" + account
-                    + "&playerid=" + playerId
-                    + "&customization=" + customization);
+
+            String protocol = VideoAd.parseBoolean(environment.get(VideoAd.Environment.KEY_FORCE_SECURE_HTTP), false) ? "https:" : "http:";
+
+            String url = protocol
+                        + PLAYER_URL_BASE.replace("[KEY_SERVER]", server)
+                        + "env=" + server
+                        + "&adsdk=" + versionString
+                        + "&cid=" + account
+                        + "&playerid=" + playerId
+                        + "&customization=" + customization;
+            TLog.d("Loading player: " + url);
+            loadUrl(url);
         }
     }
 
@@ -343,7 +351,7 @@ public class VideoWebView extends WebView {
      */
     public void loadAd() {
         if (mPlayerPageLoaded) {
-            callJSFunction("loadAd");
+            callJSFunction("loadAd", null, null);
         } else {
             mListener.onPlayerFailure(VideoAd.ErrorCode.AD_NOT_READY, "VideoAd is not ready");
         }
@@ -354,20 +362,41 @@ public class VideoWebView extends WebView {
      */
     public void displayAd() {
         if (mPlayerPageLoaded) {
-            callJSFunction("startAd");
+            callJSFunction("startAd", null, null);
         } else {
             mListener.onPlayerFailure(VideoAd.ErrorCode.AD_NOT_READY, "VideoAd is not ready");
         }
     }
 
     /**
-     * calls a function in the player JavaScript API
+     * Updates geo location to the player
+     *
+     * @param latitude coordinates
+     * @param longitude coordinates
+     */
+    public void updateLocation(String latitude, String longitude) {
+        if (mPlayerPageLoaded) {
+            callJSFunction("updateLocation", latitude, longitude);
+        }
+    }
+
+    /**
+     * Calls a function in the player JavaScript API
      *
      * @param function name of the JavaScript function
-     *
+     * @param arg1 first argument for the JavaScript function
+     * @param arg2 seconds argument for the JavaScript function
      */
-    private void callJSFunction(String function) {
-        loadUrl("javascript:" + function + "();");
+    private void callJSFunction(String function, String arg1, String arg2) {
+        String a1 = null;
+        String a2 = null;
+        if (arg1 != null) {
+            a1 = "\"" + arg1 + "\"";
+        }
+        if (arg2 != null) {
+            a2 = "\"" + arg2 + "\"";
+        }
+        loadUrl("javascript:" + function + "(" + arg1 + "," +  arg2 + ");");
     }
 
     /**

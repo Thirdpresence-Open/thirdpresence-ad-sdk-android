@@ -1,5 +1,8 @@
 package com.thirdpresence.adsdk.sampleapp;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -19,6 +22,8 @@ public class MainActivity extends AppCompatActivity implements VideoAd.Listener 
 
     private VideoInterstitial mInterstitial;
 
+    private static final int LOCATION_PERMISSION_CHECK = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,6 +34,21 @@ public class MainActivity extends AppCompatActivity implements VideoAd.Listener 
 
         // Enable console logs for the SDK
         TLog.enabled = true;
+
+        // Access to the location data is optional but highly recommended.
+        // Android 6.0 requires user to grant access to location services.
+        // Therefore the app shall request permission from the user before
+        // initialising the interstitial
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M) {
+            if (checkSelfPermission(
+                    Manifest.permission.ACCESS_COARSE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                requestPermissions(
+                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                        LOCATION_PERMISSION_CHECK);
+            }
+        }
 
         // Create VideoInterstitial object
         mInterstitial = new VideoInterstitial();
@@ -62,6 +82,13 @@ public class MainActivity extends AppCompatActivity implements VideoAd.Listener 
                 params.put(VideoAd.Parameters.KEY_APP_VERSION, "1.0");
                 params.put(VideoAd.Parameters.KEY_APP_STORE_URL, "https://play.google.com/store/apps/details?id=com.thirdpresence.adsdk.sampleapp");
 
+                // In order to get more targeted ads you shall provide user's gender and year of birth
+                // You can use e.g. Google+ API or Facebook Graph API
+                // https://developers.google.com/android/reference/com/google/android/gms/plus/model/people/package-summary
+                // https://developers.facebook.com/docs/android/graph/
+                params.put(VideoAd.Parameters.KEY_USER_GENDER, "male");
+                params.put(VideoAd.Parameters.KEY_USER_YOB, "1970");
+
                 // This is used to test external VAST tags with the player
                 if (vastTag != null && vastTag.length() > 0) {
                     params.put(VideoAd.Parameters.KEY_VAST_URL, vastTag);
@@ -73,7 +100,6 @@ public class MainActivity extends AppCompatActivity implements VideoAd.Listener 
 
                 try {
                     mInterstitial.init(MainActivity.this, environment, params, VideoAd.DEFAULT_TIMEOUT);
-                    Toast.makeText(MainActivity.this, "Initialized", Toast.LENGTH_SHORT).show();
                 } catch (IllegalStateException e) {
                     Log.e("SampleApp", e.toString());
                     Toast.makeText(MainActivity.this, "Init failed", Toast.LENGTH_SHORT).show();
@@ -122,11 +148,28 @@ public class MainActivity extends AppCompatActivity implements VideoAd.Listener 
     @Override
     public void onPlayerReady() {
         Log.d("SampleApp", "Player initialised");
+        Toast.makeText(MainActivity.this, "Initialized", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onError(VideoAd.ErrorCode errorCode, String message) {
         Log.e("SampleApp", "Error occured: " + message);
         Toast.makeText(MainActivity.this, "Loading player failed: " + message, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case LOCATION_PERMISSION_CHECK: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d("SampleApp", "Location permission granted");
+                } else {
+                    Log.d("SampleApp", "Location permission denied");
+                }
+                return;
+            }
+        }
     }
 }

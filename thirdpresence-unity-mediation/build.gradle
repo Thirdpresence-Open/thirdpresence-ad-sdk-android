@@ -45,6 +45,7 @@ configurations {
 }
 
 dependencies {
+    compile 'com.android.support:support-v4:23.2.1'
     compile 'com.android.support:appcompat-v7:23.2.1'
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
@@ -115,3 +116,11 @@ assembleRelease.doLast {
 
     delete file("$unityPackageDir/${unityPackageFile}");
 }
+
+task cleanUnityBuild {
+    delete fileTree(dir: 'unity-package/export' , include: '*')
+    delete fileTree(dir: 'unity-package/Thirdpresence/Assets' , include: '**/*.meta')
+    delete fileTree(dir: 'unity-package/ThirdpresenceAdSDK/Assets/Plugins/Android' , include: '*.aar')
+}
+
+clean.dependsOn(cleanUnityBuild)
