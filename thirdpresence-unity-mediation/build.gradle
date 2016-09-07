@@ -88,33 +88,38 @@ def unityPackageBasename = "thirdpresence-ad-sdk"
 def unityPackageFile = "${unityPackageBasename}.unitypackage"
 
 assembleRelease.doLast {
-    copy {
-        from(new File(project(':thirdpresence-ad-sdk').buildDir, 'outputs/aar')) {
-            include '*-release.aar'
+    if (unityeditor == null) {
+        logger.warn('unity.editor is not set in local.properties. The value must be a path to Unity Editor.')
+        throw new GradleException('Could not find Unity Editor')
+    } else {
+        copy {
+            from(new File(project(':thirdpresence-ad-sdk').buildDir, 'outputs/aar')) {
+                include '*-release.aar'
+            }
+            from('build/outputs/aar') {
+                include '*-release.aar'
+            }
+            rename '(.+)-release(.+)', '$1$2'
+            into 'unity-package/ThirdpresenceAdSDK/Assets/Plugins/Android'
         }
-        from('build/outputs/aar') {
-            include '*-release.aar'
+
+        delete fileTree(dir: 'unity-package/export', include: '*')
+        delete fileTree(dir: 'unity-package/Thirdpresence/Assets', include: '**/*.meta')
+
+        exec {
+            executable "bash"
+            args "-c", "$unityeditor -force-free -nographics -quit -batchmode -projectPath $projectDir/unity-package/ThirdpresenceAdSDK -exportPackage Assets/Plugins ../export/${unityPackageFile} -logFile $projectDir/unity-package/ThirdpresenceAdSDK/log.txt"
         }
-        rename '(.+)-release(.+)', '$1$2'
-        into 'unity-package/ThirdpresenceAdSDK/Assets/Plugins/Android'
+
+        mkdir(new File("$unityPackageDir/$fullVersionString"));
+
+        copy {
+            from file("$unityPackageDir/${unityPackageFile}")
+            into "$unityPackageDir/$fullVersionString"
+        }
+
+        delete file("$unityPackageDir/${unityPackageFile}");
     }
-
-    delete fileTree(dir: 'unity-package/export' , include: '*')
-    delete fileTree(dir: 'unity-package/Thirdpresence/Assets' , include: '**/*.meta')
-
-    exec {
-        executable "bash"
-        args "-c", "$unityeditor -force-free -nographics -quit -batchmode -projectPath $projectDir/unity-package/ThirdpresenceAdSDK -exportPackage Assets/Plugins ../export/${unityPackageFile} -logFile $projectDir/unity-package/ThirdpresenceAdSDK/log.txt"
-    }
-
-    mkdir(new File("$unityPackageDir/$fullVersionString"));
-
-    copy {
-        from file("$unityPackageDir/${unityPackageFile}")
-        into "$unityPackageDir/$fullVersionString"
-    }
-
-    delete file("$unityPackageDir/${unityPackageFile}");
 }
 
 task cleanUnityBuild {

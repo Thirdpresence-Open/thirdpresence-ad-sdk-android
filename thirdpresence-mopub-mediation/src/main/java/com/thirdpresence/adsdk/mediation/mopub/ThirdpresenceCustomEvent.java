@@ -114,7 +114,11 @@ public class ThirdpresenceCustomEvent extends CustomEventInterstitial implements
                 }
                 mInterstitialListener.onInterstitialDismissed();
             } else if (eventName.equals(VideoAd.Events.AD_ERROR)) {
-                mInterstitialListener.onInterstitialFailed(MoPubErrorCode.NETWORK_NO_FILL);
+                if (mAdLoaded) {
+                    mInterstitialListener.onInterstitialFailed(MoPubErrorCode.VIDEO_PLAYBACK_ERROR);
+                } else {
+                    mInterstitialListener.onInterstitialFailed(MoPubErrorCode.NO_FILL);
+                }
             } else if (eventName.equals(VideoAd.Events.AD_CLICKTHRU)) {
                 mInterstitialListener.onInterstitialClicked();
             }

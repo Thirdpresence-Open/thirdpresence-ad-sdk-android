@@ -167,7 +167,7 @@ public class ThirdpresenceRewardedVideoAdapter implements MediationRewardedVideo
                 }
                 mRewardedListener.onAdClosed(this);
             } else if (eventName.equals(VideoAd.Events.AD_ERROR)) {
-                mRewardedListener.onAdFailedToLoad(this, AdRequest.ERROR_CODE_INTERNAL_ERROR);
+                mRewardedListener.onAdFailedToLoad(this, AdRequest.ERROR_CODE_NO_FILL);
             } else if (eventName.equals(VideoAd.Events.AD_CLICKTHRU)) {
                 mRewardedListener.onAdClicked(this);
             } else if (eventName.equals(VideoAd.Events.AD_VIDEO_COMPLETE)) {
@@ -210,7 +210,7 @@ public class ThirdpresenceRewardedVideoAdapter implements MediationRewardedVideo
         }
         if (mRewardedListener != null) {
             int admobErrorCode = ThirdpresenceCustomEventHelper.mapErrorCode(errorCode);
-            mRewardedListener.onInitializationFailed(this, admobErrorCode);
+            mRewardedListener.onAdFailedToLoad(this, admobErrorCode);
         }
 
     }

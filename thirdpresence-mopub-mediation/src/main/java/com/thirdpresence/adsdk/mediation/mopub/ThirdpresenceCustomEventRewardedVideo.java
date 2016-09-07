@@ -24,12 +24,12 @@ import java.util.Map;
  */
 public class ThirdpresenceCustomEventRewardedVideo extends CustomEventRewardedVideo implements MediationSettings, VideoAd.Listener, LifecycleListener {
 
-    private VideoInterstitial mInterstitial;
+    private RewardedVideo mInterstitial;
     private String mPlayerId = null;
     private String mRewardTitle = MoPubReward.NO_REWARD_LABEL;
     private int mRewardAmount = MoPubReward.NO_REWARD_AMOUNT;
     private CustomEventRewardedVideoListener mRewardedListener;
-
+    private boolean mAdLoaded = false;
     public class RewardedVideoListener implements CustomEventRewardedVideoListener {}
 
     private static final String EXTRAS_KEY_REWARD_TITLE = "rewardtitle";
@@ -144,6 +144,7 @@ public class ThirdpresenceCustomEventRewardedVideo extends CustomEventRewardedVi
             mInterstitial = null;
         }
         mPlayerId = null;
+        mAdLoaded = false;
     }
 
     /**
@@ -157,6 +158,7 @@ public class ThirdpresenceCustomEventRewardedVideo extends CustomEventRewardedVi
     public void onAdEvent(String eventName, String arg1, String arg2, String arg3) {
         if (mPlayerId != null ) {
             if (eventName.equals(VideoAd.Events.AD_LOADED)) {
+                mAdLoaded = true;
                 MoPubRewardedVideoManager.onRewardedVideoLoadSuccess(
                     ThirdpresenceCustomEventRewardedVideo.class,
                     mPlayerId);
@@ -172,13 +174,18 @@ public class ThirdpresenceCustomEventRewardedVideo extends CustomEventRewardedVi
                     null, // Can't deduce the zoneId from this object.
                     reward);
             } else if (eventName.equals(VideoAd.Events.AD_STOPPED)) {
+                mAdLoaded = false;
                 if (mInterstitial != null) {
                     mInterstitial.remove();
                 }
                 MoPubRewardedVideoManager.onRewardedVideoClosed(ThirdpresenceCustomEventRewardedVideo.class, mPlayerId);
                 mPlayerId = null;
             } else if (eventName.equals(VideoAd.Events.AD_ERROR)) {
-                MoPubRewardedVideoManager.onRewardedVideoPlaybackError(ThirdpresenceCustomEventRewardedVideo.class, mPlayerId, MoPubErrorCode.VIDEO_PLAYBACK_ERROR);
+                if (mAdLoaded) {
+                    MoPubRewardedVideoManager.onRewardedVideoPlaybackError(ThirdpresenceCustomEventRewardedVideo.class, mPlayerId, MoPubErrorCode.VIDEO_PLAYBACK_ERROR);
+                } else {
+                    MoPubRewardedVideoManager.onRewardedVideoLoadFailure(ThirdpresenceCustomEventRewardedVideo.class, mPlayerId, MoPubErrorCode.NO_FILL);
+                }
             } else if (eventName.equals(VideoAd.Events.AD_CLICKTHRU)) {
                 MoPubRewardedVideoManager.onRewardedVideoClicked(
                     ThirdpresenceCustomEventRewardedVideo.class,
@@ -193,12 +200,19 @@ public class ThirdpresenceCustomEventRewardedVideo extends CustomEventRewardedVi
      */
     public void onError(VideoAd.ErrorCode errorCode, String message) {
         if (mPlayerId != null) {
-            mInterstitial.remove();
             MoPubErrorCode moPubErrorCode = ThirdpresenceCustomEventHelper.mapErrorCode(errorCode);
-            MoPubRewardedVideoManager.onRewardedVideoLoadFailure(
-                    ThirdpresenceCustomEventRewardedVideo.class,
-                    mPlayerId,
-                    moPubErrorCode);
+
+            if (mAdLoaded) {
+                MoPubRewardedVideoManager.onRewardedVideoPlaybackError(
+                        ThirdpresenceCustomEventRewardedVideo.class,
+                        mPlayerId,
+                        moPubErrorCode);
+            } else {
+                MoPubRewardedVideoManager.onRewardedVideoLoadFailure(
+                        ThirdpresenceCustomEventRewardedVideo.class,
+                        mPlayerId,
+                        moPubErrorCode);
+            }
         }
     }
 

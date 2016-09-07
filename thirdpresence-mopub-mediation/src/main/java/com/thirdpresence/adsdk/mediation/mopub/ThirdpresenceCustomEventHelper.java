@@ -95,10 +95,9 @@ public class ThirdpresenceCustomEventHelper {
                 moPubErrorCode = MoPubErrorCode.NETWORK_TIMEOUT;
                 break;
             case NO_FILL:
+            default:
                 moPubErrorCode = MoPubErrorCode.NO_FILL;
                 break;
-            default:
-                moPubErrorCode = MoPubErrorCode.UNSPECIFIED;
         }
 
         return moPubErrorCode;

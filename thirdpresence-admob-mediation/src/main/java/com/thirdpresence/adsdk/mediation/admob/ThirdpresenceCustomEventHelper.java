@@ -114,13 +114,16 @@ public class ThirdpresenceCustomEventHelper {
         int admobErrorCode;
         switch (errorCode) {
             case NETWORK_FAILURE:
+            case NETWORK_TIMEOUT:
                 admobErrorCode = AdRequest.ERROR_CODE_NETWORK_ERROR;
                 break;
+            case INVALID_STATE:
+                admobErrorCode = AdRequest.ERROR_CODE_INTERNAL_ERROR;
+                break;
+            default:
             case NO_FILL:
                 admobErrorCode = AdRequest.ERROR_CODE_NO_FILL;
                 break;
-            default:
-                admobErrorCode = AdRequest.ERROR_CODE_INTERNAL_ERROR;
         }
 
         return admobErrorCode;

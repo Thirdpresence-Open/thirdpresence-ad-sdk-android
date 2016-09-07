@@ -146,7 +146,7 @@ public class ThirdpresenceCustomEventInterstitial implements CustomEventIntersti
                 }
                 mInterstitialListener.onAdClosed();
             } else if (eventName.equals(VideoAd.Events.AD_ERROR)) {
-                mInterstitialListener.onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
+                mInterstitialListener.onAdFailedToLoad(AdRequest.ERROR_CODE_NO_FILL);
             } else if (eventName.equals(VideoAd.Events.AD_CLICKTHRU)) {
                 mInterstitialListener.onAdClicked();
             } else if (eventName.equals(VideoAd.Events.AD_LEFT_APPLICATION)) {
