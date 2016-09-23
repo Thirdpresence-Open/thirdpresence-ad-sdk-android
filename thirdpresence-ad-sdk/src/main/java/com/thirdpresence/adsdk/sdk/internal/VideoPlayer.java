@@ -66,6 +66,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
     private boolean mAdLoadingPending = false;
     private boolean mAdDisplaying = false;
     private boolean mVideoClicked = false;
+    private boolean mWebViewPaused = false;
     private boolean mOrientationChanged = false;
     private boolean mPendingLocationUpdate = false;
 
@@ -397,6 +398,13 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
         mPlayerReady = false;
         mPlayerLoading = false;
         mVideoClicked = false;
+        
+        if (mWebView != null && mWebViewPaused){
+            mWebView.onResume();
+            mWebView.resumeTimers();
+            mWebViewPaused = false;
+        }
+
         if (mInitTimeoutTimer != null) {
             mInitTimeoutTimer.cancel();
             mInitTimeoutTimer = null;
@@ -701,7 +709,6 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             mActivity.startActivity(browserIntent);
 
-
         } catch (android.content.ActivityNotFoundException e) {
             mVideoClicked = false;
         }
@@ -752,10 +759,16 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
         if (activity == mActivity) {
             TLog.d("Activity resumed");
             mActivityRunning = true;
-            if (mAdLoaded && mVideoClicked) {
-                mVideoClicked = false;
-                mWebView.displayAd();
+
+            if(mWebView != null && mWebViewPaused){
+                mWebView.onResume();
+                mWebView.resumeTimers();
+                mWebViewPaused = false;
+                mWebView.resumeAd();
             }
+
+            mVideoClicked = false;
+
         }
     }
 
@@ -768,10 +781,15 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
             TLog.d("Activity paused");
             mActivityRunning = false;
 
-            if (mVideoClicked) {
-                if (mListener != null) {
-                    mListener.onAdEvent(VideoAd.Events.AD_LEFT_APPLICATION, null, null, null);
-                }
+            if(mWebView != null && mAdDisplaying){
+                mWebView.pauseAd();
+                mWebView.onPause();
+                mWebView.pauseTimers();
+                mWebViewPaused = true;
+            }
+
+            if (mVideoClicked && mListener != null) {
+                mListener.onAdEvent(VideoAd.Events.AD_LEFT_APPLICATION, null, null, null);
             }
         }
     }

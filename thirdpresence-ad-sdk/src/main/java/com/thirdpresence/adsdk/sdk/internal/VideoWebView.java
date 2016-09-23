@@ -358,7 +358,7 @@ public class VideoWebView extends WebView {
     }
 
     /**
-     * Display an ad
+     * Displays an ad
      */
     public void displayAd() {
         if (mPlayerPageLoaded) {
@@ -367,6 +367,28 @@ public class VideoWebView extends WebView {
             mListener.onPlayerFailure(VideoAd.ErrorCode.AD_NOT_READY, "VideoAd is not ready");
         }
     }
+
+    /**
+     * Pauses the loaded ad
+     */
+    public void pauseAd() {
+        if (mPlayerPageLoaded) {
+            callJSFunction("pauseAd", null, null);
+        } else {
+            mListener.onPlayerFailure(VideoAd.ErrorCode.AD_NOT_READY, "VideoAd is not ready");
+        }
+    }
+    /**
+     * Resumes the loaded  ad
+     */
+    public void resumeAd() {
+        if (mPlayerPageLoaded) {
+            callJSFunction("resumeAd", null, null);
+        } else {
+            mListener.onPlayerFailure(VideoAd.ErrorCode.AD_NOT_READY, "VideoAd is not ready");
+        }
+    }
+
 
     /**
      * Updates geo location to the player
