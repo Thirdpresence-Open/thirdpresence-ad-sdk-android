@@ -67,7 +67,5 @@ dependencies {
     compile 'com.android.support:design:23.2.1'
     // Optional for getting Google Advertising ID
     compile 'com.google.android.gms:play-services:8.4.0'
-    // Optional for MOAT ad tracking
-    // compile(name:'TRDP-moat-mobile-app-kit-1.7.1', ext:'aar')
     compile project(path: ':thirdpresence-ad-sdk')
 }

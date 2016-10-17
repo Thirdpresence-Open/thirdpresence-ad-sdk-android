@@ -45,7 +45,7 @@ configurations {
 repositories {
     jcenter()
     flatDir{
-        dirs '../external'
+        dirs 'libs'
     }
 }
 
@@ -54,6 +54,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:support-v4:23.2.1'
     compile 'com.android.support:appcompat-v7:23.2.1'
+    compile project(path: ':thirdpresence-ad-sdk-moat')
     javadocDeps 'com.android.support:recyclerview-v7:23.2.1:sources'
     javadocDeps 'com.android.support:support-annotations:23.2.1:sources'
 }

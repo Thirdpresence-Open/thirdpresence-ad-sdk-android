@@ -139,7 +139,11 @@ public class VideoWebView extends WebView {
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
             super.onReceivedError(view, errorCode, description, failingUrl);
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                mListener.onNetworkError(errorCode, description);
+                if (!mPlayerPageLoaded) {
+                    mListener.onNetworkError(errorCode, description);
+                } else {
+                    TLog.w("Network error ignored: " + errorCode + ":" + description);
+                }
             }
         }
 
@@ -147,7 +151,11 @@ public class VideoWebView extends WebView {
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             super.onReceivedError(view, request, error);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && error != null) {
-                mListener.onNetworkError(error.getErrorCode(), error.getDescription().toString() );
+                if (!mPlayerPageLoaded || request.isForMainFrame()) {
+                    mListener.onNetworkError(error.getErrorCode(), error.getDescription().toString());
+                } else {
+                    TLog.w("Network error ignored: " + error.getErrorCode() + ":" + error.getDescription().toString());
+                }
             }
         }
 
@@ -162,9 +170,9 @@ public class VideoWebView extends WebView {
                     }
                 }
                 if (message == null) {
-                    message = "HTTP failure when loading the player";
+                    message = "failure when loading the player";
                 }
-
+                message = "HTTP: " + message;
                 mListener.onPlayerFailure(VideoAd.ErrorCode.PLAYER_INIT_FAILED, message);
             }
         }

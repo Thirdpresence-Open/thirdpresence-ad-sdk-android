@@ -1,0 +1,2 @@
+configurations.create("default")
+artifacts.add("default", file('libs/TRDP-moat-mobile-app-kit-1.7.1.aar'))

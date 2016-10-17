@@ -262,8 +262,11 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
                                 TLog.d("Timeout occured while loading an ad");
                                 mListener.onError(VideoAd.ErrorCode.NETWORK_TIMEOUT, "Timeout occured while loading an ad");
                             }
-                            mWebView.stopLoading();
+                            if (mWebView != null) {
+                                mWebView.stopLoading();
+                            }
                             mAdLoading = false;
+
                         }
                     }
                 });
@@ -427,7 +430,9 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                mActivity.runOnUiThread(runnable);
+                if (mActivity != null) {
+                    mActivity.runOnUiThread(runnable);
+                }
             }
         }, timeout);
     }
@@ -635,16 +640,21 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
             Class<?> trackerClass = Class.forName("com.moat.analytics.mobile.WebAdTracker");
             Method trackMethod = trackerClass.getMethod("track", (Class<?>[]) null);
             success = (Boolean) trackMethod.invoke(mWebAdTracker, (Object[]) null);
+            if (success) {
+                TLog.i("MOAT SDK enabled");
+            } else {
+                TLog.i("MOAT SDK failed to initialize");
+            }
         } catch (Exception e) {
             // MOAT SDK not available, will continue without tracking
             success = true;
+            TLog.i("MOAT SDK is not available");
         }
 
         if (success) {
             initPlayer();
         }
         else {
-            TLog.d("Setting ad tracker failed");
             mListener.onError(VideoAd.ErrorCode.PLAYER_INIT_FAILED, "Setting up ad tracker failed");
         }
     }
