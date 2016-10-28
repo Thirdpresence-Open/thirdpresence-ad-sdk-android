@@ -26,16 +26,25 @@ public class VideoInterstitial extends VideoAd {
 
     /**
      * Constructor
+     *
+     * Use the constructor with the placementId as argument
      */
     public VideoInterstitial() {
-        super(PLACEMENT_TYPE_INTERSTITIAL);
+        super(PLACEMENT_TYPE_INTERSTITIAL, VideoAd.DEFAULT_PLACEMENT_ID);
     }
 
     /**
      * Constructor
      */
-    public VideoInterstitial(String placementType) {
-        super(placementType);
+    public VideoInterstitial(String placementId) {
+        super(PLACEMENT_TYPE_INTERSTITIAL, placementId);
+    }
+
+    /**
+     * Constructor
+     */
+    public VideoInterstitial(String placementType, String placementId) {
+        super(placementType, placementId);
     }
 
     /**
@@ -51,7 +60,7 @@ public class VideoInterstitial extends VideoAd {
     /**
      * Inits the ad unit
      *
-     * @param activity The container activity where the intertitial is displayed
+     * @param activity The container activity where the interstitial is displayed
      * @param environment Environment parameters.
      *                    @see VideoAd.Environment for details
      *                    Mandatory parameters: KEY_ACCOUNT and KEY_PLACEMENT_ID
@@ -64,9 +73,8 @@ public class VideoInterstitial extends VideoAd {
                      Map<String, String> environment,
                      Map<String, String> params,
                      long timeout){
-        super.init();
         TLog.d("Initialising " + this.getPlacementType());
-        mVideoPlayer.init(activity, environment, params, timeout);
+        mVideoPlayer.init(activity, environment, params, timeout, getPlacementId());
     }
 
     /**
@@ -94,11 +102,43 @@ public class VideoInterstitial extends VideoAd {
     }
 
     /**
-     * Display the ad view and starts playing the video
+     * Resets and loads new ad. Listener.onAdEvent() is called with AD_LOADED eventName when the ad is loaded
+     */
+    public void resetAndLoadAd() {
+        reset();
+        loadAd();
+    }
+
+    /**
+     * Displays the ad in the current activity
+     * Notice that the activity given in init() must be active when displaying the ad
+     *
+     * @deprecated
      */
     public void displayAd() {
         TLog.d("Trying to display an ad");
-        mVideoPlayer.displayAd();
+        mVideoPlayer.displayAdInCurrentActivity();
+    }
+
+    /**
+     * Display the ad in the given activity
+     *
+     * @param activity that displays the ad or null if using built-in activity
+     * @param runnable to be executed when completed or null
+     */
+    public void displayAd(Activity activity, Runnable runnable) {
+        TLog.d("Trying to display an ad with new activity");
+        mVideoPlayer.displayAd(activity, runnable);
+    }
+
+    /**
+     * Display the ad
+     *
+     * @param runnable to be executed when completed or null
+     */
+    public void displayAd(Runnable runnable) {
+        TLog.d("Trying to display an ad");
+        mVideoPlayer.displayAd(null, runnable);
     }
 
     /**
@@ -120,7 +160,7 @@ public class VideoInterstitial extends VideoAd {
     }
 
     /**
-     * Switch the activity the player contains in
+     * Updates the activity the ad view is located in
      */
     public void switchActivity(Activity newActivity) {
         TLog.d("Switching an activity");

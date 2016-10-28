@@ -12,12 +12,12 @@ Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    compileSdkVersion 24
+    buildToolsVersion "24.0.3"
 
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 23
+        targetSdkVersion 24
         versionCode buildNum
         versionName versionString
     }
@@ -45,14 +45,18 @@ configurations {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:23.2.1'
-    compile 'com.android.support:appcompat-v7:23.2.1'
+    compile 'com.android.support:support-compat:24.2.1'
+    compile 'com.android.support:support-core-utils:24.2.1'
+    compile 'com.android.support:support-annotations:24.2.1'
+    compile 'com.google.android.gms:play-services-ads:9.6.1'
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
     compile project(':thirdpresence-ad-sdk')
     javadocDeps project(':thirdpresence-ad-sdk').fileTree(include: ['*.jar'], dir: 'build/libs')
-    javadocDeps 'com.android.support:support-annotations:23.2.1:sources'
+    javadocDeps 'com.android.support:support-v4:24.1.1:sources'
+    javadocDeps 'com.android.support:support-annotations:24.1.1:sources'
 }
+
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
@@ -79,15 +83,16 @@ artifacts {
 
 def unityeditor = properties.getProperty("unity.editor")
 def xvfb = properties.getProperty("unity.xvfb")
+def sdk_home = properties.getProperty("sdk.dir")
 
 if (xvfb != null) {
     unityeditor = "$xvfb $unityeditor"
 }
-def unityPackageDir = "$projectDir/unity-package/export"
-def unityPackageBasename = "thirdpresence-ad-sdk"
+
+def unityPackageBasename = "thirdpresence-ad-sdk-android"
 def unityPackageFile = "${unityPackageBasename}.unitypackage"
 
-assembleRelease.doLast {
+task buildUnityPackage << {
     if (unityeditor == null) {
         logger.warn('unity.editor is not set in local.properties. The value must be a path to Unity Editor.')
         throw new GradleException('Could not find Unity Editor')
@@ -99,33 +104,45 @@ assembleRelease.doLast {
             from('build/outputs/aar') {
                 include '*-release.aar'
             }
+            from('unity-package') {
+                include 'AndroidManifest.xml'
+            }
+            from("$sdk_home/extras/android/m2repository/com/android/support/support-compat/24.2.1") {
+                include '*.aar'
+            }
+            from("$sdk_home/extras/android/m2repository/com/android/support/support-core-utils/24.2.1") {
+                include '*.aar'
+            }
+            from("$sdk_home/extras/google/m2repository/com/google/android/gms/play-services-ads/9.6.1") {
+                include '*.aar'
+            }
             rename '(.+)-release(.+)', '$1$2'
             into 'unity-package/ThirdpresenceAdSDK/Assets/Plugins/Android'
         }
 
-        delete fileTree(dir: 'unity-package/export', include: '*')
-        delete fileTree(dir: 'unity-package/Thirdpresence/Assets', include: '**/*.meta')
+        delete fileTree(dir: 'unity-package/ThirdpresenceAdSDK/Assets', include: '**/*.meta')
+
+        mkdir(new File("$projectDir/build/unity"));
 
         exec {
             executable "bash"
-            args "-c", "$unityeditor -force-free -nographics -quit -batchmode -projectPath $projectDir/unity-package/ThirdpresenceAdSDK -exportPackage Assets/Plugins ../export/${unityPackageFile} -logFile $projectDir/unity-package/ThirdpresenceAdSDK/log.txt"
+            args "-c", "$unityeditor -force-free -nographics -quit -batchmode -projectPath $projectDir/unity-package/ThirdpresenceAdSDK -logFile $projectDir/unity-package/ThirdpresenceAdSDK/setup.log -executeMethod Autobuild.SetToolPaths"
         }
 
-        mkdir(new File("$unityPackageDir/$fullVersionString"));
-
-        copy {
-            from file("$unityPackageDir/${unityPackageFile}")
-            into "$unityPackageDir/$fullVersionString"
+        exec {
+            executable "bash"
+            args "-c", "$unityeditor -force-free -nographics -quit -batchmode -projectPath $projectDir/unity-package/ThirdpresenceAdSDK -exportPackage Assets/Plugins ../../build/unity/${unityPackageFile} -logFile $projectDir/unity-package/ThirdpresenceAdSDK/export.log"
         }
 
-        delete file("$unityPackageDir/${unityPackageFile}");
+
     }
 }
+buildUnityPackage.enabled = true
 
-task cleanUnityBuild {
+task cleanUnityBuild << {
     delete fileTree(dir: 'unity-package/export' , include: '*')
     delete fileTree(dir: 'unity-package/Thirdpresence/Assets' , include: '**/*.meta')
     delete fileTree(dir: 'unity-package/ThirdpresenceAdSDK/Assets/Plugins/Android' , include: '*.aar')
 }
-
-clean.dependsOn(cleanUnityBuild)
+cleanUnityBuild.mustRunAfter(clean)
+cleanUnityBuild.enabled = true

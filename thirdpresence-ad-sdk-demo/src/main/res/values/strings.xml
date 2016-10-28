@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Photo Demo</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+
+    <string name="snackbar_opening_email">Sharing...</string>
+    <string name="snackbar_failed_to_share">Failed to share the photo</string>
+
+    <string name="share_chooser_title">Select application</string>
+    <string name="share_message_subject">See my photo</string>
+
+    <string name="error_no_image_loaded">There are no photos to share!</string>
+    <string name="error_no_ext_storage_read_permission">Permission for reading contents of the external storage must have been granted!</string>
+    <string name="error_no_ext_storage_write_permission">Permission for modifying contents of the external storage must have been granted!</string>
+    <string name="error_no_camera_permission">Permission for accessing camera must have been granted!</string>
+
+    <!-- Strings related to Settings -->
+    <string name="preference_slideshow_display_time">Slideshow display time</string>
+    <string name="title_activity_settings">Settings</string>
+    <string name="pref_header_general">General</string>
+
+</resources>

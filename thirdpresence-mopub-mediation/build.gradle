@@ -17,13 +17,13 @@ Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    compileSdkVersion 24
+    buildToolsVersion "24.0.3"
     useLibrary  'org.apache.http.legacy'
 
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 23
+        targetSdkVersion 24
         versionCode buildNum
         versionName versionString
     }
@@ -53,8 +53,13 @@ configurations {
 dependencies {
     compile fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
-    compile 'com.android.support:support-v4:23.2.1'
-    compile 'com.android.support:appcompat-v7:23.2.1'
+    compile 'com.android.support:support-compat:24.2.1'
+    compile 'com.android.support:support-core-utils:24.2.1'
+    compile 'com.android.support:preference-v7:24.2.1'
+    compile 'com.android.support:design:24.2.1'
+    compile 'com.android.support:support-annotations:24.2.1'
+    compile 'com.google.android.gms:play-services-ads:9.6.1'
+    compile project(':thirdpresence-ad-sdk')
     compile('com.mopub:mopub-sdk:4.5.1@aar') {
         transitive = true
     }
@@ -63,9 +68,9 @@ dependencies {
     javadocDeps 'com.mopub:mopub-sdk:4.5.1:sources'
     javadocDeps 'com.google.android.exoplayer:exoplayer:r1.5.6:sources'
     javadocDeps 'com.mopub.volley:mopub-volley:1.1.0:sources'
-    javadocDeps 'com.android.support:support-v4:23.2.1:sources'
-    javadocDeps 'com.android.support:support-annotations:23.2.1:sources'
-    javadocDeps 'com.android.support:recyclerview-v7:23.2.1:sources'
+    javadocDeps 'com.android.support:support-v4:24.1.1:sources'
+    javadocDeps 'com.android.support:support-annotations:24.1.1:sources'
+    javadocDeps 'com.android.support:recyclerview-v7:24.1.1:sources'
 
 }
 
@@ -134,7 +139,8 @@ task javadoc(type: Javadoc, dependsOn: sourcesJar) {
     source = android.sourceSets.main.java.srcDirs
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
     classpath += configurations.javadocDeps
-    exclude '**/BuildConfig.java'
+    include '**/ThirdpresenceCustomEvent.java'
+    include '**/ThirdpresenceCustomEventRewardedVideo.java'
     failOnError = false
 }
 

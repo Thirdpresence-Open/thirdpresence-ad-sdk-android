@@ -14,10 +14,13 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+import android.os.Message;
 import android.os.SystemClock;
 import android.support.v4.content.ContextCompat;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
@@ -26,6 +29,8 @@ import android.widget.RelativeLayout;
 import com.thirdpresence.adsdk.sdk.VideoAd;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -33,16 +38,20 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * <h1>VideoPlayer</h1>
  *
  * VideoPlayer class creates and WebView and loads Thirdpresence HTML5 ad player on it.
  * It provides means to load and display video ads.
  *
  */
-public class VideoPlayer implements VideoWebView.Listener, Application.ActivityLifecycleCallbacks {
+public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
 
     private VideoAd.Listener mListener;
 
     private Activity mActivity;
+    private Activity mActiveActivity = null;
+
+    private Application mApplication;
     private RelativeLayout mContainer;
     private VideoWebView mWebView;
 
@@ -56,15 +65,10 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
     private Timer mLoadTimeoutTimer;
 
     private String mDeviceId;
+    private String mPlacementId;
 
-    private boolean mActivityRunning = false;
-    private boolean mPlayerReady = false;
-    private boolean mPlayerLoading = false;
-    private boolean mInitialised = false;
-    private boolean mAdLoading = false;
-    private boolean mAdLoaded = false;
+    private boolean mUsingPlayerActivity = false;
     private boolean mAdLoadingPending = false;
-    private boolean mAdDisplaying = false;
     private boolean mVideoClicked = false;
     private boolean mWebViewPaused = false;
     private boolean mOrientationChanged = false;
@@ -73,6 +77,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
     private Object mWebAdTracker;
 
     private HandlerThread mLocationHandler;
+    private LocationListener mLocationListener;
     
     private int mOriginalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
 
@@ -80,6 +85,32 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
     private static final String LOCATION_PERMISSION_WARNING_V6 = LOCATION_PERMISSION_WARNING + "\n" + "Beginning in Android 6.0 the location permission must be explicitly granted by user while app is running";
 
     private static final long LOCATION_EXPIRATION_LIMIT_IN_SECONDS = 3600;
+
+    public enum State {
+        IDLE,
+        INITIALISING,
+        INITIALIZED,
+        LOADING,
+        LOADED,
+        DISPLAYING,
+        STOPPED,
+        ERROR
+    }
+    private State mPlayerState = State.IDLE;
+
+    class StateChangeRunnableInfo {
+        public Runnable runOnStateChange;
+        public State previousState;
+        public State nextState;
+
+        public StateChangeRunnableInfo(Runnable runnable, State fromState, State toState)  {
+            runOnStateChange = runnable;
+            previousState = fromState;
+            nextState = toState;
+        }
+    }
+
+    private ArrayList<StateChangeRunnableInfo> mRunnables = new ArrayList<>();
 
     /**
      * Sets listener for callback events
@@ -98,64 +129,76 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      * @param environment Environment parameters
      *                    @see com.thirdpresence.adsdk.sdk.VideoAd.Environment for details
      *                    Mandatory parameters: KEY_ACCOUNT and KEY_PLACEMENT_ID
-     *
      * @param params VideoAd parameters
      *                  @see com.thirdpresence.adsdk.sdk.VideoAd.Parameters for details
-     *
      * @param timeout Timeout for setting up the player in milliseconds
-     *
+     * @param placementId placement id of the placement the player is attached to
      */
     public void init(Activity activity,
                      Map<String, String> environment,
                      Map<String, String> params,
-                     long timeout) {
-
-        if (mInitialised) {
-            throw new IllegalStateException("Already initialised");
-        }
+                     long timeout,
+                     String placementId) {
 
         if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
             throw new IllegalThreadStateException("init() is not called from UI thread");
         }
 
-        mInitialised = true;
-
-        mActivity = activity;
-        mActivityRunning = true;
-        mEnv = environment;
-        mParams = params;
-        mInitTimeout = timeout;
-        mLoadTimeout = timeout;
-
-        mActivity.getApplication().registerActivityLifecycleCallbacks(this);
-
-        if (checkLocationPermissions(mActivity)) {
-            Location loc = getLocation(mActivity);
-            if (loc != null) {
-                mParams.put(VideoAd.Parameters.KEY_GEO_LAT, String.valueOf(loc.getLatitude()));
-                mParams.put(VideoAd.Parameters.KEY_GEO_LON, String.valueOf(loc.getLongitude()));
-            }
+        if (mPlayerState == State.INITIALISING) {
+            TLog.w("already initialising");
+            return;
         }
+
+        changeState(State.INITIALISING);
 
         if (mContainer != null) {
             close();
         }
 
+        mActivity = activity;
+        mActiveActivity = activity;
+        mApplication = activity.getApplication();
+        mPlacementId = placementId;
+        mEnv = environment;
+        mParams = params;
+        mInitTimeout = timeout;
+        mLoadTimeout = timeout;
+
+        mApplication.registerActivityLifecycleCallbacks(this);
+
+        if (checkLocationPermissions(mApplication)) {
+            Location loc = getLocation(mApplication);
+            if (loc != null) {
+                mParams.put(VideoAd.Parameters.KEY_GEO_LAT, String.valueOf(loc.getLatitude()));
+                mParams.put(VideoAd.Parameters.KEY_GEO_LON, String.valueOf(loc.getLongitude()));
+            }
+        }
+        
         if (!environment.containsKey(VideoAd.Environment.KEY_SERVER)) {
             mEnv.put(VideoAd.Environment.KEY_SERVER, VideoAd.SERVER_TYPE_PRODUCTION);
         }
 
         if (!params.containsKey(VideoAd.Parameters.KEY_BUNDLE_ID)) {
-            mParams.put(VideoAd.Parameters.KEY_BUNDLE_ID, activity.getApplicationContext().getPackageName());
+            mParams.put(VideoAd.Parameters.KEY_BUNDLE_ID, mApplication.getPackageName());
         }
 
-        mWebView = new VideoWebView(mActivity);
-        mWebView.setListener(this);
+        mWebView = new VideoWebView(mApplication);
+        mWebView.setHandler(mHandler);
         mWebView.setBackAllowed(!VideoAd.parseBoolean(environment.get(VideoAd.Environment.KEY_DISABLE_BACK_BUTTON), false));
+        mWebView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent event) {
+                if (mPlayerState == State.STOPPED || mPlayerState == State.ERROR) {
+                    reset();
+                    return true;
+                }
+                return false;
+            }
+        });
 
         ViewGroup root = (ViewGroup) activity.getWindow().getDecorView().getRootView();
 
-        mContainer = new RelativeLayout(activity);
+        mContainer = new RelativeLayout(mApplication);
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
 
         mContainer.addView(mWebView, layoutParams);
@@ -167,7 +210,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
         root.addView(mContainer, layoutParams);
 
         AdInfoRetriever retriever = new AdInfoRetriever();
-        retriever.setContext(activity);
+        retriever.setContext(mApplication);
         retriever.execute();
     }
 
@@ -190,50 +233,54 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      * Closes the ad view and releases resources.
      */
     public void close() {
+        TLog.d("Releasing resources");
 
         if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
             throw new IllegalThreadStateException("close() is not called from UI thread");
         }
 
-        if (mActivity != null) {
-            mActivity.getApplication().unregisterActivityLifecycleCallbacks(this);
-
-            resetState();
-
-            if (mContainer != null) {
-                if (mContainer.getVisibility() == View.VISIBLE) {
-                    mContainer.setVisibility(View.GONE);
-                }
-                ((ViewGroup) mContainer.getParent()).removeView(mContainer);
-                mContainer.removeAllViews();
-                mContainer = null;
-            }
-            if (mWebView != null) {
-                mWebView.setListener(null);
-                mWebView.stopLoading();
-                mWebView.destroy();
-                mWebView = null;
-            }
-
-            if (mWebAdTracker != null) {
-                mWebAdTracker = null;
-            }
-
-            mActivity = null;
-            mInitialised = false;
+        if (mLocationListener != null) {
+            LocationManager lm = (LocationManager) mApplication.getSystemService(Context.LOCATION_SERVICE);
+            //noinspection ResourceType
+            lm.removeUpdates(mLocationListener);
+            mLocationListener = null;
         }
 
         if (mLocationHandler != null) {
             mLocationHandler.quit();
             mLocationHandler = null;
         }
-    }
 
-    /**
-     * Check if player is ready
-     */
-    public boolean isReady() {
-        return mPlayerReady;
+        if (mApplication != null) {
+            mApplication.unregisterActivityLifecycleCallbacks(this);
+            mApplication = null;
+        }
+
+        resetState();
+
+        if (mContainer != null) {
+            if (mContainer.getVisibility() == View.VISIBLE) {
+                mContainer.setVisibility(View.GONE);
+            }
+            ((ViewGroup) mContainer.getParent()).removeView(mContainer);
+            mContainer.removeAllViews();
+            mContainer = null;
+        }
+
+        if (mWebView != null) {
+            mWebView.setHandler(null);
+            mWebView.stopLoading();
+            mWebView.destroy();
+            mWebView = null;
+        }
+
+        mHandler.removeCallbacksAndMessages(null);
+
+        if (mWebAdTracker != null) {
+            mWebAdTracker = null;
+        }
+
+        mActivity = null;
     }
 
     /**
@@ -244,84 +291,145 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
             throw new IllegalThreadStateException("loadAd() is not called from UI thread");
         }
 
-        if (mContainer == null || mWebView == null) {
+        if (mContainer == null || mWebView == null || mPlayerState == State.ERROR) {
+            changeState(State.ERROR);
             if (mListener != null) {
                 TLog.d("The ad unit is not initialised");
                 mListener.onError(VideoAd.ErrorCode.INVALID_STATE, "The ad unit is not initialised");
             }
-        } else if (mPlayerReady) {
+        } else if (mPlayerState == State.LOADING) {
+            TLog.w("Already loading an ad");
+        } else if (mPlayerState == State.INITIALISING) {
+            TLog.d("Loading pending");
+            mAdLoadingPending = true;
+        } else if (mPlayerState == State.INITIALIZED) {
+            TLog.d("Start loading ");
             mAdLoadingPending = false;
-            if (!mAdLoading) {
-                mAdLoading = true;
-                mLoadTimeoutTimer = new Timer();
-                setTimeout(mLoadTimeoutTimer, mLoadTimeout, new Runnable() {
-                    @Override
-                    public void run() {
-                        if (mAdLoading) {
-                            if (mListener != null) {
-                                TLog.d("Timeout occured while loading an ad");
-                                mListener.onError(VideoAd.ErrorCode.NETWORK_TIMEOUT, "Timeout occured while loading an ad");
-                            }
-                            if (mWebView != null) {
-                                mWebView.stopLoading();
-                            }
-                            mAdLoading = false;
-
+            changeState(State.LOADING);
+            mLoadTimeoutTimer = new Timer();
+            setTimeout(mLoadTimeoutTimer, mLoadTimeout, new Runnable() {
+                @Override
+                public void run() {
+                    if (mPlayerState == State.LOADING) {
+                        changeState(State.ERROR);
+                        if (mListener != null) {
+                            TLog.d("Timeout occured while loading an ad");
+                            mListener.onError(VideoAd.ErrorCode.NETWORK_TIMEOUT, "Timeout occured while loading an ad");
+                        }
+                        if (mWebView != null) {
+                            mWebView.stopLoading();
                         }
                     }
-                });
-                mWebView.loadAd();
-            }
+                }
+            });
+            mWebView.loadAd();
+
         } else {
-            mAdLoadingPending = true;
+            TLog.w("Invalid state, load request ignored");
         }
     }
 
     /**
      * Display the ad view and starts playing the video
      */
-    public void displayAd() {
+    public void displayAdInCurrentActivity() {
         if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
             throw new IllegalThreadStateException("displayAd() is not called from UI thread");
         }
 
-        if (!mActivityRunning) {
-            throw new IllegalStateException("Trying to display an ad while the containing activity is not running");
+        if (mPlayerState == State.DISPLAYING) {
+            TLog.w("Already displaying an ad. Display request ignored");
+            return;
         }
 
+        displayAdInternal();
+    }
 
-        if (mContainer != null && mWebView != null) {
-            if (mAdLoaded) {
-                if (!mAdDisplaying) {
-                    mAdDisplaying = true;
-                    mOriginalOrientation = mActivity.getRequestedOrientation();
-                    if (VideoAd.parseBoolean(mEnv.get(VideoAd.Environment.KEY_FORCE_LANDSCAPE), false)) {
-                        mOrientationChanged = true;
-                        mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-                    } else if (VideoAd.parseBoolean(mEnv.get(VideoAd.Environment.KEY_FORCE_PORTRAIT), false)) {
-                        mOrientationChanged = true;
-                        mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                    }
-                    mContainer.setVisibility(View.VISIBLE);
+    /**
+     * Display the ad view and starts playing the video
+     *
+     * @param activity update the current activity where the ad is played
+     * @param runnable to be executed after complete
+     */
+    public void displayAd(Activity activity, Runnable runnable) {
+        if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
+            throw new IllegalThreadStateException("displayAd() is not called from UI thread");
+        }
 
-                    mContainer.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (mWebView != null) {
-                                mWebView.displayAd();
-                            }
-                        }
-                    }, 100);
+        if (mPlayerState == State.DISPLAYING) {
+            TLog.w("displayAd() ignored as called while already displaying an ad.");
+            return;
+        }
 
-                }
+        if (mPlayerState == State.LOADED) {
+            addStateChangeRunnable(State.DISPLAYING, null, runnable);
+            if (activity != null) {
+                switchActivity(activity);
+                displayAdInternal();
+            } else if (mActiveActivity != null) {
+                mUsingPlayerActivity = true;
+                Intent i = new Intent();
+                i.setClass(mApplication, PlayerActivity.class);
+                i.putExtra(PlayerActivity.PLACEMENT_ID_EXTRA_KEY, mPlacementId);
+                mActiveActivity.startActivity(i);
             } else {
-                mAdLoaded = false;
-                if (mListener != null ) {
-                    TLog.d("An ad not available yet");
-                    mListener.onError(VideoAd.ErrorCode.AD_NOT_READY, "An ad not available yet.");
-                }
+                TLog.w("Could not display player activity");
+                changeState(State.ERROR);
+            }
+        } else {
+            if (mListener != null) {
+                TLog.d("Invalid state, ad is not loaded.");
+                mListener.onError(VideoAd.ErrorCode.AD_NOT_READY, "No ad available yet.");
+            }
+
+            if (runnable != null) {
+                if (mHandler != null)
+                    mHandler.post(runnable);
             }
         }
+    }
+
+    /**
+     * Displays the ad view and starts playing the video
+     */
+    private void displayAdInternal() {
+
+        if (mActivity == null || mActivity != mActiveActivity) {
+            if (mListener != null) {
+                mListener.onError(VideoAd.ErrorCode.INVALID_STATE, "Activity is not active");
+            }
+            return;
+        }
+
+        if (mContainer == null) {
+            if (mListener != null) {
+                mListener.onError(VideoAd.ErrorCode.INVALID_STATE, "Container view does not exist");
+            }
+            return;
+        }
+
+        changeState(State.DISPLAYING);
+
+        mOriginalOrientation = mActivity.getRequestedOrientation();
+        if (VideoAd.parseBoolean(mEnv.get(VideoAd.Environment.KEY_FORCE_LANDSCAPE), false)) {
+            mOrientationChanged = true;
+            mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        } else if (VideoAd.parseBoolean(mEnv.get(VideoAd.Environment.KEY_FORCE_PORTRAIT), false)) {
+            mOrientationChanged = true;
+            mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
+
+        mContainer.setVisibility(View.VISIBLE);
+        setAdTracker();
+
+        mContainer.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (mWebView != null) {
+                    mWebView.displayAd();
+                }
+            }
+        }, 100);
     }
 
     /**
@@ -330,7 +438,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      * @return true if loaded, false otherwise
      */
     public boolean isAdLoaded() {
-        return mAdLoaded;
+        return mPlayerState == State.LOADED;
     }
 
     /**
@@ -339,7 +447,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      * @return true if ready, false otherwise
      */
     public boolean isPlayerReady() {
-        return mPlayerReady;
+        return mPlayerState != State.IDLE && mPlayerState != State.INITIALISING && mPlayerState != State.ERROR;
     }
 
     /**
@@ -349,11 +457,13 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
         if (mWebView != null) {
 
             if (!mEnv.containsKey(VideoAd.Environment.KEY_ACCOUNT)) {
+                changeState(State.ERROR);
                 if (mListener != null ) {
                     TLog.d("Player failure: account not set");
                     mListener.onError(VideoAd.ErrorCode.PLAYER_INIT_FAILED, "Cannot init the player. Account not set");
                 }
             } else if (!mEnv.containsKey(VideoAd.Environment.KEY_ACCOUNT)) {
+                changeState(State.ERROR);
                 if (mListener != null ) {
                     TLog.d("Player failure: placement id not set");
                     mListener.onError(VideoAd.ErrorCode.PLAYER_INIT_FAILED,  "Cannot init the player. Placement id not set");
@@ -364,6 +474,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
                 setTimeout(mInitTimeoutTimer, mInitTimeout, new Runnable() {
                     @Override
                     public void run() {
+                        changeState(State.ERROR);
                         close();
 
                         if (mListener != null) {
@@ -378,13 +489,13 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
 
                 mParams.put(VideoAd.Parameters.KEY_AD_PLACEMENT, VideoAd.PLACEMENT_TYPE_INTERSTITIAL);
                 mWebView.initPlayer(mEnv, mParams);
-                mPlayerLoading = true;
+                changeState(State.INITIALISING);
             }
         }
     }
 
     /**
-     * Reset state variables
+     * Resets all state variables
      */
     private void resetState() {
         if (mActivity != null) {
@@ -392,19 +503,19 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
             if (mOrientationChanged && currentOrientation != mOriginalOrientation) {
                 mActivity.setRequestedOrientation(mOriginalOrientation);
             }
+
+            if (mUsingPlayerActivity && mActivity instanceof PlayerActivity && !mActivity.isFinishing()) {
+                mActivity.finish();
+            }
         }
 
+        changeState(State.INITIALIZED);
         mAdLoadingPending = false;
-        mAdLoading = false;
-        mAdLoaded = false;
-        mAdDisplaying = false;
-        mPlayerReady = false;
-        mPlayerLoading = false;
+        mUsingPlayerActivity = false;
         mVideoClicked = false;
         
         if (mWebView != null && mWebViewPaused){
             mWebView.onResume();
-            mWebView.resumeTimers();
             mWebViewPaused = false;
         }
 
@@ -430,9 +541,7 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                if (mActivity != null) {
-                    mActivity.runOnUiThread(runnable);
-                }
+                mHandler.post(runnable);
             }
         }, timeout);
     }
@@ -442,21 +551,23 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      * does not allow playing the video in it's own activity.
      */
     public void switchActivity(Activity newActivity) {
-        ViewGroup vg = (ViewGroup)mContainer.getParent();
-        vg.setLayoutTransition(null);
-        vg.removeView(mContainer);
-        vg.invalidate();
-        ViewGroup root = (ViewGroup) newActivity.getWindow().getDecorView().getRootView();
-        root.addView(mContainer);
-
-        mActivity = newActivity;
-        mActivityRunning = true;
+        if (mContainer != null && newActivity != null) {
+            ViewGroup vg = (ViewGroup) mContainer.getParent();
+            vg.setLayoutTransition(null);
+            vg.removeView(mContainer);
+            vg.invalidate();
+            ViewGroup root = (ViewGroup) newActivity.getWindow().getDecorView().getRootView();
+            root.addView(mContainer);
+            mActivity = newActivity;
+        } else {
+            mActivity = null;
+        }
     }
 
     /**
      * Helper function for checking if permissions for locations are granted
      *
-     * @param context
+     * @param context the application context
      * @return true if either ACCESS_COARSE_LOCATION or ACCESS_FINE_LOCATION
      * permission is available, otherwise false
      */
@@ -481,7 +592,6 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
                 }
             }
         }
-
         return permissionAvailable;
     }
 
@@ -516,14 +626,13 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
                 }
             }
 
-            bestProvider = LocationManager.GPS_PROVIDER;
             if (bestProvider != null) {
                 // Start location update if most recent update older than the expiration limit
                 long expiration = 0;
                 long locTime = 0;
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                    locTime = loc.getElapsedRealtimeNanos();
+                    locTime = (loc != null) ? loc.getElapsedRealtimeNanos() : 0;
                     expiration = SystemClock.elapsedRealtimeNanos() -
                             TimeUnit.NANOSECONDS.convert(LOCATION_EXPIRATION_LIMIT_IN_SECONDS, TimeUnit.SECONDS);
                 }
@@ -533,40 +642,44 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
                     if (mLocationHandler == null) {
                         mLocationHandler = new HandlerThread("TPR Ad SDK Location handler thread");
                         mLocationHandler.start();
-                    }
-                    LocationListener listener = new LocationListener() {
-                        @Override
-                        public void onLocationChanged(Location location) {
-                            if (location != null) {
-                                final Location newLocation = location;
-                                mActivity.runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if (mPlayerReady) {
-                                            updateLocationToPlayer(newLocation);
-                                        } else if (mPlayerLoading) {
-                                            mPendingLocationUpdate = true;
+
+                        mLocationListener = new LocationListener() {
+                            @Override
+                            public void onLocationChanged(Location location) {
+                                if (location != null) {
+                                    final Location newLocation = location;
+
+                                    mHandler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            if (mPlayerState != State.INITIALISING) {
+                                                mPendingLocationUpdate = true;
+                                            } else if (mPlayerState != State.IDLE && mPlayerState != State.ERROR) {
+                                                updateLocationToPlayer(newLocation);
+                                            }
                                         }
-                                    }
-                                });
+                                    });
+                                }
                             }
-                        }
 
-                        @Override
-                        public void onStatusChanged(String s, int i, Bundle bundle) {
-                        }
+                            @Override
+                            public void onStatusChanged(String s, int i, Bundle bundle) {
+                            }
 
-                        @Override
-                        public void onProviderEnabled(String s) {
-                        }
+                            @Override
+                            public void onProviderEnabled(String s) {
+                            }
 
-                        @Override
-                        public void onProviderDisabled(String s) {
-                        }
-                    };
+                            @Override
+                            public void onProviderDisabled(String s) {
+                            }
 
-                    //noinspection ResourceType
-                    lm.requestSingleUpdate(bestProvider, listener, mLocationHandler.getLooper());
+                        };
+
+                        //noinspection ResourceType
+                        lm.requestSingleUpdate(bestProvider, mLocationListener, mLocationHandler.getLooper());
+
+                    }
                 }
             }
         } catch (Exception e) {
@@ -594,12 +707,13 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
     }
 
     /**
-     * AsyncTask for retrieve the advertising ID of the device
+     * AsyncTask for retrieving the advertising ID of the device
      */
     private class AdInfoRetriever extends AsyncTask<Void, Void, Void> {
-        private Activity mActivity;
-        public void setContext(Activity activity) {
-            mActivity = activity;
+
+        private Context mContext;
+        public void setContext(Context context) {
+            mContext = context;
         }
 
         @Override
@@ -608,25 +722,30 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
                 // Using Google Play Services is optional
                 Class<?> idClientClass = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient");
                 Method getIdInfoMethod = idClientClass.getMethod("getAdvertisingIdInfo", Context.class);
-                Object idInfo = getIdInfoMethod.invoke(null, mActivity);
+                Object idInfo = getIdInfoMethod.invoke(null, mContext);
                 Method getIdMethod = idInfo.getClass().getMethod("getId", (Class<?>[]) null);
                 mDeviceId = (String) getIdMethod.invoke(idInfo, (Object[]) null);
+                TLog.d("Device ID retrieved: " + mDeviceId);
+
             } catch (Exception e) {
                 // Google Play Services not available
+                TLog.d("Google play services not available");
                 mDeviceId = null;
             }
-            mActivity.runOnUiThread(new Runnable() {
+
+            mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    setAdTracker();
-                }
+                    initPlayer();
+                 }
             });
+
             return null;
         }
     }
 
     /**
-     * Setup MOAT Ad tracker if SDK available
+     * Setup MOAT Ad tracker if MOAT SDK available
      */
     private void setAdTracker() {
         boolean success;
@@ -643,111 +762,164 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
             if (success) {
                 TLog.i("MOAT SDK enabled");
             } else {
-                TLog.i("MOAT SDK failed to initialize");
+                TLog.w("MOAT SDK failed to initialize");
             }
         } catch (Exception e) {
             // MOAT SDK not available, will continue without tracking
-            success = true;
-            TLog.i("MOAT SDK is not available");
+            TLog.w("MOAT SDK is not available");
         }
 
-        if (success) {
-            initPlayer();
-        }
-        else {
-            mListener.onError(VideoAd.ErrorCode.PLAYER_INIT_FAILED, "Setting up ad tracker failed");
-        }
     }
 
     /**
-     * {@inheritDoc}
+     * Changes the player state and executes state change runnables
+     *
+     * @param newState the state changing to
      */
-    @Override
-    public void onPlayerReady() {
-        mPlayerLoading = false;
-        mPlayerReady = true;
-
-        if (mInitTimeoutTimer != null) {
-            mInitTimeoutTimer.cancel();
-            mInitTimeoutTimer = null;
-        }
-
-        if (mPendingLocationUpdate) {
-            Location location = getLocation(mActivity);
-            if (location != null) {
-                updateLocationToPlayer(location);
+    private void changeState(State newState) {
+        TLog.i("Change state " + mPlayerState + " > " + newState);
+        Iterator<StateChangeRunnableInfo> i = mRunnables.iterator();
+        while (i.hasNext()) {
+            StateChangeRunnableInfo info = i.next();
+            if (info.previousState == mPlayerState) {
+                i.remove();
+                if (info.nextState == null || info.nextState == newState) {
+                    mHandler.postDelayed(info.runOnStateChange, 1);
+                }
             }
         }
-
-        if (mListener != null ) {
-            mListener.onPlayerReady();
-        }
-
-        if (mAdLoadingPending) {
-            loadAd();
-        }
+        mPlayerState = newState;
     }
 
     /**
-     * {@inheritDoc}
+     * Adds new state change runnable
+     *
+     * @param fromState the state, which exit will trigger the runnable
+     * @param toState if given will cause runnable to execute if moving to this state.
+     * @param runnable to be executed
      */
-    @Override
-    public void onNetworkError(int statusCode, String description) {
-        TLog.d("Network failure " + statusCode + ":" + description);
-        mListener.onError(VideoAd.ErrorCode.NETWORK_FAILURE, description);
+    private void addStateChangeRunnable(State fromState, State toState, Runnable runnable) {
+        StateChangeRunnableInfo info = new StateChangeRunnableInfo(runnable, fromState, toState);
+        mRunnables.add(info);
     }
 
     /**
-     * {@inheritDoc}
+     * Message handler
      */
-    @Override
-    public void onPlayerFailure(VideoAd.ErrorCode errorCode, String errorText) {
-        TLog.d("Player failure " + errorCode + ":" + errorText);
-        close();
-        if (mListener != null ) {
-            mListener.onError(VideoAd.ErrorCode.PLAYER_INIT_FAILED, errorText);
-        }
-    }
+    private Handler mHandler = new Handler(Looper.getMainLooper()) {
+        public void handleMessage(Message msg) {
+            Bundle data = msg.getData();
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onOpenURLIntercepted(String url) {
-        try {
-            mVideoClicked = true;
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            mActivity.startActivity(browserIntent);
+            switch (msg.what) {
+                case VideoWebView.MSG_TYPE_PLAYER_READY: {
 
-        } catch (android.content.ActivityNotFoundException e) {
-            mVideoClicked = false;
-        }
-    }
+                    changeState(State.INITIALIZED);
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onAdEvent(String eventName, String arg1, String arg2, String arg3) {
-        TLog.d("An ad event occurred: " + eventName + ":" + arg1 + ":" + arg2 + ":" + arg3);
-        if (eventName.equals(VideoAd.Events.AD_LOADED)) {
-            if (mLoadTimeoutTimer != null) {
-                mLoadTimeoutTimer.cancel();
-                mLoadTimeoutTimer = null;
+                    if (mInitTimeoutTimer != null) {
+                        mInitTimeoutTimer.cancel();
+                        mInitTimeoutTimer = null;
+                    }
+
+                    if (mPendingLocationUpdate) {
+                        Location location = getLocation(mApplication);
+                        if (location != null) {
+                            updateLocationToPlayer(location);
+                        }
+                    }
+
+                    if (mListener != null) {
+                        mListener.onPlayerReady();
+                    }
+
+                    if (mAdLoadingPending) {
+                        loadAd();
+                    }
+
+                    break;
+                }
+                case VideoWebView.MSG_TYPE_PLAYER_EVENT: {
+                    if (data != null) {
+                        String args[] = data.getStringArray(VideoWebView.MSG_DATA_KEY_PLAYER_EVENT_DETAILS);
+
+                        TLog.d("An ad event occurred: " + args[0] + ":" + args[1] + ":" + args[2] + ":" + args[3]);
+                        if (args[0] != null) {
+                            if (args[0].equals(VideoAd.Events.AD_LOADED)) {
+                                if (mLoadTimeoutTimer != null) {
+                                    mLoadTimeoutTimer.cancel();
+                                    mLoadTimeoutTimer = null;
+                                }
+                                changeState(State.LOADED);
+                            } else if (args[0].equals(VideoAd.Events.AD_STOPPED)) {
+                                if (mPlayerState == State.DISPLAYING) {
+                                    changeState(State.STOPPED);
+                                }
+                            }
+
+                            if (mListener != null) {
+                                mListener.onAdEvent(args[0], args[1], args[2], args[3]);
+                            }
+                        }
+                    }
+                    break;
+                }
+                case VideoWebView.MSG_TYPE_PLAYER_ERROR: {
+                    if (data != null) {
+                        int errorCode = data.getInt(VideoWebView.MSG_DATA_KEY_ERROR_CODE);
+                        String errorMessage = data.getString(VideoWebView.MSG_DATA_KEY_ERROR_MESSAGE);
+
+                        TLog.d("Player failure " + errorCode + ":" + errorMessage);
+
+                        changeState(State.ERROR);
+
+                        close();
+
+                        if (mListener != null) {
+                            mListener.onError(VideoAd.ErrorCode.PLAYER_INIT_FAILED, errorMessage);
+                        }
+                    }
+                    break;
+                }
+                case VideoWebView.MSG_TYPE_NETWORK_ERROR: {
+                    if (data != null) {
+                        int errorCode = data.getInt(VideoWebView.MSG_DATA_KEY_ERROR_CODE);
+                        String errorMessage = data.getString(VideoWebView.MSG_DATA_KEY_ERROR_MESSAGE);
+
+                        TLog.d("Network error: " + errorCode + ":" + errorMessage);
+
+                        changeState(State.ERROR);
+
+                        if (mListener != null) {
+                            mListener.onError(VideoAd.ErrorCode.NETWORK_FAILURE, errorMessage);
+                        }
+                    }
+                    break;
+                }
+                case VideoWebView.MSG_TYPE_URL_INTERCEPTED: {
+                    if (data != null && mActivity != null) {
+                        try {
+                            mVideoClicked = true;
+                            String url = data.getString(VideoWebView.MSG_DATA_KEY_URL);
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                            mActivity.startActivity(browserIntent);
+
+                        } catch (Exception e) {
+                            mVideoClicked = false;
+                        }
+                    }
+                    break;
+                }
+                default:
+
             }
-            mAdLoaded = true;
         }
-
-        if (mListener != null ) {
-            mListener.onAdEvent(eventName, arg1, arg2, arg3);
-        }
-    }
+    };
 
     /**
      * {@inheritDoc}
      */
     @Override
     public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+        TLog.d("Activity created: " + activity.getClass().getSimpleName());
     }
 
     /**
@@ -755,10 +927,8 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      */
     @Override
     public void onActivityStarted(Activity activity) {
-        if (activity == mActivity) {
-            TLog.d("Activity started");
-            mActivityRunning = true;
-        }
+        TLog.d("Activity started: " + activity.getClass().getSimpleName());
+        mActiveActivity = activity;
     }
 
     /**
@@ -766,19 +936,14 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      */
     @Override
     public void onActivityResumed(Activity activity) {
+        TLog.d("Activity resumed: " + activity.getClass().getSimpleName());
+        mActiveActivity = activity;
         if (activity == mActivity) {
-            TLog.d("Activity resumed");
-            mActivityRunning = true;
-
-            if(mWebView != null && mWebViewPaused){
-                mWebView.onResume();
-                mWebView.resumeTimers();
+            if (mWebView != null && mWebViewPaused) {
                 mWebViewPaused = false;
                 mWebView.resumeAd();
             }
-
             mVideoClicked = false;
-
         }
     }
 
@@ -787,14 +952,14 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      */
     @Override
     public void onActivityPaused(Activity activity) {
-        if (activity == mActivity) {
-            TLog.d("Activity paused");
-            mActivityRunning = false;
+        TLog.d("Activity paused: " + activity.getClass().getSimpleName());
+        if (activity == mActiveActivity) {
+            mActiveActivity = null;
+        }
 
-            if(mWebView != null && mAdDisplaying){
+        if (activity == mActivity) {
+            if(mWebView != null && mPlayerState == State.DISPLAYING){
                 mWebView.pauseAd();
-                mWebView.onPause();
-                mWebView.pauseTimers();
                 mWebViewPaused = true;
             }
 
@@ -809,10 +974,15 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      */
     @Override
     public void onActivityStopped(Activity activity) {
-        if (activity == mActivity) {
-            TLog.d("Activity stopped");
-            mActivityRunning = false;
+        TLog.d("Activity stopped: " + activity.getClass().getSimpleName());
+        if (activity == mActiveActivity) {
+            mActiveActivity = null;
         }
+
+        if (!mUsingPlayerActivity && activity == mActivity && mPlayerState == State.DISPLAYING && !mVideoClicked) {
+            TLog.w("Activity stopped while displaying an ad");
+        }
+
     }
 
     /**
@@ -827,10 +997,16 @@ public class VideoPlayer implements VideoWebView.Listener, Application.ActivityL
      */
     @Override
     public void onActivityDestroyed(Activity activity) {
+        TLog.d("Activity destroyed: " + activity.getClass().getSimpleName());
+        if (activity == mActiveActivity) {
+            mActiveActivity = null;
+        }
         if (activity == mActivity) {
-            TLog.d("Activity destroyed");
-            mActivityRunning = false;
-            close();
+            if (!(activity instanceof PlayerActivity)) {
+                reset();
+            }
+
+            mActivity = null;
         }
     }
 }

@@ -1,71 +1,32 @@
 package com.thirdpresence.adsdk.mediation.unity;
 
-import android.app.Activity;
-
 import com.thirdpresence.adsdk.sdk.VideoAd;
-
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by okkonen on 27/06/16.
+ *
+ * ThirdpresenceAdapterBase is a base class for video ad adapters
+ *
  */
 public class ThirdpresenceAdapterBase {
 
-    private ThirdpresencePlayerActivity mPlayerActivity;
-
     private static final String SERVER = VideoAd.SERVER_TYPE_PRODUCTION;
-    private static final String EXTRAS_KEY_SDK_NAME = "sdk-name";
-    private static final String EXTRAS_KEY_SDK_VERSION = "sdk-version";
-    private static final String EXTRAS_KEY_ACCOUNT = "account";
-    private static final String EXTRAS_KEY_PLACEMENT_ID = "placementid";
 
-    private static final String EXTRAS_KEY_APP_NAME = "appname";
-    private static final String EXTRAS_KEY_APP_VERSION = "appversion";
-    private static final String EXTRAS_KEY_APP_STORE_URL = "appstoreurl";
-    private static final String EXTRAS_KEY_SKIP_OFFSET = "skipoffset";
-    private static final String EXTRAS_KEY_BUNDLE_ID = "bundleid";
-    private static final String EXTRAS_KEY_USER_GENDER = "gender";
-    private static final String EXTRAS_KEY_USER_YOB = "yob";
+    public static final String EXTRAS_KEY_SDK_NAME = "sdk-name";
+    public static final String EXTRAS_KEY_SDK_VERSION = "sdk-version";
+    public static final String EXTRAS_KEY_ACCOUNT = "account";
+    public static final String EXTRAS_KEY_PLACEMENT_ID = "placementid";
+    public static final String EXTRAS_KEY_REWARD_TITLE = "rewardtitle";
+    public static final String EXTRAS_KEY_REWARD_AMOUNT = "rewardamount";
 
-    public static synchronized ThirdpresenceAdapterBase getInstance() {
-        // Empty default implementation
-        return null;
-    }
-
-    /**
-     * Displays the interstitial ad. Called from ThirdpresencePlayerActivity
-     */
-    public void displayAd() {
-        // Empty default implementation.
-    }
-
-    /**
-     * Removes the ad. Called from ThirdpresencePlayerActivity
-     */
-    public void removeAd() {
-        // Empty default implementation.
-    }
-
-    /**
-     * Sets the player activity.
-     */
-    public void setPlayerActivity(Activity activity) {
-        mPlayerActivity = (ThirdpresencePlayerActivity)activity;
-    }
-
-    /**
-     * Finishes the player activity.
-     */
-    public void finishPlayerActivity() {
-        if (mPlayerActivity != null) {
-            if (!mPlayerActivity.isFinishing()) {
-                mPlayerActivity.finish();
-            }
-            mPlayerActivity = null;
-        }
-    }
-
+    public static final String EXTRAS_KEY_APP_NAME = "appname";
+    public static final String EXTRAS_KEY_APP_VERSION = "appversion";
+    public static final String EXTRAS_KEY_APP_STORE_URL = "appstoreurl";
+    public static final String EXTRAS_KEY_SKIP_OFFSET = "skipoffset";
+    public static final String EXTRAS_KEY_BUNDLE_ID = "bundleid";
+    public static final String EXTRAS_KEY_USER_GENDER = "gender";
+    public static final String EXTRAS_KEY_USER_YOB = "yob";
 
     /**
      * Sets the environment data
@@ -103,6 +64,7 @@ public class ThirdpresenceAdapterBase {
         params.put(VideoAd.Parameters.KEY_USER_YOB, extras.get(EXTRAS_KEY_USER_YOB));
         return params;
     }
+
 }
 
 

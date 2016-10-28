@@ -12,7 +12,6 @@ import com.mopub.mobileads.MoPubErrorCode;
 import com.mopub.mobileads.MoPubRewardedVideoManager;
 import com.thirdpresence.adsdk.sdk.RewardedVideo;
 import com.thirdpresence.adsdk.sdk.VideoAd;
-import com.thirdpresence.adsdk.sdk.VideoInterstitial;
 
 import java.util.Map;
 

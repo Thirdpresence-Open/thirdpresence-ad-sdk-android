@@ -1,11 +1,13 @@
 package com.thirdpresence.adsdk.sdk;
 
-import android.Manifest;
 import android.app.Activity;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.os.Build;
+import java.util.Map;
 
+/**
+ * <h1>VideoAd</h1>
+ *
+ * VideoAd is a base class for all video ad classes. Do not use directly.
+ */
 public abstract class VideoAd {
 
     /**
@@ -136,6 +138,8 @@ public abstract class VideoAd {
         public final static String KEY_PLACEMENT_ID = "playerid";
         /**
          * Disable BACK button while ad is playing
+         *
+         * @deprecated
          */
         public final static String KEY_DISABLE_BACK_BUTTON = "disablebackbutton";
         /**
@@ -239,8 +243,6 @@ public abstract class VideoAd {
          * User year of birth
          */
         public final static String KEY_USER_YOB = "yob";
-
-
     }
 
     /**
@@ -252,7 +254,6 @@ public abstract class VideoAd {
      * Ad Placement type rewarded type
      */
     public final static String PLACEMENT_TYPE_REWARDED_VIDEO = "rewardedvideo";
-
 
     /**
      * Thirdpresence error codes
@@ -299,15 +300,19 @@ public abstract class VideoAd {
     }
 
     public final static long DEFAULT_TIMEOUT = 20000;
+    public final static String DEFAULT_PLACEMENT_ID = "default_placement_id";
 
     private final String mPlacementType;
+    private final String mPlacementId;
 
     private VideoAd() {
         mPlacementType = "";
+        mPlacementId = "";
     }
 
-    protected VideoAd(String placementType) {
+    protected VideoAd(String placementType, String placementId) {
         mPlacementType = placementType;
+        mPlacementId = placementId;
     }
 
     /**
@@ -318,46 +323,88 @@ public abstract class VideoAd {
     }
 
     /**
+     * Gets the placement id
+     */
+    public String getPlacementId() {
+        return mPlacementId;
+    }
+
+    /**
      * Sets listener for callback events
      *
      * @param listener An object implementing the interface
      *
      */
-    protected abstract void setListener(Listener listener);
+    public abstract void setListener(Listener listener);
 
     /**
-     * Inits the ad uit
+     * Inits the ad unit
+     * @param activity The container activity where the interstitial is displayed
+     * @param environment Environment parameters.
+     *                    @see VideoAd.Environment for details
+     *                    Mandatory parameters: KEY_ACCOUNT and KEY_PLACEMENT_ID
+     * @param params VideoAd parameters
+     *               @see VideoAd.Parameters for details
+     * @param timeout Timeout for setting up the player in milliseconds
      */
-    protected void init() {}
+    public abstract void init(Activity activity,
+                     Map<String, String> environment,
+                     Map<String, String> params,
+                     long timeout);
 
     /**
      * Closes the ad unit resets the ad unit
      */
-    protected void reset() {}
+    public abstract void reset();
 
     /**
      * Closes the ad unit and releases resources.
      */
-    protected void remove() {}
+    public abstract void remove();
 
     /**
      * Loads an ad. Listener.onAdEvent() is called with AD_LOADED eventName when the ad is loaded
      */
-    protected void loadAd() {}
+    public abstract void loadAd();
 
     /**
-     * Display the ad view and starts playing the video
+     * Resets and laods new ad. Listener.onAdEvent() is called with AD_LOADED eventName when the ad is loaded
      */
-    protected void displayAd() {}
+    public abstract void resetAndLoadAd();
+    /**
+     * Displays the ad in the current activity
+     *
+     * @deprecated
+     */
+    public abstract void displayAd();
 
+    /**
+     * Displays the ad in the built-in activity
+     *
+     * @param runnable to be executed when completed
+     */
+    public abstract void displayAd(Runnable runnable);
+
+    /**
+     * Display the ad in the given activity
+     *
+     * @param activity that displays the ad or null if using built-in activity
+     * @param runnable to be executed when completed or null
+     */
+    public abstract void displayAd(Activity activity, Runnable runnable);
     /**
      * Checks if an ad is loaded
      *
      * @return true if loaded, false otherwise
      */
-    protected boolean isAdLoaded() {
-        return false;
-    }
+    public abstract boolean isAdLoaded();
+
+    /**
+     * Checks if the player is ready
+     *
+     * @return true if ready, false otherwise
+     */
+    public abstract boolean isPlayerReady();
 
     /**
      * Helper function for parsing boolean from a string

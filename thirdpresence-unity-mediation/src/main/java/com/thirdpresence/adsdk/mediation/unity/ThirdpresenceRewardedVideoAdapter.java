@@ -1,9 +1,7 @@
 package com.thirdpresence.adsdk.mediation.unity;
 
 import android.app.Activity;
-import android.content.Intent;
-
-import com.thirdpresence.adsdk.sdk.RewardedVideo;
+import com.thirdpresence.adsdk.sdk.VideoAdManager;
 import com.thirdpresence.adsdk.sdk.VideoAd;
 
 import java.util.Map;
@@ -19,10 +17,9 @@ import java.util.Map;
 public class ThirdpresenceRewardedVideoAdapter extends ThirdpresenceAdapterBase implements VideoAd.Listener {
 
     private static ThirdpresenceRewardedVideoAdapter mInstance = null;
-    private RewardedVideo mRewardedVideo;
+    private String mPlacementId;
     private String mRewardTitle = null;
     private int mRewardAmount = -1;
-    private Activity mUnityActivity;
 
     /**
      * A listener implemented in Unity via {@code AndroidJavaProxy} to receive ad events.
@@ -60,8 +57,7 @@ public class ThirdpresenceRewardedVideoAdapter extends ThirdpresenceAdapterBase 
         mRewardedVideoListener = listener;
     }
 
-    private static final String EXTRAS_KEY_REWARD_TITLE = "rewardtitle";
-    private static final String EXTRAS_KEY_REWARD_AMOUNT = "rewardamount";
+
 
     /**
      * Inits the rewarded video ad unit
@@ -79,11 +75,11 @@ public class ThirdpresenceRewardedVideoAdapter extends ThirdpresenceAdapterBase 
         removeRewardedVideo();
 
         if (activity == null) {
-            mRewardedVideoListener.onRewardedVideoFailed(VideoAd.ErrorCode.INVALID_STATE.getErrorCode(), "Activity is null");
+            if (mRewardedVideoListener != null) {
+                mRewardedVideoListener.onRewardedVideoFailed(VideoAd.ErrorCode.INVALID_STATE.getErrorCode(), "Activity is null");
+            }
             return;
         }
-
-        mUnityActivity = activity;
 
         if (environment.containsKey(EXTRAS_KEY_REWARD_TITLE)) {
             mRewardTitle = environment.get(EXTRAS_KEY_REWARD_TITLE);
@@ -101,27 +97,44 @@ public class ThirdpresenceRewardedVideoAdapter extends ThirdpresenceAdapterBase 
         }
 
         if (mRewardTitle == null || mRewardAmount < 0) {
-            mRewardedVideoListener.onRewardedVideoFailed(VideoAd.ErrorCode.INVALID_STATE.getErrorCode(), "Rewarded video title or amount not properly set");
+            if (mRewardedVideoListener != null) {
+                mRewardedVideoListener.onRewardedVideoFailed(VideoAd.ErrorCode.INVALID_STATE.getErrorCode(), "Rewarded video title or amount not properly set");
+            }
             return;
+        }
+
+
+        if (!environment.containsKey(EXTRAS_KEY_ACCOUNT)) {
+            if (mRewardedVideoListener != null) {
+                mRewardedVideoListener.onRewardedVideoFailed(VideoAd.ErrorCode.PLAYER_INIT_FAILED.getErrorCode(), "Account is not set");
+            }
+            return;
+        }
+
+        if (!environment.containsKey(EXTRAS_KEY_PLACEMENT_ID)) {
+            if (mRewardedVideoListener != null) {
+                mRewardedVideoListener.onRewardedVideoFailed(VideoAd.ErrorCode.PLAYER_INIT_FAILED.getErrorCode(), "Placement id is not set");
+            }
         }
 
         Map<String, String> env = setEnvironment(environment);
         Map<String, String> params = setPlayerParameters(playerParams);
 
-        mRewardedVideo = new RewardedVideo();
-        mRewardedVideo.setListener(this);
-        mRewardedVideo.init(activity, env, params, VideoAd.DEFAULT_TIMEOUT);
-        mRewardedVideo.loadAd();
+        mPlacementId = env.get(VideoAd.Environment.KEY_PLACEMENT_ID);
+
+        VideoAd ad = VideoAdManager.getInstance().create(VideoAd.PLACEMENT_TYPE_INTERSTITIAL, mPlacementId);
+        ad.init(activity, env, params, VideoAd.DEFAULT_TIMEOUT);
+        ad.setListener(this);
+        ad.loadAd();
     }
 
     /**
      * Shows the loaded rewarded videoad
      */
     public void showRewardedVideo() {
-        if (mRewardedVideo != null && mRewardedVideo.isAdLoaded()) {
-            Intent i = new Intent(mUnityActivity, ThirdpresencePlayerActivity.class);
-            i.putExtra(ThirdpresencePlayerActivity.ADAPTER_CLASS_EXTRAS_KEY, this.getClass().getName());
-            mUnityActivity.startActivity(i);
+        VideoAd ad = VideoAdManager.getInstance().get(mPlacementId);
+        if (ad != null && ad.isAdLoaded()) {
+            ad.displayAd(null, null);
         } else if (mRewardedVideoListener != null) {
             mRewardedVideoListener.onRewardedVideoFailed(VideoAd.ErrorCode.INVALID_STATE.getErrorCode(), "Player is not loaded.");
         }
@@ -131,51 +144,7 @@ public class ThirdpresenceRewardedVideoAdapter extends ThirdpresenceAdapterBase 
      * Removes the rewarded video ad unit
      */
     public void removeRewardedVideo() {
-        if (mRewardedVideo != null) {
-            mRewardedVideo.remove();
-            mRewardedVideo.setListener(null);
-            mRewardedVideo = null;
-        }
-
-        finishPlayerActivity();
-    }
-
-    /**
-     * Finish the player activity
-     */
-    public void finishPlayerActivity() {
-        removeAd();
-        super.finishPlayerActivity();
-    }
-
-    /**
-     * Displays the ad. This is used by ThirdpresencePlayerActivity
-     */
-    public void displayAd() {
-        if (mRewardedVideo != null) {
-            mRewardedVideo.displayAd();
-        } else if (mRewardedVideoListener != null) {
-            mRewardedVideoListener.onRewardedVideoFailed(VideoAd.ErrorCode.INVALID_STATE.getErrorCode(), "Player is not loaded.");
-        }
-    }
-
-
-    /**
-     * Removes the ad
-     */
-    public void removeAd() {
-        super.removeAd();
-        if (mRewardedVideo != null) {
-            mRewardedVideo.remove();
-        }
-    }
-
-    /**
-     * Sets the player activity.
-     */
-    public void setPlayerActivity(Activity activity) {
-        super.setPlayerActivity(activity);
-        mRewardedVideo.switchActivity(activity);
+        VideoAdManager.getInstance().remove(mPlacementId);
     }
 
     /**
@@ -196,8 +165,6 @@ public class ThirdpresenceRewardedVideoAdapter extends ThirdpresenceAdapterBase 
             } else if (eventName.equals(VideoAd.Events.AD_VIDEO_COMPLETE)) {
                 mRewardedVideoListener.onRewardedVideoCompleted(mRewardTitle, mRewardAmount);
             } else if (eventName.equals(VideoAd.Events.AD_STOPPED)) {
-                removeAd();
-                finishPlayerActivity();
                 mRewardedVideoListener.onRewardedVideoDismissed();
             } else if (eventName.equals(VideoAd.Events.AD_ERROR)) {
                 mRewardedVideoListener.onRewardedVideoFailed(VideoAd.ErrorCode.NO_FILL.getErrorCode(), "No ad available");
@@ -213,12 +180,9 @@ public class ThirdpresenceRewardedVideoAdapter extends ThirdpresenceAdapterBase 
      * {@inheritDoc}
      */
     public void onError(VideoAd.ErrorCode errorCode, String message) {
-        removeAd();
+        removeRewardedVideo();
         if (mRewardedVideoListener != null) {
             mRewardedVideoListener.onRewardedVideoFailed(errorCode.getErrorCode(), message);
         }
-
-        finishPlayerActivity();
-
     }
 }

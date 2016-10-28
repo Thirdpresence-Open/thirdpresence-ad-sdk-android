@@ -16,7 +16,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="This sample app demostrates usage of the Thirdpresence Ad SDK"
-        android:singleLine="false"
         android:layout_alignParentTop="false"
         android:layout_alignParentLeft="false"
         android:layout_alignParentBottom="false"

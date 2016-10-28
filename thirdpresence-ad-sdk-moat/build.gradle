@@ -1,2 +1,5 @@
 configurations.create("default")
-artifacts.add("default", file('libs/TRDP-moat-mobile-app-kit-1.7.1.aar'))
+
+//Add MOAT SDK library to libs directory
+//artifacts.add("default", file('libs/<REPLACE WITH MOAT SDK LIBRARY FILE NAME>'))
+

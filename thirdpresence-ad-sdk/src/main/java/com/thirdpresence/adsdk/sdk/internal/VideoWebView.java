@@ -1,19 +1,16 @@
 package com.thirdpresence.adsdk.sdk.internal;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
-import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
-import android.graphics.Color;
-import android.graphics.PixelFormat;
-//import android.net.ConnectivityManager;
+import android.net.ConnectivityManager;
+import android.net.Uri;
 import android.os.Build;
-
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
-import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -22,31 +19,27 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-
 import com.thirdpresence.adsdk.sdk.BuildConfig;
 import com.thirdpresence.adsdk.sdk.VideoAd;
-
 import org.json.JSONObject;
 import java.net.URLEncoder;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-
 import java.util.Map;
 
 /**
+ * <h1>VideoWebView</h1>
  *
  * VideoWebView is an extended WebView to be used to display Thirdpresence HTML5 video player
  *
  */
 public class VideoWebView extends WebView {
 
-    private Activity mActivity;
-    private Listener mListener;
+    private Context mApplication;
+    private Handler mHandler;
 
     private boolean mPlayerPageLoaded = false;
     private boolean mBackAllowed = false;
-    private boolean mDeadlockCleared = false;
 
     private final static String JS_API_NAME = "ThirdpresenceNative";
     private final static String PLAYER_URL_BASE = "//d1c13tt6n7tja5.cloudfront.net/tags/[KEY_SERVER]/sdk/LATEST/sdk_player.v3.html?";
@@ -54,52 +47,16 @@ public class VideoWebView extends WebView {
     private final static String EVENT_NAME_PLAYER_READY = "PlayerReady";
     private final static String EVENT_NAME_PLAYER_ERROR = "PlayerError";
 
-    /**
-     * Callback interface for WebView events.
-     */
-    public interface Listener {
+    public final static int MSG_TYPE_PLAYER_READY = 101;
+    public final static int MSG_TYPE_PLAYER_EVENT = 102;
+    public final static int MSG_TYPE_PLAYER_ERROR = 103;
+    public final static int MSG_TYPE_NETWORK_ERROR = 104;
+    public final static int MSG_TYPE_URL_INTERCEPTED = 105;
 
-        /**
-         * Called when player is loaded and ready to be getting further actions
-         */
-        void onPlayerReady();
-
-        /**
-         * Called when loading or initialising the player has failed
-         *
-         * @param errorCode @see com.thirdpresence.adsdk.sdk.VideoAd.ErrorCode
-         * @param errorText human-readable error message
-         *
-         */
-        void onPlayerFailure(VideoAd.ErrorCode errorCode, String errorText);
-
-        /**
-         * Called when network error has occured
-         *
-         * @param statusCode HTTP status code
-         * @param description status description
-         *
-         */
-        void onNetworkError(int statusCode, String description);
-
-        /**
-         * Called when a player event has occured
-         *
-         * @param eventName name of the event
-         * @param arg1 an event-specific argument
-         * @param arg2 an event-specific argument
-         * @param arg3 an event-specific argument
-         * @see com.thirdpresence.adsdk.sdk.VideoAd.Events
-         *
-         */
-        void onAdEvent(String eventName, String arg1, String arg2, String arg3);
-
-        /**
-         * Called when user tries to open URL. Typically occurs when an ad has a landing page and
-         * user clicks the video. Typically the URL is opened in the browser or PlayStore app.
-         */
-        void onOpenURLIntercepted(String url);
-    }
+    public final static String MSG_DATA_KEY_PLAYER_EVENT_DETAILS = "PlayerEventDetails";
+    public final static String MSG_DATA_KEY_ERROR_CODE = "ErrorCode";
+    public final static String MSG_DATA_KEY_ERROR_MESSAGE = "ErrorMessage";
+    public final static String MSG_DATA_KEY_URL = "URL";
 
     /**
      * Implementation of the web interface that is used for receiving events from HTML5 player.
@@ -112,20 +69,23 @@ public class VideoWebView extends WebView {
 
         @JavascriptInterface
         public void onPlayerEvent(final String eventName, final String arg1, final String arg2, final String arg3) {
-            mActivity.runOnUiThread(new Runnable() {
-                public void run() {
-                    if (mListener != null) {
-                        if (eventName.contentEquals(EVENT_NAME_PLAYER_READY)) {
-                            mPlayerPageLoaded = true;
-                            mListener.onPlayerReady();
-                        } else if (eventName.contentEquals(EVENT_NAME_PLAYER_ERROR)) {
-                            mListener.onPlayerFailure(VideoAd.ErrorCode.PLAYER_INIT_FAILED, arg1);
-                        } else {
-                            mListener.onAdEvent(eventName, arg1, arg2, arg3);
-                        }
-                    }
+            if (eventName != null) {
+                String a1 = arg1 != null ? arg1 : "";
+                String a2 = arg2 != null ? arg2 : "";
+                String a3 = arg3 != null ? arg3 : "";
+
+                if (eventName.contentEquals(EVENT_NAME_PLAYER_READY)) {
+                    mPlayerPageLoaded = true;
+                    sendEmptyMessage(MSG_TYPE_PLAYER_READY);
+                } else if (eventName.contentEquals(EVENT_NAME_PLAYER_ERROR)) {
+                    sendErrorMessage(MSG_TYPE_PLAYER_ERROR, VideoAd.ErrorCode.PLAYER_INIT_FAILED.getErrorCode(), a1);
+                } else {
+                    Bundle data = new Bundle();
+                    String args[] = {eventName, a1, a2, a3};
+                    data.putStringArray(MSG_DATA_KEY_PLAYER_EVENT_DETAILS, args);
+                    sendMessage(MSG_TYPE_PLAYER_EVENT, data);
                 }
-            });
+            }
         }
     }
 
@@ -138,11 +98,14 @@ public class VideoWebView extends WebView {
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
             super.onReceivedError(view, errorCode, description, failingUrl);
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                if (!mPlayerPageLoaded) {
-                    mListener.onNetworkError(errorCode, description);
-                } else {
-                    TLog.w("Network error ignored: " + errorCode + ":" + description);
+            if (view == VideoWebView.this) {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                    if (!mPlayerPageLoaded) {
+                        String message = description != null ? description : "Unknown error";
+                        sendErrorMessage(MSG_TYPE_NETWORK_ERROR, errorCode, message);
+                    } else {
+                        TLog.w("Network error ignored: " + errorCode + ":" + description);
+                    }
                 }
             }
         }
@@ -150,11 +113,15 @@ public class VideoWebView extends WebView {
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             super.onReceivedError(view, request, error);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && error != null) {
-                if (!mPlayerPageLoaded || request.isForMainFrame()) {
-                    mListener.onNetworkError(error.getErrorCode(), error.getDescription().toString());
-                } else {
-                    TLog.w("Network error ignored: " + error.getErrorCode() + ":" + error.getDescription().toString());
+            if (view == VideoWebView.this) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && error != null) {
+                    CharSequence description = error.getDescription();
+                    String message = description != null ? description.toString() : "Unknown error";
+                    if (!mPlayerPageLoaded || request.isForMainFrame()) {
+                        sendErrorMessage(MSG_TYPE_NETWORK_ERROR, error.getErrorCode(), message);
+                    } else {
+                        TLog.w("Network error ignored: " + error.getErrorCode() + ":" + message);
+                    }
                 }
             }
         }
@@ -162,34 +129,65 @@ public class VideoWebView extends WebView {
         @Override
         public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
             super.onReceivedHttpError(view, request, errorResponse);
-            if (!mPlayerPageLoaded) {
-                String message = null;
-                if (errorResponse != null) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        message = errorResponse.getReasonPhrase();
+            if (view == VideoWebView.this) {
+                if (!mPlayerPageLoaded) {
+                    String message = null;
+                    if (errorResponse != null) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            message = errorResponse.getReasonPhrase();
+                        }
                     }
+                    if (message == null) {
+                        message = "failure when loading the player";
+                    }
+
+                    message = "HTTP: " + message;
+                    sendErrorMessage(MSG_TYPE_PLAYER_ERROR, VideoAd.ErrorCode.PLAYER_INIT_FAILED.getErrorCode(), message);
                 }
-                if (message == null) {
-                    message = "failure when loading the player";
-                }
-                message = "HTTP: " + message;
-                mListener.onPlayerFailure(VideoAd.ErrorCode.PLAYER_INIT_FAILED, message);
             }
         }
 
+        @SuppressWarnings("deprecation")
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            if (!isConnected()) {
-                TLog.e("Device is not connected to Internet");
-            }
+            if (view == VideoWebView.this) {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                    if (!isConnected()) {
+                        TLog.e("Device is not connected to Internet");
+                    }
 
-            if (mPlayerPageLoaded && !shallHandleURLInWebView(url)) {
-                if (mListener != null) {
-                    mListener.onOpenURLIntercepted(url);
+                    if (mPlayerPageLoaded && url != null && !shallHandleURLInWebView(url)) {
+                        Bundle data = new Bundle();
+                        data.putString(MSG_DATA_KEY_URL, url);
+                        sendMessage(MSG_TYPE_URL_INTERCEPTED, data);
+                        return true;
+                    }
                 }
-                return true;
             }
             return super.shouldOverrideUrlLoading(view, url);
+        }
+
+        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+            if (view == VideoWebView.this) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    if (!isConnected()) {
+                        TLog.e("Device is not connected to Internet");
+                    }
+
+                    Uri url = request.getUrl();
+
+                    if (mPlayerPageLoaded && url != null) {
+                        String urlString = url.toString();
+                        if (urlString != null &&  !shallHandleURLInWebView(urlString)) {
+                            Bundle data = new Bundle();
+                            data.putString(MSG_DATA_KEY_URL, urlString);
+                            sendMessage(MSG_TYPE_URL_INTERCEPTED, data);
+                            return true;
+                        }
+                    }
+                }
+            }
+            return super.shouldOverrideUrlLoading(view, request);
         }
     }
 
@@ -203,18 +201,13 @@ public class VideoWebView extends WebView {
      */
     @SuppressLint({"AddJavascriptInterface", "SetJavaScriptEnabled"})
     public VideoWebView(Context context) {
-        super(context.getApplicationContext());
+        super(context);
 
-        if (!mDeadlockCleared) {
-            clearWebViewDeadlock(getContext());
-            mDeadlockCleared = true;
-        }
-
-        mActivity = (Activity) context;
+        mApplication = context;
         mPlayerPageLoaded = false;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            if (0 != (mActivity.getApplicationInfo().flags &= ApplicationInfo.FLAG_DEBUGGABLE)) {
+            if (0 != (mApplication.getApplicationInfo().flags &= ApplicationInfo.FLAG_DEBUGGABLE)) {
                 WebView.setWebContentsDebuggingEnabled(true);
             }
         }
@@ -272,13 +265,13 @@ public class VideoWebView extends WebView {
     }
 
     /**
-     * Sets listener
+     * Sets handler which handles messages on the main thread
      *
-     * @param listener listener object
+     * @param handler handler object
      *
      */
-    public void setListener(Listener listener) {
-        mListener = listener;
+    public void setHandler(Handler handler) {
+        mHandler = handler;
     }
 
     /**
@@ -333,11 +326,17 @@ public class VideoWebView extends WebView {
         }
 
         if (account == null) {
-            mListener.onPlayerFailure(VideoAd.ErrorCode.PLAYER_INIT_FAILED, "Cannot init the player. Account not set");
+            sendErrorMessage(MSG_TYPE_PLAYER_ERROR,
+                    VideoAd.ErrorCode.PLAYER_INIT_FAILED.getErrorCode(),
+                    "Cannot init the player. Account not set");
         } else if (playerId == null) {
-            mListener.onPlayerFailure(VideoAd.ErrorCode.PLAYER_INIT_FAILED, "Cannot init the player. VideoAd id not set");
+            sendErrorMessage(MSG_TYPE_PLAYER_ERROR,
+                    VideoAd.ErrorCode.PLAYER_INIT_FAILED.getErrorCode(),
+                    "Cannot init the player. VideoAd id not set");
         } else if (customization == null) {
-            mListener.onPlayerFailure(VideoAd.ErrorCode.PLAYER_INIT_FAILED, "Cannot init the player. Invalid customization parameters");
+            sendErrorMessage(MSG_TYPE_PLAYER_ERROR,
+                    VideoAd.ErrorCode.PLAYER_INIT_FAILED.getErrorCode(),
+                    "Cannot init the player. Invalid customization parameters");
         } else {
 
             String protocol = VideoAd.parseBoolean(environment.get(VideoAd.Environment.KEY_FORCE_SECURE_HTTP), false) ? "https:" : "http:";
@@ -361,7 +360,9 @@ public class VideoWebView extends WebView {
         if (mPlayerPageLoaded) {
             callJSFunction("loadAd", null, null);
         } else {
-            mListener.onPlayerFailure(VideoAd.ErrorCode.AD_NOT_READY, "VideoAd is not ready");
+            sendErrorMessage(MSG_TYPE_PLAYER_ERROR,
+                    VideoAd.ErrorCode.INVALID_STATE.getErrorCode(),
+                    "Player is not ready");
         }
     }
 
@@ -372,7 +373,9 @@ public class VideoWebView extends WebView {
         if (mPlayerPageLoaded) {
             callJSFunction("startAd", null, null);
         } else {
-            mListener.onPlayerFailure(VideoAd.ErrorCode.AD_NOT_READY, "VideoAd is not ready");
+            sendErrorMessage(MSG_TYPE_PLAYER_ERROR,
+                    VideoAd.ErrorCode.INVALID_STATE.getErrorCode(),
+                    "Player is not ready");
         }
     }
 
@@ -383,7 +386,9 @@ public class VideoWebView extends WebView {
         if (mPlayerPageLoaded) {
             callJSFunction("pauseAd", null, null);
         } else {
-            mListener.onPlayerFailure(VideoAd.ErrorCode.AD_NOT_READY, "VideoAd is not ready");
+            sendErrorMessage(MSG_TYPE_PLAYER_ERROR,
+                    VideoAd.ErrorCode.INVALID_STATE.getErrorCode(),
+                    "Player is not ready");
         }
     }
     /**
@@ -393,7 +398,9 @@ public class VideoWebView extends WebView {
         if (mPlayerPageLoaded) {
             callJSFunction("resumeAd", null, null);
         } else {
-            mListener.onPlayerFailure(VideoAd.ErrorCode.AD_NOT_READY, "VideoAd is not ready");
+            sendErrorMessage(MSG_TYPE_PLAYER_ERROR,
+                    VideoAd.ErrorCode.INVALID_STATE.getErrorCode(),
+                    "Player is not ready");
         }
     }
 
@@ -409,6 +416,32 @@ public class VideoWebView extends WebView {
             callJSFunction("updateLocation", latitude, longitude);
         }
     }
+
+    private void sendEmptyMessage(int what) {
+        if (mHandler != null) {
+            mHandler.sendEmptyMessage(what);
+        }
+    }
+
+    private void sendMessage(int what, Bundle data) {
+        if (mHandler != null) {
+            Message msg = Message.obtain(mHandler, what);
+            msg.setData(data);
+            mHandler.sendMessage(msg);
+        }
+    }
+
+    private void sendErrorMessage(int what, int code, String message) {
+        if (mHandler != null && message != null) {
+            Message msg = Message.obtain(mHandler, what);
+            Bundle data = new Bundle();
+            data.putInt(MSG_DATA_KEY_ERROR_CODE, code);
+            data.putString(MSG_DATA_KEY_ERROR_MESSAGE, message);
+            msg.setData(data);
+            mHandler.sendMessage(msg);
+        }
+    }
+
 
     /**
      * Calls a function in the player JavaScript API
@@ -426,7 +459,7 @@ public class VideoWebView extends WebView {
         if (arg2 != null) {
             a2 = "\"" + arg2 + "\"";
         }
-        loadUrl("javascript:" + function + "(" + arg1 + "," +  arg2 + ");");
+        loadUrl("javascript:" + function + "(" + a1 + "," +  a2 + ");");
     }
 
     /**
@@ -472,10 +505,10 @@ public class VideoWebView extends WebView {
      */
     private boolean isConnected() {
         boolean isConnected = false;
-        /*
-        if (mActivity != null) {
+
+        if (mApplication != null) {
             ConnectivityManager cm =
-                    (ConnectivityManager) mActivity.getSystemService(Context.CONNECTIVITY_SERVICE);
+                    (ConnectivityManager) mApplication.getSystemService(Context.CONNECTIVITY_SERVICE);
 
             if (cm != null) {
                 if (cm.getActiveNetworkInfo() != null
@@ -485,49 +518,7 @@ public class VideoWebView extends WebView {
                 }
             }
         }
-        */
+
         return isConnected;
-    }
-
-    /**
-     * Copied from MoPub SDK
-     *
-     * This fixes https://code.google.com/p/android/issues/detail?id=63754,
-     * which occurs on KitKat device. When a WebView containing an HTML5 video is
-     * is destroyed it can deadlock the WebView thread until another hardware accelerated WebView
-     * is added to the view hierarchy and restores the GL context. Since we need to use WebView
-     * before adding it to the view hierarchy, this method clears the deadlock by adding a
-     * separate invisible WebView.
-     *
-     * This potential deadlock must be cleared anytime you attempt to access a WebView that
-     * is not added to the view hierarchy.
-     *
-     * @param context context
-     *
-     */
-    private void clearWebViewDeadlock(@NonNull final Context context) {
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
-            // Create an invisible webview
-            final WebView webView = new WebView(context.getApplicationContext());
-            webView.setBackgroundColor(Color.TRANSPARENT);
-
-            // For the deadlock to be cleared, we must load content and add to the view hierarchy. Since
-            // we don't have an activity context, we'll use a system window.
-            webView.loadDataWithBaseURL(null, "", "text/html", "UTF-8", null);
-            final WindowManager.LayoutParams params = new WindowManager.LayoutParams();
-            params.width = 1;
-            params.height = 1;
-            // Unlike other system window types TYPE_TOAST doesn't require extra permissions
-            params.type = WindowManager.LayoutParams.TYPE_TOAST;
-            params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                    | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-                    | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
-            params.format = PixelFormat.TRANSPARENT;
-            params.gravity = Gravity.START | Gravity.TOP;
-            final WindowManager windowManager =
-                    (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-
-            windowManager.addView(webView, params);
-        }
     }
 }

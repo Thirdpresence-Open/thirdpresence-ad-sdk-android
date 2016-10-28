@@ -1,0 +1,12 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <EditTextPreference
+        android:key="slideshow_display_time"
+        android:title="@string/preference_slideshow_display_time"
+        android:defaultValue="@integer/preference_slideshow_display_time_default"
+        android:inputType="number"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"/>
+
+</PreferenceScreen>

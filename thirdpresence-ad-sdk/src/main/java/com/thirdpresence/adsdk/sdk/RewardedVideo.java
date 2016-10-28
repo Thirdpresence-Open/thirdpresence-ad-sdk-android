@@ -1,7 +1,5 @@
 package com.thirdpresence.adsdk.sdk;
 
-import android.util.Log;
-
 /**
  * <h1>RewardedVideo</h1>
  *
@@ -14,7 +12,14 @@ public class RewardedVideo extends VideoInterstitial {
      * Constructor
      */
     public RewardedVideo() {
-        super(PLACEMENT_TYPE_REWARDED_VIDEO);
+        super(PLACEMENT_TYPE_REWARDED_VIDEO, "");
+    }
+
+    /**
+     * Constructor
+     */
+    public RewardedVideo(String placementId) {
+        super(PLACEMENT_TYPE_REWARDED_VIDEO, placementId);
     }
 
 }

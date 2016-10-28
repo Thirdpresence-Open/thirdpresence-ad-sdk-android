@@ -3,8 +3,11 @@ package com.thirdpresence.adsdk.sdk.internal;
 import android.util.Log;
 
 /**
+ * <h1>TLog</h1>
  *
  * TLog is a wrapper class for Android Log class
+ *
+ * Set the value of the property enabled to true in order to enable trace logs.
  *
  */
 public class TLog {
@@ -12,7 +15,7 @@ public class TLog {
     public static boolean enabled = false;
 
     private TLog() {
-    };
+    }
 
     public static void v(String message) {
         if (enabled) {
