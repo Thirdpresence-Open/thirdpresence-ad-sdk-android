@@ -135,7 +135,7 @@ An example code for initialising and displaying an interstitial ad placement:
 
 ### Banner ad placement
 
-In order to display videoa ad in an banner ad placement a BannerView needs to be added to the layout. This can be done either by defining the view in the layout XML or creating the view programmatically. 
+In order to display video ad in an banner ad placement a BannerView needs to be added to the layout. This can be done either by defining the view in the layout XML or creating the view programmatically. 
 Example of defining BannerView in the layout XML:
 ```
     <com.thirdpresence.adsdk.sdk.BannerView
