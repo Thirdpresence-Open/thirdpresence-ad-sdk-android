@@ -1,9 +1,31 @@
 <resources>
     <string name="app_name">Ad SDK Sample App</string>
+    <string name="app_description">This sample app demostrates usage of the Thirdpresence Ad SDK</string>
+    <string name="label_select_placement_type">Select placement type</string>
+    <string name="list_item_interstitial">Interstitial</string>
+    <string name="list_item_rewarded_video">Rewarded video</string>
+    <string name="list_item_banner">Banner</string>
     <string name="label_account_name">Account name</string>
     <string name="label_placement_id">Placement id</string>
     <string name="label_vast_tag">VAST tag</string>
+    <string name="label_status">Status</string>
+    <string name="label_reward">Reward</string>
+    <string name="button_init">Init</string>
+    <string name="button_load">Load</string>
+    <string name="button_display">Display</string>
+    <string name="button_reload">Reload</string>
+    <string name="desc_init_button">init placement</string>
+    <string name="desc_load_button">load ad</string>
+    <string name="desc_reload_button">reload ad</string>
+    <string name="desc_display_button">display ad</string>
     <string name="default_account_name">sdk-demo</string>
-    <string name="default_placement_id">sa7nvltbrn</string>
+    <string name="default_interstitial_placement_id">sa7nvltbrn</string>
+    <string name="default_rewarded_video_placement_id">nhdfxqclej</string>
+    <string name="default_banner_placement_id">zhlwlm9280</string>
     <string name="hint_vast_tag">external VAST (optional)</string>
+    <string name="hint_account_field">account name</string>
+    <string name="hint_placement_id_field">placement id</string>
+    <string name="hint_status_field">status field</string>
+    <string name="hint_reward_field">reward field</string>
+
 </resources>

@@ -13,14 +13,8 @@ import java.util.Map;
  * units for an application. It uses Thirdpresence HTML5 ad video player that supports VAST and
  * VPAID video ads. Visit www.thirdpresence.com and wiki.thirdpresence.com for more information.
  *
- * @author  Marko Okkonen
- * @version 1.0
- * @since   2016-03-31
- *
  */
 public class VideoInterstitial extends VideoAd {
-
-    public final static long DEFAULT_TIMEOUT = 10000;
 
     private final VideoPlayer mVideoPlayer = new VideoPlayer();
 
@@ -28,6 +22,8 @@ public class VideoInterstitial extends VideoAd {
      * Constructor
      *
      * Use the constructor with the placementId as argument
+     *
+     * @deprecated
      */
     public VideoInterstitial() {
         super(PLACEMENT_TYPE_INTERSTITIAL, VideoAd.DEFAULT_PLACEMENT_ID);
@@ -35,6 +31,9 @@ public class VideoInterstitial extends VideoAd {
 
     /**
      * Constructor
+     *
+     * @param placementId the placement id
+     *
      */
     public VideoInterstitial(String placementId) {
         super(PLACEMENT_TYPE_INTERSTITIAL, placementId);
@@ -42,6 +41,11 @@ public class VideoInterstitial extends VideoAd {
 
     /**
      * Constructor
+     *
+     *
+     * @param placementType @see VideoAd for possible values
+     * @param placementId the placement id
+     *
      */
     public VideoInterstitial(String placementType, String placementId) {
         super(placementType, placementId);
@@ -74,7 +78,7 @@ public class VideoInterstitial extends VideoAd {
                      Map<String, String> params,
                      long timeout){
         TLog.d("Initialising " + this.getPlacementType());
-        mVideoPlayer.init(activity, environment, params, timeout, getPlacementId());
+        mVideoPlayer.init(activity, null, environment, params, timeout, getPlacementId(), getPlacementType());
     }
 
     /**
@@ -142,6 +146,21 @@ public class VideoInterstitial extends VideoAd {
     }
 
     /**
+     * Pauses the playing ad
+     */
+    public void pauseAd() {
+        mVideoPlayer.pauseAd();
+    }
+
+    /**
+     * Resumes the paused ad
+     */
+    public void resumeAd() {
+        mVideoPlayer.resumeAd();
+    }
+
+
+    /**
      * Checks if an ad is loaded
      *
      * @return true if loaded, false otherwise
@@ -161,6 +180,10 @@ public class VideoInterstitial extends VideoAd {
 
     /**
      * Updates the activity the ad view is located in
+     *
+     * @param newActivity activity to switch to
+     *
+     * @deprecated                 
      */
     public void switchActivity(Activity newActivity) {
         TLog.d("Switching an activity");

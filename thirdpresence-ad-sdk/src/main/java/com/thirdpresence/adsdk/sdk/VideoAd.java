@@ -33,7 +33,7 @@ public abstract class VideoAd {
         /**
          * This callback is called when an error occurs
          *
-         * @param errorCode @see ErrorCode
+         * @param errorCode @see ErrorCode for possible values
          * @param message Human-readable error message
          *
          */
@@ -154,6 +154,14 @@ public abstract class VideoAd {
          * Force secure HTTP requests
          */
         public final static String KEY_FORCE_SECURE_HTTP = "forcehttps";
+        /**
+         * Title of a reward (for example virtual currency)
+         */
+        public final static String KEY_REWARD_TITLE = "rewardtitle";
+        /**
+         * Amount of a reward
+         */
+        public final static String KEY_REWARD_AMOUNT = "rewardamount";
     }
 
     /**
@@ -256,6 +264,11 @@ public abstract class VideoAd {
     public final static String PLACEMENT_TYPE_REWARDED_VIDEO = "rewardedvideo";
 
     /**
+     * Ad Placement type rewarded type
+     */
+    public final static String PLACEMENT_TYPE_BANNER = "banner";
+
+    /**
      * Thirdpresence error codes
      */
     public enum ErrorCode {
@@ -299,6 +312,7 @@ public abstract class VideoAd {
         }
     }
 
+
     public final static long DEFAULT_TIMEOUT = 20000;
     public final static String DEFAULT_PLACEMENT_ID = "default_placement_id";
 
@@ -310,6 +324,13 @@ public abstract class VideoAd {
         mPlacementId = "";
     }
 
+    /**
+     * Gets the placement type
+     *
+     * @param placementType See possible values above
+     * @param placementId placement id
+     *
+     */
     protected VideoAd(String placementType, String placementId) {
         mPlacementType = placementType;
         mPlacementId = placementId;
@@ -347,10 +368,27 @@ public abstract class VideoAd {
      *               @see VideoAd.Parameters for details
      * @param timeout Timeout for setting up the player in milliseconds
      */
-    public abstract void init(Activity activity,
+    public void init(Activity activity,
                      Map<String, String> environment,
                      Map<String, String> params,
-                     long timeout);
+                     long timeout) {}
+
+    /**
+     * Inits the ad unit
+     * @param activity The container activity where the interstitial is displayed
+     * @param bannerView container view for the banner ad
+     * @param environment Environment parameters.
+     *                    @see VideoAd.Environment for details
+     *                    Mandatory parameters: KEY_ACCOUNT and KEY_PLACEMENT_ID
+     * @param params VideoAd parameters
+     *               @see VideoAd.Parameters for details
+     * @param timeout Timeout for setting up the player in milliseconds
+     */
+    public void init(Activity activity,
+                     BannerView bannerView,
+                     Map<String, String> environment,
+                     Map<String, String> params,
+                     long timeout) {}
 
     /**
      * Closes the ad unit resets the ad unit
@@ -379,6 +417,16 @@ public abstract class VideoAd {
     public abstract void displayAd();
 
     /**
+     * Pauses the playing ad
+     */
+    public abstract void pauseAd();
+
+    /**
+     * Resumes the paused ad
+     */
+    public abstract void resumeAd();
+
+    /**
      * Displays the ad in the built-in activity
      *
      * @param runnable to be executed when completed
@@ -405,6 +453,25 @@ public abstract class VideoAd {
      * @return true if ready, false otherwise
      */
     public abstract boolean isPlayerReady();
+
+    /**
+     * Gets reward title. This is relevant only for rewarded video
+     *
+     * @return reward title
+     */
+    public String getRewardTitle() {
+        return null;
+    }
+
+    /**
+     * Gets reward amount. This is relevant only for rewarded video
+     *
+     * @return reward amount
+     */
+    public Number getRewardAmount() {
+        return 0;
+    }
+
 
     /**
      * Helper function for parsing boolean from a string

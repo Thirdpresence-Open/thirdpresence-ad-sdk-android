@@ -66,6 +66,7 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
 
     private String mDeviceId;
     private String mPlacementId;
+    private String mPlacementType;
 
     private boolean mUsingPlayerActivity = false;
     private boolean mAdLoadingPending = false;
@@ -73,6 +74,7 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
     private boolean mWebViewPaused = false;
     private boolean mOrientationChanged = false;
     private boolean mPendingLocationUpdate = false;
+    private boolean mDisplayImmediately = false;
 
     private Object mWebAdTracker;
 
@@ -123,6 +125,16 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
     }
 
     /**
+     * Sets the player to display the ad immediately and not waiting displayAd() call.
+     *
+     * @param enabled true if ad to be displayed immediately
+     *
+     */
+    public void setDisplayImmediately(boolean enabled) {
+        mDisplayImmediately = enabled;
+    }
+
+    /**
      * Inits the player
      *
      * @param activity The container activity where the intertitial is displayed
@@ -135,10 +147,12 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
      * @param placementId placement id of the placement the player is attached to
      */
     public void init(Activity activity,
+                     ViewGroup rootLayout,
                      Map<String, String> environment,
                      Map<String, String> params,
                      long timeout,
-                     String placementId) {
+                     String placementId,
+                     String plcementType) {
 
         if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
             throw new IllegalThreadStateException("init() is not called from UI thread");
@@ -159,6 +173,7 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
         mActiveActivity = activity;
         mApplication = activity.getApplication();
         mPlacementId = placementId;
+        mPlacementType = plcementType;
         mEnv = environment;
         mParams = params;
         mInitTimeout = timeout;
@@ -188,7 +203,7 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
         mWebView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent event) {
-                if (mPlayerState == State.STOPPED || mPlayerState == State.ERROR) {
+                if (mPlacementType != VideoAd.PLACEMENT_TYPE_BANNER && (mPlayerState == State.STOPPED || mPlayerState == State.ERROR)) {
                     reset();
                     return true;
                 }
@@ -196,7 +211,7 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
             }
         });
 
-        ViewGroup root = (ViewGroup) activity.getWindow().getDecorView().getRootView();
+        ViewGroup root = rootLayout != null ? rootLayout : (ViewGroup) activity.getWindow().getDecorView().getRootView();
 
         mContainer = new RelativeLayout(mApplication);
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
@@ -224,7 +239,7 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
 
         if (mContainer != null) {
             mContainer.setVisibility(View.GONE);
-            resetState();
+            resetState(false);
             initPlayer();
         }
     }
@@ -256,7 +271,7 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
             mApplication = null;
         }
 
-        resetState();
+        resetState(true);
 
         if (mContainer != null) {
             if (mContainer.getVisibility() == View.VISIBLE) {
@@ -281,6 +296,7 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
         }
 
         mActivity = null;
+        TLog.d("Player cleaned up");
     }
 
     /**
@@ -313,8 +329,8 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
                     if (mPlayerState == State.LOADING) {
                         changeState(State.ERROR);
                         if (mListener != null) {
-                            TLog.d("Timeout occured while loading an ad");
-                            mListener.onError(VideoAd.ErrorCode.NETWORK_TIMEOUT, "Timeout occured while loading an ad");
+                            TLog.d("Timeout occurred while loading an ad");
+                            mListener.onError(VideoAd.ErrorCode.NETWORK_TIMEOUT, "Timeout occurred while loading an ad");
                         }
                         if (mWebView != null) {
                             mWebView.stopLoading();
@@ -433,6 +449,20 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
     }
 
     /**
+     * Pauses the playing ad
+     */
+    public void pauseAd() {
+        mWebView.pauseAd();
+    }
+
+    /**
+     * Resumes the paused ad
+     */
+    public void resumeAd() {
+        mWebView.resumeAd();
+    }
+
+    /**
      * Checks if an ad is loaded
      *
      * @return true if loaded, false otherwise
@@ -478,7 +508,7 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
                         close();
 
                         if (mListener != null) {
-                            mListener.onError(VideoAd.ErrorCode.NETWORK_TIMEOUT, "Timeout occured while initialising the player");
+                            mListener.onError(VideoAd.ErrorCode.NETWORK_TIMEOUT, "Timeout occurred while initialising the player");
                         }
                     }
                 });
@@ -488,7 +518,7 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
                 }
 
                 mParams.put(VideoAd.Parameters.KEY_AD_PLACEMENT, VideoAd.PLACEMENT_TYPE_INTERSTITIAL);
-                mWebView.initPlayer(mEnv, mParams);
+                mWebView.initPlayer(mEnv, mParams, mPlacementType);
                 changeState(State.INITIALISING);
             }
         }
@@ -497,7 +527,8 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
     /**
      * Resets all state variables
      */
-    private void resetState() {
+    private void resetState(boolean closing) {
+        TLog.d("resetState");
         if (mActivity != null) {
             int currentOrientation = mActivity.getRequestedOrientation();
             if (mOrientationChanged && currentOrientation != mOriginalOrientation) {
@@ -509,7 +540,11 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
             }
         }
 
-        changeState(State.INITIALIZED);
+        if (closing) {
+            changeState(State.IDLE);
+        } else {
+            changeState(State.INITIALIZED);
+        }
         mAdLoadingPending = false;
         mUsingPlayerActivity = false;
         mVideoClicked = false;
@@ -777,6 +812,8 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
      * @param newState the state changing to
      */
     private void changeState(State newState) {
+        if (mPlayerState == newState) return;
+
         TLog.i("Change state " + mPlayerState + " > " + newState);
         Iterator<StateChangeRunnableInfo> i = mRunnables.iterator();
         while (i.hasNext()) {
@@ -849,6 +886,10 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
                                     mLoadTimeoutTimer = null;
                                 }
                                 changeState(State.LOADED);
+
+                                if (mDisplayImmediately) {
+                                    displayAdInCurrentActivity();
+                                }
                             } else if (args[0].equals(VideoAd.Events.AD_STOPPED)) {
                                 if (mPlayerState == State.DISPLAYING) {
                                     changeState(State.STOPPED);
@@ -858,6 +899,7 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
                             if (mListener != null) {
                                 mListener.onAdEvent(args[0], args[1], args[2], args[3]);
                             }
+
                         }
                     }
                     break;
@@ -887,6 +929,8 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
                         TLog.d("Network error: " + errorCode + ":" + errorMessage);
 
                         changeState(State.ERROR);
+
+                        close();
 
                         if (mListener != null) {
                             mListener.onError(VideoAd.ErrorCode.NETWORK_FAILURE, errorMessage);

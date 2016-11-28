@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_banner"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="com.thirdpresence.adsdk.sampleapp.BannerActivity">
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/accountField"
+        android:layout_alignParentLeft="false"
+        android:layout_alignParentStart="false"
+        android:text="@string/default_account_name"
+        android:hint="@string/hint_account_field"
+        android:layout_alignBaseline="@+id/accountLabel"
+        android:layout_toRightOf="@id/accountLabel"
+        android:layout_marginLeft="5dp" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/placementField"
+        android:layout_alignParentStart="false"
+        android:text="@string/default_banner_placement_id"
+        android:hint="@string/hint_placement_id_field"
+        android:inputType="text"
+        android:layout_alignBaseline="@+id/placementLabel"
+        android:layout_alignLeft="@+id/accountField" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/vastTagField"
+        android:layout_alignParentStart="false"
+        android:hint="@string/hint_vast_tag"
+        android:inputType="textUri"
+        android:layout_alignBaseline="@+id/vastTagLabel"
+        android:layout_alignLeft="@id/accountField" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/statusField"
+        android:layout_alignParentStart="false"
+        android:contentDescription="@string/hint_status_field"
+        android:inputType="textUri"
+        android:layout_alignBaseline="@+id/statusLabel"
+        android:layout_alignLeft="@id/accountField"
+        android:enabled="false"
+        android:saveEnabled="false"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/label_account_name"
+        android:id="@id/accountLabel"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="40dp"
+        android:labelFor="@id/accountField" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/label_placement_id"
+        android:id="@id/placementLabel"
+        android:layout_below="@id/accountLabel"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="15dp"
+        android:labelFor="@id/placementField" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/label_vast_tag"
+        android:id="@id/vastTagLabel"
+        android:layout_below="@id/placementLabel"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="15dp"
+        android:labelFor="@id/vastTagField" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@id/statusLabel"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/label_status"
+        android:labelFor="@id/statusField"
+        android:layout_below="@id/vastTagLabel"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="15dip"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/button_reload"
+        android:contentDescription="@string/desc_reload_button"
+        android:id="@+id/reloadButton"
+        android:layout_below="@id/statusLabel"
+        android:layout_centerHorizontal="true"/>
+
+    <com.thirdpresence.adsdk.sdk.BannerView
+        xmlns:tpr="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/bannerView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:padding="0dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/reloadButton"
+        tpr:adWidth="300"
+        tpr:adHeight="250"/>
+
+</RelativeLayout>

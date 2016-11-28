@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,6 +8,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.thirdpresence.adsdk.sampleapp.MainActivity"
     tools:showIn="@layout/activity_main">
@@ -15,113 +16,24 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="This sample app demostrates usage of the Thirdpresence Ad SDK"
-        android:layout_alignParentTop="false"
-        android:layout_alignParentLeft="false"
-        android:layout_alignParentBottom="false"
-        android:layout_alignParentRight="false"
-        android:layout_alignParentEnd="false"
-        android:layout_alignParentStart="false"
+        android:text="@string/app_description"
         android:ellipsize="none"
         android:id="@+id/textView"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Init"
-        android:id="@+id/initButton"
-        android:layout_below="@+id/vastTagLabel"
-        android:layout_alignParentLeft="false"
-        android:layout_alignParentStart="false"
-        android:layout_marginTop="20dip" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Load"
-        android:id="@+id/loadButton"
-        android:layout_alignTop="@+id/initButton"
-        android:layout_centerHorizontal="true" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Display"
-        android:id="@+id/displayButton"
-        android:layout_alignTop="@+id/loadButton"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentLeft="false" />
-
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/accountField"
-        android:layout_alignParentLeft="false"
-        android:layout_alignParentStart="false"
-        android:text="@string/default_account_name"
-        android:layout_alignBaseline="@+id/accountLabel"
-        android:layout_toRightOf="@+id/accountLabel"
-        android:layout_marginLeft="5dp" />
-
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/placementField"
-        android:layout_alignParentStart="false"
-        android:text="@string/default_placement_id"
-        android:inputType="text"
-        android:layout_alignBaseline="@+id/placementLabel"
-        android:layout_alignLeft="@+id/accountField" />
-
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/vastTagField"
-        android:layout_alignParentStart="false"
-        android:hint="@string/hint_vast_tag"
-        android:inputType="textUri"
-        android:layout_alignBaseline="@+id/vastTagLabel"
-        android:layout_alignLeft="@+id/accountField" />
-
     <TextView
+        android:text="@string/label_select_placement_type"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="@string/label_account_name"
-        android:id="@+id/accountLabel"
-        android:layout_below="@+id/textView"
-        android:layout_alignParentLeft="true"
-        android:layout_marginTop="20dp"
-        android:layout_alignParentStart="true"
-        android:labelFor="@id/accountField"
-        android:lines="1"
-        android:layout_toLeftOf="@+id/loadButton" />
 
-    <TextView
-        android:layout_width="wrap_content"
+        android:layout_marginTop="10dp"
+        android:id="@+id/label_select_placement_type"/>
+
+    <ListView
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="@string/label_placement_id"
-        android:id="@+id/placementLabel"
-        android:layout_below="@+id/accountLabel"
-        android:layout_alignParentLeft="true"
-        android:layout_marginTop="20dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="@string/label_vast_tag"
-        android:id="@+id/vastTagLabel"
-        android:layout_below="@+id/placementLabel"
-        android:layout_alignParentLeft="true"
-        android:layout_marginTop="20dp"
-        android:layout_alignParentStart="true"
-        android:labelFor="@id/vastTagField"
-        android:lines="1"
-        android:layout_toLeftOf="@+id/loadButton" />
+        android:layout_marginTop="10dp"
+        android:id="@+id/list_select_placement_type"/>
 
 
-
-</RelativeLayout>
+</LinearLayout>

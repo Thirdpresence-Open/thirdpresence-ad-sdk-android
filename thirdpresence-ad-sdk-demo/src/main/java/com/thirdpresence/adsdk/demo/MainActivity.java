@@ -419,11 +419,11 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void updateImages() {
+    private void updateImages() {
         new GetImagesTask().execute();
     }
 
-    public void startSlideShow() {
+    private void startSlideShow() {
         setFullscreen(true);
 
         if (mSlideShowTimer != null) {
@@ -466,7 +466,7 @@ public class MainActivity extends AppCompatActivity
         }, displayTime * 1000, displayTime * 1000);
     }
 
-    public void stopSlideShow() {
+    private void stopSlideShow() {
         setFullscreen(false);
 
         if (mSlideShowTimer != null) {

@@ -54,16 +54,23 @@ public class VideoAdManager {
             throw new IllegalArgumentException("placementId cannot be null");
         }
 
-        VideoAd videoAd = null;
+        VideoAd videoAd;
         if (placementType.contentEquals(VideoAd.PLACEMENT_TYPE_INTERSTITIAL)) {
             videoAd = new VideoInterstitial(placementId);
         } else if (placementType.contentEquals(VideoAd.PLACEMENT_TYPE_REWARDED_VIDEO)) {
             videoAd = new RewardedVideo(placementId);
+        } else if (placementType.contentEquals(VideoAd.PLACEMENT_TYPE_BANNER)) {
+            videoAd = new VideoBanner(placementId);
+        } else {
+            throw new IllegalArgumentException(placementType + " is not valid placement type");
         }
 
         if (videoAd != null) {
             mVideoAds.put(placementId, videoAd);
+        } else {
+            throw new IllegalStateException("Could not create VideoAd object");
         }
+
         return videoAd;
     }
 

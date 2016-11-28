@@ -3,6 +3,7 @@ using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Assertions;
 
 #if UNITY_ANDROID
 
@@ -86,6 +87,9 @@ public class ThirdpresenceAdsAndroid
 	{
         if( Application.platform != RuntimePlatform.Android )
             return;
+
+		Assert.IsNotNull (environment, "environment argument is null");
+		Assert.IsNotNull (playerParams,  "playerParams argument is null");
 
 		using (var pluginClass = new AndroidJavaClass ("com.thirdpresence.adsdk.mediation.unity.ThirdpresenceInterstitialAdapter")) {
 			interstitialPlugin = pluginClass.CallStatic<AndroidJavaObject> ("getInstance");
@@ -201,6 +205,9 @@ public class ThirdpresenceAdsAndroid
 	{
         if( Application.platform != RuntimePlatform.Android )
             return;
+
+		Assert.IsNotNull (environment, "environment argument is null");
+		Assert.IsNotNull (playerParams,  "playerParams argument is null");
 
 		using (var pluginClass = new AndroidJavaClass ("com.thirdpresence.adsdk.mediation.unity.ThirdpresenceRewardedVideoAdapter")) {
 			rewardedVideoPlugin = pluginClass.CallStatic<AndroidJavaObject> ("getInstance");

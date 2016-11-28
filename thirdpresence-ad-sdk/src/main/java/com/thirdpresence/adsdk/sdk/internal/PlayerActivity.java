@@ -24,7 +24,7 @@ public class PlayerActivity extends Activity {
     private String mPlacementId;
     private boolean mDisplayingAd;
 
-    private static int NAVIGATION_BAR_HIDE_DELAY = 1000;
+    private static final int NAVIGATION_BAR_HIDE_DELAY = 1000;
 
     /**
      * {@inheritDoc}

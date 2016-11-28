@@ -30,8 +30,8 @@ repositories {
 
 dependencies {
 	// SDK library and admob mediation plugin
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.4.0@aar'
-    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.4.0@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5@aar'
+    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.5@aar'
     // Google Play Services 
     compile 'com.google.android.gms:play-services-ads:9.6.1'
     // Google Support libraries
@@ -59,22 +59,32 @@ The location permission is optional, but highly recommended to get a higher fill
 ## Creating an ad unit
 
 - Login to the Admob console
-- Create a new Interstitial ad unit for video, if one does not exist
+- Create a new ad unit for video, if one does not exist. Following ad units are supported:
+    - Banner (Automatic refresh shall be "no refresh" or min. 60 seconds)
+    - Interstitial
+    - Rewarded interstitial 
 - In the ad units list, click the "x ad source(s)" link on the Mediation column of the interstitial ad unit
-- Click New ad network button
+- Click the New ad network button
 - Click the "+ Custom event" button
 - Fill in the form:
 
-| Field | Value |
-| --- | --- |
-| Class Name | com.thirdpresence.adsdk.mediation.admob.ThirdpresenceCustomEventInterstitial |
-| Label | Thirdpresence |
-| Parameter | account:REPLACE_ME,placementid:REPLACE_ME,gender:REPLACE_ME,yob:REPLACE_ME |
+[ Ad Unit | Class Name | Parameter |
+| --- | --- | --- |
+| Banner | com.thirdpresence.adsdk.mediation.admob.ThirdpresenceCustomEventBanner | account:REPLACE_ME,placementid:REPLACE_ME |
+| Interstitial | com.thirdpresence.adsdk.mediation.admob.ThirdpresenceCustomEventInterstitial | account:REPLACE_ME,placementid:REPLACE_ME |
+| Rewarded interstitial | com.thirdpresence.adsdk.mediation.admob.ThirdpresenceRewardedVideoAdapter | account:REPLACE_ME,placementid:REPLACE_ME,rewardtitle:REPLACE_ME;rewardamount:REPLACE_ME |
 
 **Replace REPLACE_ME placeholders with actual values!**
 
-For testing purposes, use account name "sdk-demo" and placementid "sa7nvltbrn".
-Provide the user's gender and yob (year of birth) to get more targeted ads. Leave them empty if the information is not available.
+For the rewarded video the reward title and reward amount values are mandatory.
+
+For testing purposes, use account name "sdk-demo" and following placement ids:
+ 
+| Ad Unit | Placement Id | 
+| --- | --- | 
+| Banner | zhlwlm9280 | 
+| Interstitial | sa7nvltbrn |
+| Rewarded interstitial | nhdfxqclej |
 
 - Click the Continue button
 - Give eCPM for the Thirdpresence ad network

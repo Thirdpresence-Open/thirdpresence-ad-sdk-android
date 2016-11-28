@@ -38,8 +38,16 @@ public class VideoWebView extends WebView {
     private Context mApplication;
     private Handler mHandler;
 
+    private String mPlayerUrl;
+
     private boolean mPlayerPageLoaded = false;
     private boolean mBackAllowed = false;
+
+    private int mInitRetryCount;
+
+    private final static int INIT_RETRY_COUNT_MAX = 5;
+    private final static int INIT_RETRY_DELAY_MS = 1000;
+
 
     private final static String JS_API_NAME = "ThirdpresenceNative";
     private final static String PLAYER_URL_BASE = "//d1c13tt6n7tja5.cloudfront.net/tags/[KEY_SERVER]/sdk/LATEST/sdk_player.v3.html?";
@@ -101,8 +109,14 @@ public class VideoWebView extends WebView {
             if (view == VideoWebView.this) {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
                     if (!mPlayerPageLoaded) {
-                        String message = description != null ? description : "Unknown error";
-                        sendErrorMessage(MSG_TYPE_NETWORK_ERROR, errorCode, message);
+                        if (mInitRetryCount <= INIT_RETRY_COUNT_MAX) {
+                            mInitRetryCount++;
+                            TLog.w("Network error ignored: " + errorCode + ":" + description + ". Trying to retry.");
+                            retryInitPlayer();
+                        } else {
+                            String message = description != null ? description : "Unknown error";
+                            sendErrorMessage(MSG_TYPE_NETWORK_ERROR, errorCode, message);
+                        }
                     } else {
                         TLog.w("Network error ignored: " + errorCode + ":" + description);
                     }
@@ -117,6 +131,13 @@ public class VideoWebView extends WebView {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && error != null) {
                     CharSequence description = error.getDescription();
                     String message = description != null ? description.toString() : "Unknown error";
+                    if (!mPlayerPageLoaded && mPlayerUrl != null && mInitRetryCount <= INIT_RETRY_COUNT_MAX) {
+                        mInitRetryCount++;
+                        TLog.w("Network error ignored: " + error.getErrorCode() + ":" + message + ". Trying to retry.");
+                        retryInitPlayer();
+                        return;
+                    }
+
                     if (!mPlayerPageLoaded || request.isForMainFrame()) {
                         sendErrorMessage(MSG_TYPE_NETWORK_ERROR, error.getErrorCode(), message);
                     } else {
@@ -132,17 +153,25 @@ public class VideoWebView extends WebView {
             if (view == VideoWebView.this) {
                 if (!mPlayerPageLoaded) {
                     String message = null;
+                    int errorCode = -1;
                     if (errorResponse != null) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                            message = errorResponse.getReasonPhrase();
+                            message = "HTTP: " +  errorResponse.getReasonPhrase();
+                            errorCode = errorResponse.getStatusCode();
                         }
                     }
+
                     if (message == null) {
-                        message = "failure when loading the player";
+                        message = "HTTP: Unknonw failure when loading the player";
                     }
 
-                    message = "HTTP: " + message;
-                    sendErrorMessage(MSG_TYPE_PLAYER_ERROR, VideoAd.ErrorCode.PLAYER_INIT_FAILED.getErrorCode(), message);
+                    if (mPlayerUrl != null && mInitRetryCount <= INIT_RETRY_COUNT_MAX) {
+                        mInitRetryCount++;
+                        TLog.w("Network error ignored: " + errorCode + ":" + message + ". Trying to retry.");
+                        retryInitPlayer();
+                    } else {
+                        sendErrorMessage(MSG_TYPE_PLAYER_ERROR, errorCode , message);
+                    }
                 }
             }
         }
@@ -205,6 +234,8 @@ public class VideoWebView extends WebView {
 
         mApplication = context;
         mPlayerPageLoaded = false;
+        mInitRetryCount = 0;
+        mPlayerUrl = null;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             if (0 != (mApplication.getApplicationInfo().flags &= ApplicationInfo.FLAG_DEBUGGABLE)) {
@@ -249,6 +280,8 @@ public class VideoWebView extends WebView {
      */
     @Override
     public void destroy() {
+        mPlayerUrl = null;
+        mInitRetryCount = 0;
         mPlayerPageLoaded = false;
         super.destroy();
     }
@@ -301,8 +334,9 @@ public class VideoWebView extends WebView {
      * @param playerParams player parameters
      *
      */
-    public void initPlayer(Map<String, String> environment,  Map<String, String> playerParams) {
+    public void initPlayer(Map<String, String> environment,  Map<String, String> playerParams, String placementType) {
         String customization = "";
+        mPlayerUrl = null;
         try {
             JSONObject json = new JSONObject(playerParams);
             String jsonString = json.toString();
@@ -341,15 +375,29 @@ public class VideoWebView extends WebView {
 
             String protocol = VideoAd.parseBoolean(environment.get(VideoAd.Environment.KEY_FORCE_SECURE_HTTP), false) ? "https:" : "http:";
 
-            String url = protocol
+            mPlayerUrl = protocol
                         + PLAYER_URL_BASE.replace("[KEY_SERVER]", server)
                         + "env=" + server
                         + "&adsdk=" + versionString
                         + "&cid=" + account
                         + "&playerid=" + playerId
+                        + "&type=" + placementType
                         + "&customization=" + customization;
-            TLog.d("Loading player: " + url);
-            loadUrl(url);
+            TLog.d("Loading player: " + mPlayerUrl);
+            loadUrl(mPlayerUrl);
+        }
+    }
+
+    private void retryInitPlayer() {
+        if (mHandler != null) {
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (mPlayerUrl != null) {
+                        loadUrl(mPlayerUrl);
+                    }
+                }
+            }, INIT_RETRY_DELAY_MS);
         }
     }
 

@@ -26,7 +26,7 @@ task clean(type: Delete) {
 project.ext.set("buildNumberOverride", 0)
 
 def getVersionName() {
-    def versionName = '1.4'
+    def versionName = '1.5'
     return versionName
 }
 

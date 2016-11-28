@@ -7,6 +7,7 @@ import com.thirdpresence.adsdk.sdk.VideoAd;
 import com.thirdpresence.adsdk.sdk.VideoInterstitial;
 import com.mopub.mobileads.CustomEventInterstitial;
 import com.mopub.mobileads.MoPubErrorCode;
+import com.thirdpresence.adsdk.sdk.internal.TLog;
 
 import java.util.Map;
 
@@ -41,13 +42,22 @@ public class ThirdpresenceCustomEvent extends CustomEventInterstitial implements
 
         if (activity == null) {
             mInterstitialListener.onInterstitialFailed(MoPubErrorCode.UNSPECIFIED);
+            TLog.e("activity is null");
             return;
         }
 
         Map<String, String> env = ThirdpresenceCustomEventHelper.setEnvironment(serverExtras);
         Map<String, String> params = ThirdpresenceCustomEventHelper.setPlayerParameters(activity, serverExtras);
 
-        mVideoInterstitial = new VideoInterstitial();
+        String placementId = env.get(VideoAd.Environment.KEY_PLACEMENT_ID);
+
+        if (placementId == null) {
+            mInterstitialListener.onInterstitialFailed(MoPubErrorCode.UNSPECIFIED);
+            TLog.e("Placement id is null");
+            return;
+        }
+
+        mVideoInterstitial = new VideoInterstitial(placementId);
         mVideoInterstitial.setListener(this);
         mVideoInterstitial.init(activity, env, params, VideoInterstitial.DEFAULT_TIMEOUT);
         mVideoInterstitial.loadAd();
@@ -95,6 +105,7 @@ public class ThirdpresenceCustomEvent extends CustomEventInterstitial implements
             MoPubErrorCode moPubErrorCode = ThirdpresenceCustomEventHelper.mapErrorCode(errorCode);
             mInterstitialListener.onInterstitialFailed(moPubErrorCode);
         }
+        TLog.e("An error occurred, code : " + errorCode + ", message: " + message);
     }
 
     /**
@@ -116,8 +127,10 @@ public class ThirdpresenceCustomEvent extends CustomEventInterstitial implements
             } else if (eventName.equals(VideoAd.Events.AD_ERROR)) {
                 if (mAdLoaded) {
                     mInterstitialListener.onInterstitialFailed(MoPubErrorCode.VIDEO_PLAYBACK_ERROR);
+                    TLog.e("An error occurred while playing");
                 } else {
                     mInterstitialListener.onInterstitialFailed(MoPubErrorCode.NO_FILL);
+                    TLog.e("An error occurred while loading an ad");
                 }
             } else if (eventName.equals(VideoAd.Events.AD_CLICKTHRU)) {
                 mInterstitialListener.onInterstitialClicked();

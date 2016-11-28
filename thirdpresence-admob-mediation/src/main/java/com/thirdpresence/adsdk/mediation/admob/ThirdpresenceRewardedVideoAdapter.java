@@ -1,18 +1,18 @@
 package com.thirdpresence.adsdk.mediation.admob;
 
-
 import android.app.Activity;
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
-
+import android.util.Log;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.mediation.MediationAdRequest;
-import com.google.android.gms.ads.reward.RewardItem;
+import com.google.android.gms.ads.mediation.OnContextChangedListener;
 import com.google.android.gms.ads.reward.mediation.MediationRewardedVideoAdAdapter;
 import com.google.android.gms.ads.reward.mediation.MediationRewardedVideoAdListener;
 import com.thirdpresence.adsdk.sdk.RewardedVideo;
 import com.thirdpresence.adsdk.sdk.VideoAd;
-
+import com.thirdpresence.adsdk.sdk.internal.TLog;
 import java.util.Map;
 
 /**
@@ -21,16 +21,12 @@ import java.util.Map;
  * for Admob SDK that provides rewarded video mediation for Thirdpresence Ad SDK
  *
  */
-public class ThirdpresenceRewardedVideoAdapter implements MediationRewardedVideoAdAdapter, VideoAd.Listener {
+public class ThirdpresenceRewardedVideoAdapter implements MediationRewardedVideoAdAdapter, VideoAd.Listener, OnContextChangedListener {
 
     private RewardedVideo mRewardedVideo;
-    private String mRewardTitle;
-    private int mRewardAmount;
+    private RewardData mRewardData;
     private MediationRewardedVideoAdListener mRewardedListener;
-
-    private static final String PARAM_NAME_REWARD_TITLE = "rewardtitle";
-    private static final String PARAM_NAME_REWARD_AMOUNT = "rewardamount";
-
+    private Activity mActivity;
     /**
      * Default constructor
     */
@@ -44,54 +40,82 @@ public class ThirdpresenceRewardedVideoAdapter implements MediationRewardedVideo
             mRewardedVideo.remove();
             mRewardedVideo.setListener(null);
             mRewardedVideo = null;
-            mRewardedListener = null;
         }
+        mRewardedListener = null;
+        mRewardData = null;
     }
 
     /**
      * From MediationRewardedVideoAdAdapter
      */
     @Override
-    public void initialize(Context context, MediationAdRequest mediationAdRequest, String s, MediationRewardedVideoAdListener mediationRewardedVideoAdListener, Bundle bundle, Bundle bundle1) {
+    public void initialize(Context context,
+                           MediationAdRequest mediationAdRequest,
+                           String unused,
+                           MediationRewardedVideoAdListener mediationRewardedVideoAdListener,
+                           Bundle serverParameters,
+                           Bundle mediationExtras) {
 
         clear();
 
         mRewardedListener = mediationRewardedVideoAdListener;
 
-        Activity activity = null;
-        if (context instanceof Activity) {
-            activity = (Activity) context;
+        if (mActivity == null && context instanceof Activity) {
+            mActivity = (Activity) context;
         }
 
-        if (activity == null) {
-            mRewardedListener.onInitializationFailed(this, AdRequest.ERROR_CODE_INTERNAL_ERROR);
-            return;
-        }
-
-        Map<String, String> pubParams = ThirdpresenceCustomEventHelper.parseParamsString(s);
-        Map<String, String> env = ThirdpresenceCustomEventHelper.setEnvironment(pubParams);
-        Map<String, String> params = ThirdpresenceCustomEventHelper.setPlayerParameters(activity, pubParams);
-
-        if (pubParams.containsKey(PARAM_NAME_REWARD_TITLE)) {
-            mRewardTitle = pubParams.get(PARAM_NAME_REWARD_TITLE);
-        } else {
+        if (mActivity == null) {
+            TLog.e("Activity is null");
             mRewardedListener.onInitializationFailed(this, AdRequest.ERROR_CODE_INVALID_REQUEST);
             return;
         }
 
-        try {
-            String reward = pubParams.get(PARAM_NAME_REWARD_AMOUNT);
-            if (reward != null) {
-                mRewardAmount = Integer.parseInt(reward);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            if (mActivity.isDestroyed()) {
+                TLog.e("Activity is destroyed");
+                mRewardedListener.onInitializationFailed(this, AdRequest.ERROR_CODE_INVALID_REQUEST);
+                return;
             }
-        } catch (NumberFormatException e) {
+        }
+
+        String publisherParams = serverParameters.getString(CUSTOM_EVENT_SERVER_PARAMETER_FIELD);
+        if (publisherParams == null) {
+            TLog.e("Publisher parameters not set");
             mRewardedListener.onInitializationFailed(this, AdRequest.ERROR_CODE_INVALID_REQUEST);
             return;
         }
 
-        mRewardedVideo = new RewardedVideo();
+        Map<String, String> pubParams = ThirdpresenceCustomEventHelper.parseParamsString(publisherParams);
+
+        TLog.d("Publisher parameters: " + pubParams);
+
+        mRewardData = ThirdpresenceCustomEventHelper.parseRewardData(pubParams);
+        if (mRewardData.getType() == null) {
+            TLog.e("Reward title not set");
+            mRewardedListener.onInitializationFailed(this, AdRequest.ERROR_CODE_INVALID_REQUEST);
+            return;
+        }
+
+        if (mRewardData.getAmount() == -1) {
+            TLog.e("Reward amount not set");
+            mRewardedListener.onInitializationFailed(this, AdRequest.ERROR_CODE_INVALID_REQUEST);
+            return;
+        }
+
+        Map<String, String> env = ThirdpresenceCustomEventHelper.setEnvironment(pubParams);
+        Map<String, String> params = ThirdpresenceCustomEventHelper.setPlayerParameters(mActivity, pubParams);
+
+        String placementId = env.get(VideoAd.Environment.KEY_PLACEMENT_ID);
+
+        if (placementId == null) {
+            TLog.e("Placement id not set");
+            mRewardedListener.onInitializationFailed(this, AdRequest.ERROR_CODE_INVALID_REQUEST);
+            return;
+        }
+
+        mRewardedVideo = new RewardedVideo(placementId);
         mRewardedVideo.setListener(this);
-        mRewardedVideo.init(activity, env, params, VideoAd.DEFAULT_TIMEOUT);
+        mRewardedVideo.init(mActivity, env, params, VideoAd.DEFAULT_TIMEOUT);
     }
 
     /**
@@ -113,7 +137,7 @@ public class ThirdpresenceRewardedVideoAdapter implements MediationRewardedVideo
             mRewardedVideo.displayAd();
         }
         else if (mRewardedListener != null) {
-            mRewardedListener.onAdFailedToLoad(this, AdRequest.ERROR_CODE_INTERNAL_ERROR);
+            Log.w(TLog.LOG_TAG, "Ad is not loaded");
         }
     }
 
@@ -122,7 +146,7 @@ public class ThirdpresenceRewardedVideoAdapter implements MediationRewardedVideo
      */
     @Override
     public boolean isInitialized() {
-        return mRewardedVideo != null && mRewardedVideo.isPlayerReady();
+        return (mRewardedVideo != null && mRewardedVideo.isPlayerReady());
      }
 
     /**
@@ -138,7 +162,7 @@ public class ThirdpresenceRewardedVideoAdapter implements MediationRewardedVideo
      */
     @Override
     public void onPause() {
-
+        mRewardedVideo.pauseAd();
     }
 
     /**
@@ -146,7 +170,18 @@ public class ThirdpresenceRewardedVideoAdapter implements MediationRewardedVideo
      */
     @Override
     public void onResume() {
+        mRewardedVideo.resumeAd();
+    }
 
+    /**
+     * From OnContextChangedListener
+     */
+    @Override
+    public void onContextChanged (Context newContext) {
+        if (newContext instanceof Activity) {
+            mActivity = (Activity) newContext;
+            TLog.d("New activity: " + mActivity.getTitle());
+        }
     }
 
     /**
@@ -171,19 +206,8 @@ public class ThirdpresenceRewardedVideoAdapter implements MediationRewardedVideo
             } else if (eventName.equals(VideoAd.Events.AD_CLICKTHRU)) {
                 mRewardedListener.onAdClicked(this);
             } else if (eventName.equals(VideoAd.Events.AD_VIDEO_COMPLETE)) {
-                RewardItem reward = new RewardItem() {
-                    @Override
-                    public String getType() {
-                        return mRewardTitle;
-                    }
-
-                    @Override
-                    public int getAmount() {
-                        return mRewardAmount;
-                    }
-                };
-                mRewardedListener.onRewarded(this, reward);
-
+                TLog.w("Reward earned: " + mRewardData.toString());
+                mRewardedListener.onRewarded(this, mRewardData);
             } else if (eventName.equals(VideoAd.Events.AD_LEFT_APPLICATION)) {
                 mRewardedListener.onAdLeftApplication(this);
             }

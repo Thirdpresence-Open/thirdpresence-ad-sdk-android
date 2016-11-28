@@ -33,8 +33,8 @@ repositories {
 
 dependencies {
 	// SDK library and admob mediation plugin
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.4.0@aar'
-    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.4.0@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5@aar'
+    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.5@aar'
     // Google Play Services 
     compile 'com.google.android.gms:play-services-ads:9.6.1'
     // Google Support libraries
@@ -68,14 +68,23 @@ The location permission is optional, but highly recommended to get a higher fill
 
 | Ad Unit | Custom Event Class | Custom Event Class Data |
 | --- | --- | --- |
-| Fullscreen Ad | com.thirdpresence.adsdk.mediation.mopub. ThirdpresenceCustomEvent | { "account":"REPLACE_ME", "placementid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME", "gender":"REPLACE_ME", "yob":"REPLACE_ME" } |
-| Rewarded Video | com.thirdpresence.adsdk.mediation.mopub. ThirdpresenceCustomEventRewardedVideo | { "account":"REPLACE_ME", "placementid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME", "rewardtitle":"REPLACE_ME", "rewardamount":"REPLACE_ME", "gender":"REPLACE_ME", "yob":"REPLACE_ME" }  |
+| Medium Ad | com.thirdpresence.adsdk.mediation.mopub. ThirdpresenceCustomEventBanner | { "account":"REPLACE_ME", "placementid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME" } |
+| Fullscreen Ad | com.thirdpresence.adsdk.mediation.mopub. ThirdpresenceCustomEvent | { "account":"REPLACE_ME", "placementid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME"} |
+| Rewarded Video | com.thirdpresence.adsdk.mediation.mopub. ThirdpresenceCustomEventRewardedVideo | { "account":"REPLACE_ME", "placementid":"REPLACE_ME", "appname":"REPLACE_ME", "appversion":"REPLACE_ME", "appstoreurl":"REPLACE_ME", "rewardtitle":"REPLACE_ME", "rewardamount":"REPLACE_ME" }  |
+
+The Custom Event Method field should be left blank.
 
 **Replace all the REPLACE_ME placeholders with actual values!**
 
-The Custom Event Method field should be left blank.
-For testing purposes, use account name "sdk-demo" and placementid "sa7nvltbrn".
-Provide the user's gender and yob (year of birth) to get more targeted ads. Leave them empty if the information is not available.
+For the rewarded video the reward title and reward amount values are mandatory.
+
+For testing purposes, use account name "sdk-demo" and following placement ids:
+ 
+|  Ad Unit | Placement Id | 
+| --- | --- |
+| Medium ad | zhlwlm9280 | 
+| Interstitial | sa7nvltbrn |
+| Rewarded video | nhdfxqclej |
 
 - Open the Segments tab on the Mopub console
 - Select the segment where you want to enable the Thirdpresence custom native network

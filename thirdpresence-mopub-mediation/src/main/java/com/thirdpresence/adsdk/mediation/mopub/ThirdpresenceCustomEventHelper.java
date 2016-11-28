@@ -3,6 +3,7 @@ package com.thirdpresence.adsdk.mediation.mopub;
 import android.content.Context;
 
 import com.mopub.common.MoPub;
+import com.mopub.common.MoPubReward;
 import com.mopub.mobileads.MoPubErrorCode;
 import com.thirdpresence.adsdk.sdk.VideoAd;
 
@@ -21,14 +22,14 @@ public class ThirdpresenceCustomEventHelper {
     private static final String EXTRAS_KEY_ACCOUNT = "account";
     private static final String EXTRAS_KEY_PLACEMENT_ID = "placementid";
     private static final String EXTRAS_KEY_DISABLE_BACK = "disablebackbutton";
-
     private static final String EXTRAS_KEY_APP_NAME = "appname";
     private static final String EXTRAS_KEY_APP_VERSION = "appversion";
     private static final String EXTRAS_KEY_APP_STORE_URL = "appstoreurl";
     private static final String EXTRAS_KEY_SKIP_OFFSET = "skipoffset";
     private static final String EXTRAS_KEY_USER_GENDER = "gender";
     private static final String EXTRAS_KEY_USER_YOB = "yob";
-
+    private static final String EXTRAS_KEY_REWARD_TITLE = "rewardtitle";
+    private static final String EXTRAS_KEY_REWARD_AMOUNT = "rewardamount";
 
     private ThirdpresenceCustomEventHelper() {}
 
@@ -47,6 +48,8 @@ public class ThirdpresenceCustomEventHelper {
         env.put(VideoAd.Environment.KEY_ACCOUNT, serverExtras.get(EXTRAS_KEY_ACCOUNT));
         env.put(VideoAd.Environment.KEY_PLACEMENT_ID, serverExtras.get(EXTRAS_KEY_PLACEMENT_ID));
         env.put(VideoAd.Environment.KEY_DISABLE_BACK_BUTTON, serverExtras.get(EXTRAS_KEY_DISABLE_BACK));
+        env.put(VideoAd.Environment.KEY_REWARD_TITLE, serverExtras.get(EXTRAS_KEY_REWARD_TITLE));
+        env.put(VideoAd.Environment.KEY_REWARD_AMOUNT, serverExtras.get(EXTRAS_KEY_REWARD_AMOUNT));
         return env;
     }
 
@@ -101,6 +104,46 @@ public class ThirdpresenceCustomEventHelper {
         }
 
         return moPubErrorCode;
+    }
+
+    /**
+     * Parses reward title from publisher params
+     *
+     * @param serverExtras MoPub publisher parameters
+     * @return reward title or NO_REWARD_LABEL if not found
+     *
+     */
+    public static String parseRewardTitle(Map<String, String> serverExtras) {
+
+        String title = null;
+        if (serverExtras.containsKey(EXTRAS_KEY_REWARD_TITLE)) {
+            title = serverExtras.get(EXTRAS_KEY_REWARD_TITLE);
+        }
+
+        if (title == null){
+            title = MoPubReward.NO_REWARD_LABEL;
+        }
+        return title;
+    }
+
+    /**
+     * Parses reward amount from publisher params
+     *
+     * @param serverExtras MoPub publisher parameters
+     * @return reward amount or NO_REWARD_AMOUNT if not found
+     *
+     */
+    public static int parseRewardAmount(Map<String, String> serverExtras) {
+        int amount = MoPubReward.NO_REWARD_AMOUNT;
+        try {
+            String reward = serverExtras.get(EXTRAS_KEY_REWARD_AMOUNT);
+            if (reward != null) {
+                amount = Integer.parseInt(reward);
+            }
+        } catch (NumberFormatException e) {
+            amount = MoPubReward.NO_REWARD_AMOUNT;
+        }
+        return amount;
     }
 
 }

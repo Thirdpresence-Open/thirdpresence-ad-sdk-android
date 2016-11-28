@@ -70,7 +70,14 @@ public class ThirdpresenceCustomEventInterstitial implements CustomEventIntersti
         Map<String, String> env = ThirdpresenceCustomEventHelper.setEnvironment(pubParams);
         Map<String, String> params = ThirdpresenceCustomEventHelper.setPlayerParameters(activity, pubParams);
 
-        mVideoInterstitial = new VideoInterstitial();
+        String placementId = env.get(VideoAd.Environment.KEY_PLACEMENT_ID);
+
+        if (placementId == null) {
+            mInterstitialListener.onAdFailedToLoad(AdRequest.ERROR_CODE_INTERNAL_ERROR);
+            return;
+        }
+
+        mVideoInterstitial = new VideoInterstitial(placementId);
         mVideoInterstitial.setListener(this);
         mVideoInterstitial.init(activity, env, params, VideoInterstitial.DEFAULT_TIMEOUT);
         mVideoInterstitial.loadAd();

@@ -4,10 +4,8 @@ import android.app.Activity;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-
 import com.google.android.gms.ads.AdRequest;
 import com.thirdpresence.adsdk.sdk.VideoAd;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +25,8 @@ public class ThirdpresenceCustomEventHelper {
     private static final String PARAM_NAME_SKIP_OFFSET = "skipoffset";
     private static final String PARAM_NAME_USER_GENDER = "gender";
     private static final String PARAM_NAME_USER_YOB = "yob";
+    private static final String PARAM_NAME_REWARD_TITLE = "rewardtitle";
+    private static final String PARAM_NAME_REWARD_AMOUNT = "rewardamount";
 
     private static final String GOOGLE_PLAY_URL_BASE = "http://play.google.com/store/apps/details?id=";
 
@@ -54,6 +54,12 @@ public class ThirdpresenceCustomEventHelper {
         }
         if (params.containsKey(PARAM_NAME_DISABLE_BACK)) {
             env.put(VideoAd.Environment.KEY_DISABLE_BACK_BUTTON, params.get(PARAM_NAME_DISABLE_BACK));
+        }
+        if (params.containsKey(PARAM_NAME_REWARD_TITLE)) {
+            env.put(VideoAd.Environment.KEY_REWARD_TITLE, params.get(PARAM_NAME_REWARD_TITLE));
+        }
+        if (params.containsKey(PARAM_NAME_REWARD_AMOUNT)) {
+            env.put(VideoAd.Environment.KEY_REWARD_AMOUNT, params.get(PARAM_NAME_REWARD_AMOUNT));
         }
 
         return env;
@@ -149,5 +155,35 @@ public class ThirdpresenceCustomEventHelper {
         }
         return map;
     }
+
+    /**
+     * Parses reward data from publisher params
+     *
+     * @param params Admob publisher parameters
+     * @return reward data
+     *
+     */
+    public static RewardData parseRewardData(Map<String, String> params) {
+        String title = null;
+        int amount = -1;
+
+        if (params.containsKey(PARAM_NAME_REWARD_TITLE)) {
+            title = params.get(PARAM_NAME_REWARD_TITLE);
+        }
+
+        if (params.containsKey(PARAM_NAME_REWARD_AMOUNT)) {
+            try {
+                String reward = params.get(PARAM_NAME_REWARD_AMOUNT);
+                if (reward != null) {
+                    amount = Integer.parseInt(reward);
+                }
+            } catch (NumberFormatException e) {
+                amount = -1;
+            }
+        }
+
+        return new RewardData(title, amount);
+    }
+
 }
 
