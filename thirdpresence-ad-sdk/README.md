@@ -195,6 +195,6 @@ See [Sample App](../thirdpresence-ad-sdk-demo#thirdpresence-ad-sdk-for-android--
 
 ### API reference
 
-See Thirdpresence Ad SDK [JavaDoc](http://s3.amazonaws.com/thirdpresence-ad-tags/sdk/javadoc/android/1.5/index.html)
+See Thirdpresence Ad SDK [JavaDoc](https://thirdpresence-ad-tags.s3.amazonaws.com/sdk/javadoc/android/1.5.0/index.html)
 
 
