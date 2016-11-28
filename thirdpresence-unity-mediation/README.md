@@ -10,7 +10,7 @@ The Thirdpresence Ad SDK Unity plugin provides means to display interstitial and
 ## Getting Unity plugin package
 
 The pre-built plugin is available here:
-http://s3.amazonaws.com/thirdpresence-ad-tags/sdk/plugins/unity/1.5/thirdpresence-ad-sdk-android.unitypackage
+https://thirdpresence-ad-tags.s3.amazonaws.com/sdk/plugins/unity/1.5.0/thirdpresence-ad-sdk-android.unitypackage
 
 The plugin is built with the following tools:
 
