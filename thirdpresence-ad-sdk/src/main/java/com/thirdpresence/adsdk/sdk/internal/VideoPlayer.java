@@ -70,6 +70,7 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
 
     private boolean mUsingPlayerActivity = false;
     private boolean mAdLoadingPending = false;
+    private boolean mVideoCompleted = false;
     private boolean mVideoClicked = false;
     private boolean mWebViewPaused = false;
     private boolean mOrientationChanged = false;
@@ -152,7 +153,7 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
                      Map<String, String> params,
                      long timeout,
                      String placementId,
-                     String plcementType) {
+                     String placementType) {
 
         if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
             throw new IllegalThreadStateException("init() is not called from UI thread");
@@ -173,7 +174,7 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
         mActiveActivity = activity;
         mApplication = activity.getApplication();
         mPlacementId = placementId;
-        mPlacementType = plcementType;
+        mPlacementType = placementType;
         mEnv = environment;
         mParams = params;
         mInitTimeout = timeout;
@@ -481,6 +482,15 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
     }
 
     /**
+     * Checks if the video has been completed
+     *
+     * @return true if completed, false otherwise
+     */
+    public boolean isVideoCompleted() {
+        return mVideoCompleted;
+    }
+
+    /**
      * Inits the video player
      */
     private void initPlayer() {
@@ -517,7 +527,6 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
                     mParams.put(VideoAd.Parameters.KEY_DEVICE_ID, mDeviceId);
                 }
 
-                mParams.put(VideoAd.Parameters.KEY_AD_PLACEMENT, VideoAd.PLACEMENT_TYPE_INTERSTITIAL);
                 mWebView.initPlayer(mEnv, mParams, mPlacementType);
                 changeState(State.INITIALISING);
             }
@@ -548,6 +557,7 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
         mAdLoadingPending = false;
         mUsingPlayerActivity = false;
         mVideoClicked = false;
+        mVideoCompleted = false;
         
         if (mWebView != null && mWebViewPaused){
             mWebView.onResume();
@@ -894,6 +904,8 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
                                 if (mPlayerState == State.DISPLAYING) {
                                     changeState(State.STOPPED);
                                 }
+                            } else if (args[0].equals(VideoAd.Events.AD_VIDEO_COMPLETE)) {
+                                mVideoCompleted = true;
                             }
 
                             if (mListener != null) {

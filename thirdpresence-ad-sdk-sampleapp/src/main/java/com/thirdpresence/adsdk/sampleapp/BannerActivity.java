@@ -2,6 +2,7 @@ package com.thirdpresence.adsdk.sampleapp;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -9,8 +10,10 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,6 +36,7 @@ public class BannerActivity extends AppCompatActivity {
     private String mAccountName;
     private String mPlacementId;
     private EditText mStatusField;
+    private boolean mAdLoaded;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +45,22 @@ public class BannerActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        ScrollView scrollView = (ScrollView)findViewById(R.id.activity_banner);
+        scrollView.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
+
+            @Override
+            public void onScrollChanged() {
+                // Check banner view visibility when scrolled and display ad if view is visible
+                if (mAdLoaded && isBannerVisible()) {
+                    VideoAd videoBanner = VideoAdManager.getInstance().get(mPlacementId);
+                    if (videoBanner != null) {
+                        videoBanner.displayAd();
+                    }
+                }
+            }
+        });
+
 
         mStatusField = (EditText) findViewById(R.id.statusField);
         mStatusField.setText("IDLE");
@@ -106,12 +126,21 @@ public class BannerActivity extends AppCompatActivity {
         @Override
         public void onAdEvent(String eventName, String arg1, String arg2, String arg3) {
             if (eventName.equals(AD_LOADED)) {
+                mAdLoaded = true;
                 mStatusField.setText("LOADED");
+                if (isBannerVisible()) {
+                    VideoAd videoBanner = VideoAdManager.getInstance().get(mPlacementId);
+                    if (videoBanner != null) {
+                        videoBanner.displayAd();
+                    }
+                }
             } else if (eventName.equals(AD_STARTED)) {
                 mStatusField.setText("DISPLAYING");
             } else if (eventName.equals(AD_STOPPED)) {
+                mAdLoaded = false;
                 mStatusField.setText("STOPPED");
             } else if (eventName.equals(AD_ERROR)) {
+                mAdLoaded = false;
                 Toast.makeText(BannerActivity.this, "An error occured: " + arg1, Toast.LENGTH_SHORT).show();
                 mStatusField.setText("ERROR");
             }
@@ -132,6 +161,8 @@ public class BannerActivity extends AppCompatActivity {
      * This method demonstrates how to initialize a banner ad placement.
      */
     private void loadAd() {
+        mAdLoaded = false;
+
         // Remove previous ad instance if already initialized
         VideoAdManager.getInstance().clear();
 
@@ -148,6 +179,11 @@ public class BannerActivity extends AppCompatActivity {
 
         environment.put(VideoAd.Environment.KEY_ACCOUNT, mAccountName);
         environment.put(VideoAd.Environment.KEY_PLACEMENT_ID, mPlacementId);
+
+        // By default the ad in the banner is displayed immediately. In case the banner is
+        // in scroll view or similar it is recommended to start playing the ad when it comes
+        // visible. Therefore auto display shall be disabled.
+        environment.put(VideoAd.Environment.KEY_BANNER_AUTO_DISPLAY, Boolean.FALSE.toString());
 
         HashMap<String, String> params = new HashMap<>();
         params.put(VideoAd.Parameters.KEY_PUBLISHER, "Thirdpresence Sample App");
@@ -181,4 +217,38 @@ public class BannerActivity extends AppCompatActivity {
         mStatusField.setText("LOADING");
     }
 
+    /*
+     * Helper function to check if the banner view is visible
+     */
+    private boolean isBannerVisible() {
+        BannerView bannerView = (BannerView)findViewById(R.id.bannerView);
+        if (bannerView.isShown()) {
+            ScrollView scrollView = (ScrollView)findViewById(R.id.activity_banner);
+
+            Rect scrollBounds = new Rect(
+                    scrollView.getScrollX(),
+                    scrollView.getScrollY(),
+                    scrollView.getScrollX() + scrollView.getWidth(),
+                    scrollView.getScrollY() + scrollView.getHeight());
+
+            int bannerWidth = bannerView.getWidth();
+            int bannerHeight = bannerView.getHeight();
+            int bannerX = (int)bannerView.getX();
+            int bannerY = (int)bannerView.getY();
+
+            Rect bannerRect = new Rect(
+                    bannerX,
+                    bannerY,
+                    bannerX + bannerWidth,
+                    bannerY + bannerHeight);
+
+            if (bannerRect.intersect(scrollBounds)) {
+                // Assume half of the banner view needs to be visible to start displaying the ad
+                if (bannerRect.height() >= bannerHeight * 0.5 && bannerRect.width() >= bannerWidth * 0.5 ) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

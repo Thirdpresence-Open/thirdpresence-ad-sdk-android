@@ -162,6 +162,10 @@ public abstract class VideoAd {
          * Amount of a reward
          */
         public final static String KEY_REWARD_AMOUNT = "rewardamount";
+        /**
+         * Banner auto display. Default value true.
+         */
+        public final static String KEY_BANNER_AUTO_DISPLAY = "bannerautodisplay";
     }
 
     /**
@@ -251,7 +255,21 @@ public abstract class VideoAd {
          * User year of birth
          */
         public final static String KEY_USER_YOB = "yob";
+        /**
+         * Comma-separated list of keywords
+         */
+        public final static String KEY_KEYWORDS = "keywords";
     }
+
+    /**
+     * Gender male
+     */
+    public final static String GENDER_MALE = "male";
+
+    /**
+     * Gender female
+     */
+    public final static String GENDER_FEMALE = "female";
 
     /**
      * Ad Placement type interstitial ad
@@ -409,10 +427,9 @@ public abstract class VideoAd {
      * Resets and laods new ad. Listener.onAdEvent() is called with AD_LOADED eventName when the ad is loaded
      */
     public abstract void resetAndLoadAd();
+
     /**
      * Displays the ad in the current activity
-     *
-     * @deprecated
      */
     public abstract void displayAd();
 
@@ -440,6 +457,7 @@ public abstract class VideoAd {
      * @param runnable to be executed when completed or null
      */
     public abstract void displayAd(Activity activity, Runnable runnable);
+
     /**
      * Checks if an ad is loaded
      *
@@ -453,6 +471,13 @@ public abstract class VideoAd {
      * @return true if ready, false otherwise
      */
     public abstract boolean isPlayerReady();
+
+    /**
+     * Checks if the video has been completed
+     *
+     * @return true if completed, false otherwise
+     */
+    public abstract boolean isVideoCompleted();
 
     /**
      * Gets reward title. This is relevant only for rewarded video
@@ -471,7 +496,6 @@ public abstract class VideoAd {
     public Number getRewardAmount() {
         return 0;
     }
-
 
     /**
      * Helper function for parsing boolean from a string

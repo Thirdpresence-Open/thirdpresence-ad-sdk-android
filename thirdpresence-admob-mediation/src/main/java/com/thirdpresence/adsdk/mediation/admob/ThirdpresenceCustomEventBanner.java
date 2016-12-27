@@ -67,7 +67,7 @@ public class ThirdpresenceCustomEventBanner  implements CustomEventBanner, Video
 
         Map<String, String> pubParams = ThirdpresenceCustomEventHelper.parseParamsString(publisherData);
         Map<String, String> env = ThirdpresenceCustomEventHelper.setEnvironment(pubParams);
-        Map<String, String> params = ThirdpresenceCustomEventHelper.setPlayerParameters(activity, pubParams);
+        Map<String, String> params = ThirdpresenceCustomEventHelper.setPlayerParameters(activity, mediationAdRequest, pubParams);
 
         mPlacementId = env.get(VideoAd.Environment.KEY_PLACEMENT_ID);
 

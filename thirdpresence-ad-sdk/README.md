@@ -27,7 +27,7 @@ repositories {
 
 dependencies {
 	// SDK library
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.0@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.1@aar'
     // Google Play Services 
     compile 'com.google.android.gms:play-services-ads:9.6.1'
     // Google Support libraries
@@ -135,7 +135,7 @@ An example code for initialising and displaying an interstitial ad placement:
 
 ### Banner ad placement
 
-In order to display video ad in an banner ad placement a BannerView needs to be added to the layout. This can be done either by defining the view in the layout XML or creating the view programmatically. 
+In order to display videoa ad in an banner ad placement a BannerView needs to be added to the layout. This can be done either by defining the view in the layout XML or creating the view programmatically. 
 Example of defining BannerView in the layout XML:
 ```
     <com.thirdpresence.adsdk.sdk.BannerView
@@ -161,6 +161,8 @@ The banner ad can be initialized, for example, in the Activity's onCreate() meth
 
         environment.put(VideoAd.Environment.KEY_ACCOUNT, ACCOUNT);
         environment.put(VideoAd.Environment.KEY_PLACEMENT_ID, placement);
+        // This is only needed if banner is in ScrollView or similar
+        environment.put(VideoAd.Environment.KEY_BANNER_AUTO_DISPLAY, Boolean.FALSE.toString());
 
         HashMap<String, String> params = new HashMap<>();
         params.put(VideoAd.Parameters.KEY_PUBLISHER, "Thirdpresence Sample App");
@@ -183,6 +185,7 @@ The banner ad can be initialized, for example, in the Activity's onCreate() meth
 
         VideoAd ad = VideoAdManager.getInstance().create(VideoAd.PLACEMENT_TYPE_BANNER, mPlacementId);
         ad.setListener(new BannerActivity.SampleAppListener());
+        
         ad.init(this, bannerView, environment, params, VideoAd.DEFAULT_TIMEOUT);
         
         // Video is displayed as soon as it is loaded
@@ -190,11 +193,16 @@ The banner ad can be initialized, for example, in the Activity's onCreate() meth
         
 ```
 
-See [Sample App](../thirdpresence-ad-sdk-demo#thirdpresence-ad-sdk-for-android---sample-application) and
-[Demo App](../thirdpresence-ad-sdk-demo#thirdpresence-ad-sdk-for-android---demo-application) for a complete app example. 
+In case the banner view is in an ScrollView or similar where it might be not visible at the time the view is loaded then the ad should not be displayed before the view is actually visible. 
+By default the ad is displayed automatically right after it is loaded. Set false value for environment map with key KEY_BANNER_AUTO_DISPLAY. Then when the view is visible call VideoBanner.displayAd();
+
+See Sample App for detailed examples for each placement type.
+
+[Sample App](../thirdpresence-ad-sdk-demo#thirdpresence-ad-sdk-for-android---sample-application)
+[Demo App](../thirdpresence-ad-sdk-demo#thirdpresence-ad-sdk-for-android---demo-application)
 
 ### API reference
 
-See Thirdpresence Ad SDK [JavaDoc](https://thirdpresence-ad-tags.s3.amazonaws.com/sdk/javadoc/android/1.5.0/index.html)
+See Thirdpresence Ad SDK [JavaDoc](https://thirdpresence-ad-tags.s3.amazonaws.com/sdk/javadoc/android/1.5.1/index.html)
 
 

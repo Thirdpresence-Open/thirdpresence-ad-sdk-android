@@ -5,9 +5,18 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.mediation.MediationAdRequest;
 import com.thirdpresence.adsdk.sdk.VideoAd;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+
+import static com.google.android.gms.ads.AdRequest.GENDER_FEMALE;
+import static com.google.android.gms.ads.AdRequest.GENDER_MALE;
 
 /**
  *
@@ -23,8 +32,6 @@ public class ThirdpresenceCustomEventHelper {
     private static final String PARAM_NAME_PLACEMENT_ID = "placementid";
     private static final String PARAM_NAME_DISABLE_BACK = "disablebackbutton";
     private static final String PARAM_NAME_SKIP_OFFSET = "skipoffset";
-    private static final String PARAM_NAME_USER_GENDER = "gender";
-    private static final String PARAM_NAME_USER_YOB = "yob";
     private static final String PARAM_NAME_REWARD_TITLE = "rewardtitle";
     private static final String PARAM_NAME_REWARD_AMOUNT = "rewardamount";
 
@@ -74,12 +81,11 @@ public class ThirdpresenceCustomEventHelper {
      * @return VideoAd parameters map
      *
      */
-    public static Map<String, String> setPlayerParameters(Activity activity, Map<String, String> params) {
+    public static Map<String, String> setPlayerParameters(Activity activity, MediationAdRequest adRequest, Map<String, String> params) {
         Map<String, String> playerParams = new HashMap<>();
 
         String packageName = activity.getPackageName();
         playerParams.put(VideoAd.Parameters.KEY_BUNDLE_ID, packageName);
-        playerParams.put(VideoAd.Parameters.KEY_APP_STORE_URL, GOOGLE_PLAY_URL_BASE + packageName);
 
         ApplicationInfo info = activity.getApplicationInfo();
         if (info.labelRes > 0) {
@@ -98,12 +104,33 @@ public class ThirdpresenceCustomEventHelper {
             playerParams.put(VideoAd.Parameters.KEY_SKIP_OFFSET, params.get(PARAM_NAME_SKIP_OFFSET));
         }
 
-        if (params.containsKey(PARAM_NAME_USER_GENDER)) {
-            playerParams.put(VideoAd.Parameters.KEY_USER_GENDER, params.get(PARAM_NAME_USER_GENDER));
+        int gender = adRequest.getGender();
+        if (gender == GENDER_MALE) {
+            playerParams.put(VideoAd.Parameters.KEY_USER_GENDER, VideoAd.GENDER_MALE);
+        } else if (gender == GENDER_FEMALE) {
+            playerParams.put(VideoAd.Parameters.KEY_USER_GENDER, VideoAd.GENDER_FEMALE);
         }
 
-        if (params.containsKey(PARAM_NAME_USER_YOB)) {
-            playerParams.put(VideoAd.Parameters.KEY_USER_YOB, params.get(PARAM_NAME_USER_YOB));
+        Date birthday = adRequest.getBirthday();
+        if (birthday != null) {
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy");
+            String yob = formatter.format(birthday);
+            if (yob != null) {
+                playerParams.put(VideoAd.Parameters.KEY_USER_YOB, yob);
+            }
+        }
+
+        Set<String> keywordSet = adRequest.getKeywords();
+        if (keywordSet != null && !keywordSet.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            Iterator<String> iterator = keywordSet.iterator();
+            while (iterator.hasNext()) {
+                sb.append(iterator.next());
+                if (iterator.hasNext()) {
+                    sb.append(',');
+                }
+            }
+            playerParams.put(VideoAd.Parameters.KEY_KEYWORDS, sb.toString());
         }
 
         return playerParams;

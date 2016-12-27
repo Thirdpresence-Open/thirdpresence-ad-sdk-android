@@ -125,7 +125,7 @@ public class VideoInterstitial extends VideoAd {
     }
 
     /**
-     * Display the ad in the given activity
+     * Displays the ad in the given activity
      *
      * @param activity that displays the ad or null if using built-in activity
      * @param runnable to be executed when completed or null
@@ -136,7 +136,7 @@ public class VideoInterstitial extends VideoAd {
     }
 
     /**
-     * Display the ad
+     * Displays the ad
      *
      * @param runnable to be executed when completed or null
      */
@@ -176,6 +176,15 @@ public class VideoInterstitial extends VideoAd {
      */
     public boolean isPlayerReady() {
         return mVideoPlayer.isPlayerReady();
+    }
+
+    /**
+     * Checks if the video has been completed
+     *
+     * @return true if completed, false otherwise
+     */
+    public boolean isVideoCompleted() {
+        return mVideoPlayer.isVideoCompleted();
     }
 
     /**

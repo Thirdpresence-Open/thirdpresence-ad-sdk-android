@@ -13,6 +13,8 @@ import com.mopub.mobileads.MoPubRewardedVideoManager;
 import com.thirdpresence.adsdk.sdk.RewardedVideo;
 import com.thirdpresence.adsdk.sdk.VideoAd;
 import com.thirdpresence.adsdk.sdk.internal.TLog;
+
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -42,8 +44,13 @@ public class ThirdpresenceCustomEventRewardedVideo extends CustomEventRewardedVi
         mRewardTitle = ThirdpresenceCustomEventHelper.parseRewardTitle(serverExtras);
         mRewardAmount = ThirdpresenceCustomEventHelper.parseRewardAmount(serverExtras);
 
+        final ThirdpresenceMediationSettings globalMediationSettings =
+                MoPubRewardedVideoManager.getGlobalMediationSettings(ThirdpresenceMediationSettings.class);
+
+        Map<String, Object> settings = (globalMediationSettings != null) ? globalMediationSettings.getMap() : localExtras;
+
         Map<String, String> env = ThirdpresenceCustomEventHelper.setEnvironment(serverExtras);
-        Map<String, String> params = ThirdpresenceCustomEventHelper.setPlayerParameters(launcherActivity, serverExtras);
+        Map<String, String> params = ThirdpresenceCustomEventHelper.setPlayerParameters(launcherActivity, settings, serverExtras);
 
         mPlacementId = env.get(VideoAd.Environment.KEY_PLACEMENT_ID);
 
@@ -253,5 +260,68 @@ public class ThirdpresenceCustomEventRewardedVideo extends CustomEventRewardedVi
      */
     @Override
     public void onBackPressed(@NonNull Activity activity) {}
+
+    /**
+     * For custom event mediation settings
+     */
+    public static class ThirdpresenceMediationSettings implements MediationSettings {
+        @Nullable private final String mGender;
+        @Nullable private final String mYob;
+        @Nullable private final String mKeywords;
+
+        public String getGender() {
+            return mGender;
+        }
+
+        public String getYearOfBirth() {
+            return mYob;
+        }
+
+        public String getKeywords() {
+            return mKeywords;
+        }
+
+        public Map<String, Object> getMap() {
+            Map<String, Object> map = new HashMap<String, Object>();
+            if (mGender != null)
+                map.put(ThirdpresenceCustomEventHelper.LOCAL_EXTRAS_KEY_USER_GENDER, mGender);
+            if (mYob != null)
+                map.put(ThirdpresenceCustomEventHelper.LOCAL_EXTRAS_KEY_USER_YOB, mYob);
+            if (mKeywords != null)
+                map.put(ThirdpresenceCustomEventHelper.LOCAL_EXTRAS_KEY_USER_KEYWORDS, mKeywords);
+            return map;
+        }
+
+        public static class Builder {
+            @Nullable private String gender;
+            @Nullable private String yob;
+            @Nullable private String keywords;
+
+            public Builder gender(@NonNull final String gender) {
+                this.gender = gender;
+                return this;
+            }
+
+            public Builder yearOfBirth(@NonNull final String yob) {
+                this.yob = yob;
+                return this;
+            }
+
+            public Builder keywords(@NonNull final String keywords) {
+                this.keywords = keywords;
+                return this;
+            }
+
+            public ThirdpresenceMediationSettings build() {
+                return new ThirdpresenceMediationSettings(this);
+            }
+        }
+
+        private ThirdpresenceMediationSettings(@NonNull final Builder builder) {
+            mGender = builder.gender;
+            mYob = builder.yob;
+            mKeywords = builder.keywords;
+        }
+    }
 
 }

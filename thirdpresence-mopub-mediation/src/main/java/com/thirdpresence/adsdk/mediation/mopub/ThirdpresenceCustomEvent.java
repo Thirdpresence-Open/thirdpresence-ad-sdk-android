@@ -47,7 +47,7 @@ public class ThirdpresenceCustomEvent extends CustomEventInterstitial implements
         }
 
         Map<String, String> env = ThirdpresenceCustomEventHelper.setEnvironment(serverExtras);
-        Map<String, String> params = ThirdpresenceCustomEventHelper.setPlayerParameters(activity, serverExtras);
+        Map<String, String> params = ThirdpresenceCustomEventHelper.setPlayerParameters(activity, localExtras, serverExtras);
 
         String placementId = env.get(VideoAd.Environment.KEY_PLACEMENT_ID);
 

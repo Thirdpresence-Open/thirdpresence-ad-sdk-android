@@ -184,6 +184,7 @@ public class RewardedVideoActivity extends AppCompatActivity {
         VideoAd ad = VideoAdManager.getInstance().get(mPlacementId);
         if (ad != null) {
             ad.loadAd();
+            mRewardField.setText("");
             mStatusField.setText("LOADING");
         } else {
             Toast.makeText(RewardedVideoActivity.this, "Ad not initialized yet", Toast.LENGTH_SHORT).show();
@@ -203,11 +204,16 @@ public class RewardedVideoActivity extends AppCompatActivity {
                 ad.displayAd(null, new Runnable() {
                     @Override
                     public void run() {
+                        // Reward is earned if video has been completed
+                        if (ad.isVideoCompleted()) {
+                            String rewardString = ad.getRewardAmount() + " " + ad.getRewardTitle();
+                            mRewardField.setText(rewardString);
+                            mStatusField.setText("COMPLETED");
+                        }
+
                         // Call reset to close the ad placement
                         ad.reset();
-                        String rewardString = ad.getRewardAmount() + " " + ad.getRewardTitle();
-                        mRewardField.setText(rewardString);
-                        mStatusField.setText("COMPLETED");
+
                     }
                 });
                 mStatusField.setText("DISPLAYING");

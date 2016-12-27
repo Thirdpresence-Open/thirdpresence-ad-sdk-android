@@ -33,8 +33,8 @@ repositories {
 
 dependencies {
 	// SDK library and admob mediation plugin
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.0@aar'
-    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.5.0@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.1@aar'
+    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.5.1@aar'
     // Google Play Services 
     compile 'com.google.android.gms:play-services-ads:9.6.1'
     // Google Support libraries
@@ -90,3 +90,37 @@ For testing purposes, use account name "sdk-demo" and following placement ids:
 - Select the segment where you want to enable the Thirdpresence custom native network
 - Enable the network for this segment, and set the CPM
 - Test the integration with the MoPub sample app. Remember to include the Thirdpresence plugin in your project.
+
+## Passing user info and keywords
+
+Thirdpresence can provide more targeted ads if user info and keywords are passed. In order to do that the data needs to be added to MoPub ad request.
+An example for a Medium ad unit below. The interstitial unit is done similar way.
+```
+    String userGender = "male"; // allowed values are "male" or "female"
+    String userYearOfBirth = "1976";
+    String keywords = "advertising,sdk,programming"; // comma-separated string of keyworads
+
+    Map<String,Object> extras = new HashMap<String,Object>();
+    extras.put("tpr_gender", userGender);
+    extras.put("tpr_yob", userYearOfBirth);
+    extras.put("tpr_keywords", keywords);
+    mMoPubView.setLocalExtras(extras);
+    mMoPubView.loadAd();
+        
+```
+
+An example for Rewarded video ad unit.
+```
+    String userGender = "male"; // allowed values are "male" or "female"
+    String userYearOfBirth = "1976";
+    String keywords = "advertising,sdk,programming"; // comma-separated string of keyworads
+
+    final ThirdpresenceCustomEventRewardedVideo.ThirdpresenceMediationSettings mediationSettings =
+           new ThirdpresenceCustomEventRewardedVideo.ThirdpresenceMediationSettings.Builder()
+                 .gender(userGender)
+                 .yearOfBirth(userYearOfBirth)
+                 .keywords(keywords)
+                 .build();
+
+    MoPub.initializeRewardedVideo(getActivity(), mediationSettings);
+```

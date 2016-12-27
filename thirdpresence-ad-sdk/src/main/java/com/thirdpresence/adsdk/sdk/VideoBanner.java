@@ -54,7 +54,13 @@ public class VideoBanner extends VideoAd {
     @Override
     public void init(Activity activity, BannerView bannerView, Map<String, String> environment, Map<String, String> params, long timeout) {
         TLog.d("Initialising " + this.getPlacementType());
-        mVideoPlayer.setDisplayImmediately(true);
+
+        boolean displayImmediately = true;
+        if (environment != null && environment.containsKey(Environment.KEY_BANNER_AUTO_DISPLAY)) {
+            displayImmediately = parseBoolean(environment.get(Environment.KEY_BANNER_AUTO_DISPLAY), true);
+        }
+
+        mVideoPlayer.setDisplayImmediately(displayImmediately);
         mVideoPlayer.init(activity, bannerView, environment, params, timeout, getPlacementId(), getPlacementType());
     }
 
@@ -105,19 +111,24 @@ public class VideoBanner extends VideoAd {
         loadAd();
     }
 
-    @Override
+    /**
+     * Displays the ad
+     */
     public void displayAd() {
-        // Not implemented. Banner is displayed as automatically when the ad is loaded
+        TLog.d("Trying to display an ad");
+        mVideoPlayer.displayAdInCurrentActivity();
     }
 
-    @Override
-    public void displayAd(Runnable runnable) {
-        // Not implemented. Banner is displayed as automatically when the ad is loaded
-    }
-
-    @Override
+    /**
+     * Not implemented for banner.
+     */
     public void displayAd(Activity activity, Runnable runnable) {
-        // Not implemented. Banner is displayed as automatically when the ad is loaded
+    }
+
+    /**
+     * Not implemented for banner.
+     */
+    public void displayAd(Runnable runnable) {
     }
 
     /**
@@ -155,4 +166,14 @@ public class VideoBanner extends VideoAd {
         return mVideoPlayer.isPlayerReady();
     }
 
+
+    /**
+     * Checks if the video has been completed
+     *
+     * @return true if completed, false otherwise
+     */
+    @Override
+    public boolean isVideoCompleted() {
+        return mVideoPlayer.isVideoCompleted();
+    }
 }

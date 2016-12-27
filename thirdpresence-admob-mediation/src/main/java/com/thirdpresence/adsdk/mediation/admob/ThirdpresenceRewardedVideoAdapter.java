@@ -103,7 +103,9 @@ public class ThirdpresenceRewardedVideoAdapter implements MediationRewardedVideo
         }
 
         Map<String, String> env = ThirdpresenceCustomEventHelper.setEnvironment(pubParams);
-        Map<String, String> params = ThirdpresenceCustomEventHelper.setPlayerParameters(mActivity, pubParams);
+        Map<String, String> params = ThirdpresenceCustomEventHelper.setPlayerParameters(mActivity,
+                mediationAdRequest,
+                pubParams);
 
         String placementId = env.get(VideoAd.Environment.KEY_PLACEMENT_ID);
 

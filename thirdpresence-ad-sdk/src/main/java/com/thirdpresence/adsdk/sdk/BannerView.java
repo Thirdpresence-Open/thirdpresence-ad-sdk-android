@@ -115,10 +115,10 @@ public class BannerView extends RelativeLayout {
         int height = a.getInt(R.styleable.BannerView_adHeight, 0);
         final float scale = getResources().getDisplayMetrics().density;
         if (width > 0) {
-            mParams.putInt(PARAM_KEY_AD_WIDTH, (int)(width * scale));
+            mParams.putInt(PARAM_KEY_AD_WIDTH, width);
         }
         if (height > 0) {
-            mParams.putInt(PARAM_KEY_AD_HEIGHT, (int)(height * scale));
+            mParams.putInt(PARAM_KEY_AD_HEIGHT, height);
         }
         a.recycle();
     }

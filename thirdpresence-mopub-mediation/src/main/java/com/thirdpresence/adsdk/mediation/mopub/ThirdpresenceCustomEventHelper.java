@@ -19,17 +19,21 @@ public class ThirdpresenceCustomEventHelper {
 
     private static final String SERVER = VideoAd.SERVER_TYPE_PRODUCTION;
     private static final String SDK_NAME = "mopub";
+
+    // Keys for server extras
     private static final String EXTRAS_KEY_ACCOUNT = "account";
     private static final String EXTRAS_KEY_PLACEMENT_ID = "placementid";
     private static final String EXTRAS_KEY_DISABLE_BACK = "disablebackbutton";
     private static final String EXTRAS_KEY_APP_NAME = "appname";
     private static final String EXTRAS_KEY_APP_VERSION = "appversion";
-    private static final String EXTRAS_KEY_APP_STORE_URL = "appstoreurl";
     private static final String EXTRAS_KEY_SKIP_OFFSET = "skipoffset";
-    private static final String EXTRAS_KEY_USER_GENDER = "gender";
-    private static final String EXTRAS_KEY_USER_YOB = "yob";
     private static final String EXTRAS_KEY_REWARD_TITLE = "rewardtitle";
     private static final String EXTRAS_KEY_REWARD_AMOUNT = "rewardamount";
+
+    // Keys for local extras
+    public static final String LOCAL_EXTRAS_KEY_USER_GENDER = "tpr_gender";
+    public static final String LOCAL_EXTRAS_KEY_USER_YOB = "tpr_yob";
+    public static final String LOCAL_EXTRAS_KEY_USER_KEYWORDS = "tpr_keywords";
 
     private ThirdpresenceCustomEventHelper() {}
 
@@ -61,16 +65,42 @@ public class ThirdpresenceCustomEventHelper {
      * @return VideoAd parameters map
      *
      */
-    public static Map<String, String> setPlayerParameters(Context context, Map<String, String> serverExtras) {
+    public static Map<String, String> setPlayerParameters(Context context, Map<String, Object> localExtras, Map<String, String> serverExtras) {
         Map<String, String> params = new HashMap<>();
-        params.put(VideoAd.Parameters.KEY_PUBLISHER, serverExtras.get(EXTRAS_KEY_APP_NAME));
-        params.put(VideoAd.Parameters.KEY_APP_NAME, serverExtras.get(EXTRAS_KEY_APP_NAME));
-        params.put(VideoAd.Parameters.KEY_APP_VERSION, serverExtras.get(EXTRAS_KEY_APP_VERSION));
-        params.put(VideoAd.Parameters.KEY_APP_STORE_URL, serverExtras.get(EXTRAS_KEY_APP_STORE_URL));
+
         params.put(VideoAd.Parameters.KEY_BUNDLE_ID, context.getPackageName());
-        params.put(VideoAd.Parameters.KEY_SKIP_OFFSET, serverExtras.get(EXTRAS_KEY_SKIP_OFFSET));
-        params.put(VideoAd.Parameters.KEY_USER_GENDER, serverExtras.get(EXTRAS_KEY_USER_GENDER));
-        params.put(VideoAd.Parameters.KEY_USER_YOB, serverExtras.get(EXTRAS_KEY_USER_YOB));
+
+        for (String key : serverExtras.keySet()) {
+            switch (key) {
+                case EXTRAS_KEY_APP_NAME:
+                    params.put(VideoAd.Parameters.KEY_PUBLISHER, serverExtras.get(EXTRAS_KEY_APP_NAME));
+                    params.put(VideoAd.Parameters.KEY_APP_NAME, serverExtras.get(EXTRAS_KEY_APP_NAME));
+                    break;
+                case EXTRAS_KEY_APP_VERSION:
+                    params.put(VideoAd.Parameters.KEY_APP_VERSION, serverExtras.get(EXTRAS_KEY_APP_VERSION));
+                    break;
+                case EXTRAS_KEY_SKIP_OFFSET:
+                    params.put(VideoAd.Parameters.KEY_SKIP_OFFSET, serverExtras.get(EXTRAS_KEY_SKIP_OFFSET));
+                    break;
+                default:
+            }
+        }
+
+        for (String key : localExtras.keySet()) {
+            switch (key) {
+                case LOCAL_EXTRAS_KEY_USER_GENDER:
+                    params.put(VideoAd.Parameters.KEY_USER_GENDER, (String)localExtras.get(LOCAL_EXTRAS_KEY_USER_GENDER));
+                    break;
+                case LOCAL_EXTRAS_KEY_USER_YOB:
+                    params.put(VideoAd.Parameters.KEY_USER_YOB, (String)localExtras.get(LOCAL_EXTRAS_KEY_USER_YOB));
+                    break;
+                case LOCAL_EXTRAS_KEY_USER_KEYWORDS:
+                    params.put(VideoAd.Parameters.KEY_KEYWORDS, (String)localExtras.get(LOCAL_EXTRAS_KEY_USER_KEYWORDS));
+                    break;
+                default:
+
+            }
+        }
 
         return params;
     }
