@@ -42,7 +42,7 @@ dependencies {
 
 ### Manually building SDK libraries
 
-If manual building of the SDK is preferred, see [Thirdpresence Ad SDK - Manually building the SDK] (../thirdpresence-ad-sdk/#manually-building-the-sdk) 
+If manual building of the SDK is preferred, see [Thirdpresence Ad SDK - Manually building the SDK](../thirdpresence-ad-sdk/#manually-building-the-sdk) 
 
 ## Application permissions
 

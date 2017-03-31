@@ -6,10 +6,10 @@ Thirdpresence Ad SDK is based on a WebView and the Thirdpresence HTML5 player. T
 
 There are a number of different ways to integrate the SDK with your app:
 
-1. [Direct Integration] (thirdpresence-ad-sdk#thirdpresence-ad-sdk-for-android)
-2. [Plugin for MoPub mediation] (thirdpresence-mopub-mediation#thirdpresence-ad-sdk-for-android---mopub-mediation)
-3. [Plugin for Admob mediation] (thirdpresence-admob-mediation#thirdpresence-ad-sdk-for-android---admob-mediation)
-4. [Plugin for Unity3d] (thirdpresence-unity-mediation#thirdpresence-ad-sdk-for-android---unity-plugin)
+1. [Direct Integration](thirdpresence-ad-sdk#thirdpresence-ad-sdk-for-android)
+2. [Plugin for MoPub mediation](thirdpresence-mopub-mediation#thirdpresence-ad-sdk-for-android---mopub-mediation)
+3. [Plugin for Admob mediation](thirdpresence-admob-mediation#thirdpresence-ad-sdk-for-android---admob-mediation)
+4. [Plugin for Unity3d](thirdpresence-unity-mediation#thirdpresence-ad-sdk-for-android---unity-plugin)
 
 For details of a specific integration method, click one of the options above.
 
