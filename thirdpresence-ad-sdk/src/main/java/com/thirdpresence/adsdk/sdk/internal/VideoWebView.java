@@ -1,6 +1,7 @@
 package com.thirdpresence.adsdk.sdk.internal;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.net.ConnectivityManager;
@@ -27,6 +28,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Map;
 
+import static com.thirdpresence.adsdk.sdk.VideoAd.Environment.KEY_MOAT_AD_TRACKING;
+
 /**
  * <h1>VideoWebView</h1>
  *
@@ -51,6 +54,8 @@ public class VideoWebView extends WebView {
 
     private final static String JS_API_NAME = "ThirdpresenceNative";
     private final static String PLAYER_URL_BASE = "//d1c13tt6n7tja5.cloudfront.net/tags/[KEY_SERVER]/sdk/LATEST/sdk_player.v3.html?";
+
+    private final static String AD_VERIFICATION_TYPE_MOAT = "moat";
 
     private final static String EVENT_NAME_PLAYER_READY = "PlayerReady";
     private final static String EVENT_NAME_PLAYER_ERROR = "PlayerError";
@@ -124,6 +129,7 @@ public class VideoWebView extends WebView {
             }
         }
 
+        @TargetApi(android.os.Build.VERSION_CODES.M)
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             super.onReceivedError(view, request, error);
@@ -147,6 +153,7 @@ public class VideoWebView extends WebView {
             }
         }
 
+        @TargetApi(android.os.Build.VERSION_CODES.M)
         @Override
         public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
             super.onReceivedHttpError(view, request, errorResponse);
@@ -245,7 +252,6 @@ public class VideoWebView extends WebView {
 
         WebSettings webSettings = getSettings();
         webSettings.setJavaScriptEnabled(true);
-        webSettings.setAllowFileAccess(true);
         String userAgent = getUserAgent(context);
         webSettings.setUserAgentString(userAgent);
         webSettings.setAllowFileAccess(false);
@@ -359,6 +365,8 @@ public class VideoWebView extends WebView {
             }
         }
 
+        String adVerification = VideoAd.parseBoolean(environment.get(KEY_MOAT_AD_TRACKING), true) ? AD_VERIFICATION_TYPE_MOAT : "";
+
         if (account == null) {
             sendErrorMessage(MSG_TYPE_PLAYER_ERROR,
                     VideoAd.ErrorCode.PLAYER_INIT_FAILED.getErrorCode(),
@@ -382,7 +390,8 @@ public class VideoWebView extends WebView {
                         + "&cid=" + account
                         + "&playerid=" + playerId
                         + "&type=" + placementType
-                        + "&customization=" + customization;
+                        + "&customization=" + customization
+                        + "&adverification=" + adVerification;
             TLog.d("Loading player: " + mPlayerUrl);
             loadUrl(mPlayerUrl);
         }
@@ -452,7 +461,6 @@ public class VideoWebView extends WebView {
         }
     }
 
-
     /**
      * Updates geo location to the player
      *
@@ -465,12 +473,28 @@ public class VideoWebView extends WebView {
         }
     }
 
+    /**
+     * Updates volume value for the player
+     * @param volume volume in scale 0 to 1
+     */
+    public void updateVolume(float volume) {
+        if (mPlayerPageLoaded) {
+            callJSFunction("setVolume", "" + volume, null);
+        }
+    }
+
+    /**
+     * Sends an empty message
+     */
     private void sendEmptyMessage(int what) {
         if (mHandler != null) {
             mHandler.sendEmptyMessage(what);
         }
     }
 
+    /**
+     * Sends a message with data
+     */
     private void sendMessage(int what, Bundle data) {
         if (mHandler != null) {
             Message msg = Message.obtain(mHandler, what);
@@ -479,6 +503,9 @@ public class VideoWebView extends WebView {
         }
     }
 
+    /**
+     * Sends an error message
+     */
     private void sendErrorMessage(int what, int code, String message) {
         if (mHandler != null && message != null) {
             Message msg = Message.obtain(mHandler, what);
@@ -489,7 +516,6 @@ public class VideoWebView extends WebView {
             mHandler.sendMessage(msg);
         }
     }
-
 
     /**
      * Calls a function in the player JavaScript API

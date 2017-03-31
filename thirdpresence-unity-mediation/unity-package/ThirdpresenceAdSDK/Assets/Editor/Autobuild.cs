@@ -17,6 +17,7 @@ public class Autobuild  {
 		get { return EditorPrefs.GetString("AndroidNdkRoot"); }
 		set { EditorPrefs.SetString("AndroidNdkRoot", value); }
 	}
+
 	static void SetToolPaths() {
 		AndroidSdkRoot = Environment.GetEnvironmentVariable("ANDROID_HOME");
 		JdkRoot = Environment.GetEnvironmentVariable("JAVA_HOME");

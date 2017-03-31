@@ -18,7 +18,9 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
+import android.util.Log;
 
+import com.thirdpresence.adsdk.sampleapp.test.BuildConfig;
 import com.thirdpresence.adsdk.sdk.internal.PlayerActivity;
 import com.thirdpresence.sampleapp.R;
 
@@ -46,17 +48,15 @@ public class BannerActivityTest {
 
     private UiDevice mDevice;
 
-    private static final String SAMPLE_APP_PACKAGE
-            = "com.thirdpresence.adsdk.sampleapp";
+    private static final String SAMPLE_APP_PACKAGE = "com.thirdpresence.adsdk.sampleapp";
+    private static final String STAGING_SERVER_NAME = "staging";
+    private static final String STATUS_FIELD_DESC = "status field";
 
-    private static final String STATUS_FIELD_DESC
-            = "status field";
-
-    private static final int LAUNCH_TIMEOUT = 10000;
-    private static final int LOAD_TIMEOUT = 10000;
+    private static final int LAUNCH_TIMEOUT = 5000;
+    private static final int LOAD_TIMEOUT = 20000;
     private static final int DISPLAY_TIMEOUT = 35000;
 
-    private static final String STATE_TEXT_DISPLAYING = "DIDPLAYING";
+    private static final String STATE_TEXT_DISPLAYING = "DISPLAYING";
     private static final String STATE_TEXT_STOPPED = "STOPPED";
 
     private static final String TEXT_ALLOW = "Allow";
@@ -65,20 +65,12 @@ public class BannerActivityTest {
     private static final String TEXT_OK = "OK";
 
     @Rule
-    public ActivityTestRule<BannerActivity> mActivityTestRule = new ActivityTestRule<>(BannerActivity.class);
+    public ActivityTestRule<BannerActivity> mActivityTestRule = new ActivityTestRule<>(BannerActivity.class, true, false);
 
     @Before
-    public void startMainActivityFromHomeScreen() {
-        // Initialize UiDevice instance
+    public void setUp() {
+
         mDevice = UiDevice.getInstance(getInstrumentation());
-
-        // Start from the home screen
-        mDevice.pressHome();
-
-        // Wait for launcher
-        final String launcherPackage = getLauncherPackageName();
-        assertThat(launcherPackage, notNullValue());
-        mDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
 
         Context context = InstrumentationRegistry.getContext();
 
@@ -92,22 +84,6 @@ public class BannerActivityTest {
             e.printStackTrace();
         }
 
-        // Launch the blueprint app
-        final Intent intent = context.getPackageManager()
-                .getLaunchIntentForPackage(SAMPLE_APP_PACKAGE);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);    // Clear out any previous instances
-        context.startActivity(intent);
-
-        // Wait for the app to appear
-        mDevice.wait(Until.hasObject(By.pkg(SAMPLE_APP_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
-
-        Instrumentation.ActivityMonitor activityMonitor = getInstrumentation().addMonitor(BannerActivity.class.getName(), null, false);
-
-        mActivityTestRule.launchActivity(new Intent());
-
-        BannerActivity bannerActivity = (BannerActivity) activityMonitor.waitForActivityWithTimeout(LAUNCH_TIMEOUT);
-        assertNotNull(bannerActivity);
-
         try {
             allowCurrentPermission(mDevice);
         } catch (UiObjectNotFoundException e) {
@@ -118,15 +94,20 @@ public class BannerActivityTest {
     @Test
     public void displayBannerTest() {
 
+        Intent i = new Intent();
+        if (STAGING_SERVER_NAME.equals(BuildConfig.SERVER_NAME)) {
+            i.putExtra("use_staging_server", true);
+        }
+        mActivityTestRule.launchActivity(i);
+
         UiObject2 statusText = mDevice.findObject(By.desc(STATUS_FIELD_DESC));
 
         assertThat(mDevice, notNullValue());
         assertThat(statusText, notNullValue());
 
-        ViewInteraction loadButton = onView(withId(R.id.reloadButton));
-        loadButton.perform(click());
-
         statusText.wait(Until.textEquals(STATE_TEXT_DISPLAYING), LOAD_TIMEOUT);
+
+        assertThat(statusText.getText(), is(equalTo(STATE_TEXT_DISPLAYING)));
 
         statusText.wait(Until.textEquals(STATE_TEXT_STOPPED), DISPLAY_TIMEOUT);
 

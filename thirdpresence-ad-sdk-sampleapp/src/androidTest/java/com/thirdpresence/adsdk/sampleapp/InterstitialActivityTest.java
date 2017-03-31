@@ -19,6 +19,7 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
 
+import com.thirdpresence.adsdk.sampleapp.test.BuildConfig;
 import com.thirdpresence.adsdk.sdk.internal.PlayerActivity;
 import com.thirdpresence.sampleapp.R;
 
@@ -46,14 +47,12 @@ public class InterstitialActivityTest {
 
     private UiDevice mDevice;
 
-    private static final String SAMPLE_APP_PACKAGE
-            = "com.thirdpresence.adsdk.sampleapp";
+    private static final String SAMPLE_APP_PACKAGE = "com.thirdpresence.adsdk.sampleapp";
+    private static final String STAGING_SERVER_NAME = "staging";
+    private static final String STATUS_FIELD_DESC = "status field";
 
-    private static final String STATUS_FIELD_DESC
-            = "status field";
-
-    private static final int LAUNCH_TIMEOUT = 10000;
-    private static final int INIT_TIMEOUT = 21000;
+    private static final int LAUNCH_TIMEOUT = 5000;
+    private static final int INIT_TIMEOUT = 10000;
     private static final int LOAD_TIMEOUT = 10000;
     private static final int PLAYER_INIT_TIMEOUT = 1000;
     private static final int DISPLAY_TIMEOUT = 35000;
@@ -70,17 +69,9 @@ public class InterstitialActivityTest {
     public ActivityTestRule<InterstitialActivity> mActivityTestRule = new ActivityTestRule<>(InterstitialActivity.class);
 
     @Before
-    public void startMainActivityFromHomeScreen() {
-        // Initialize UiDevice instance
+    public void setUp() {
+
         mDevice = UiDevice.getInstance(getInstrumentation());
-
-        // Start from the home screen
-        mDevice.pressHome();
-
-        // Wait for launcher
-        final String launcherPackage = getLauncherPackageName();
-        assertThat(launcherPackage, notNullValue());
-        mDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
 
         Context context = InstrumentationRegistry.getContext();
 
@@ -94,20 +85,16 @@ public class InterstitialActivityTest {
             e.printStackTrace();
         }
 
-        // Launch the blueprint app
-        final Intent intent = context.getPackageManager()
-                .getLaunchIntentForPackage(SAMPLE_APP_PACKAGE);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);    // Clear out any previous instances
-        context.startActivity(intent);
-
-        // Wait for the app to appear
-        mDevice.wait(Until.hasObject(By.pkg(SAMPLE_APP_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
 
         Instrumentation.ActivityMonitor activityMonitor = getInstrumentation().addMonitor(InterstitialActivity.class.getName(), null, false);
 
-        mActivityTestRule.launchActivity(new Intent());
+        Intent i = new Intent();
+        if (STAGING_SERVER_NAME.equals(BuildConfig.SERVER_NAME)) {
+            i.putExtra("use_staging_server", true);
+        }
+        mActivityTestRule.launchActivity(i);
 
-        InterstitialActivity interstitialActivity = (InterstitialActivity) activityMonitor.waitForActivityWithTimeout(PLAYER_INIT_TIMEOUT);
+        InterstitialActivity interstitialActivity = (InterstitialActivity) activityMonitor.waitForActivityWithTimeout(LAUNCH_TIMEOUT);
         assertNotNull(interstitialActivity);
 
         try {

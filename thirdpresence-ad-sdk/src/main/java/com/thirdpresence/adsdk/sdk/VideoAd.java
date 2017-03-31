@@ -166,6 +166,10 @@ public abstract class VideoAd {
          * Banner auto display. Default value true.
          */
         public final static String KEY_BANNER_AUTO_DISPLAY = "bannerautodisplay";
+        /**
+         * MOAT ad tracking. Default value true.
+         */
+        public final static String KEY_MOAT_AD_TRACKING = "moatadtracking";
     }
 
     /**

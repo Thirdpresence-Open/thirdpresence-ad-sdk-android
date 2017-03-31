@@ -5,7 +5,7 @@ Thirdpresence Ad SDK provides an API to display banner, interstitial and rewarde
 ## Minimum requirements
 
 - Android Studio
-- Android API level 15 (Android 4.0.3)
+- Android API level 16 (Android 4.1)
 - Google Play Services Ads 9.6.1 (optional, but highly recommended)
     - used for getting Google Advertising ID
     - for more information, see http://developer.android.com/google/play-services/setup.html
@@ -27,7 +27,7 @@ repositories {
 
 dependencies {
 	// SDK library
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.1@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.3@aar'
     // Google Play Services 
     compile 'com.google.android.gms:play-services-ads:9.6.1'
     // Google Support libraries
@@ -96,7 +96,6 @@ An example code for initialising and displaying an interstitial ad placement:
         params.put(VideoAd.Parameters.KEY_PUBLISHER, "My Application");
         params.put(VideoAd.Parameters.KEY_APP_NAME, "My Application"));
         params.put(VideoAd.Parameters.KEY_APP_VERSION, "1.0");
-        params.put(VideoAd.Parameters.KEY_APP_STORE_URL, "https://play.google.com/store/apps/details?id=com.thirdpresence.adsdk.demo");
 
         // In order to get more targeted ads you shall provide user's gender and year of birth
         // You can use e.g. Google+ API or Facebook Graph API
@@ -168,8 +167,7 @@ The banner ad can be initialized, for example, in the Activity's onCreate() meth
         params.put(VideoAd.Parameters.KEY_PUBLISHER, "Thirdpresence Sample App");
         params.put(VideoAd.Parameters.KEY_APP_NAME, "Thirdpresence Sample App");
         params.put(VideoAd.Parameters.KEY_APP_VERSION, "1.0");
-        params.put(VideoAd.Parameters.KEY_APP_STORE_URL, "https://play.google.com/store/apps/details?id=com.thirdpresence.adsdk.sampleapp");
-
+ 
         // In order to get more targeted ads you shall provide user's gender and year of birth
         // You can use e.g. Google+ API or Facebook Graph API
         // https://developers.google.com/android/reference/com/google/android/gms/plus/model/people/package-summary
@@ -203,6 +201,6 @@ See Sample App for detailed examples for each placement type.
 
 ### API reference
 
-See Thirdpresence Ad SDK [JavaDoc](https://thirdpresence-ad-tags.s3.amazonaws.com/sdk/javadoc/android/1.5.1/index.html)
+See Thirdpresence Ad SDK [JavaDoc](https://thirdpresence-ad-tags.s3.amazonaws.com/sdk/javadoc/android/1.5.3/index.html)
 
 

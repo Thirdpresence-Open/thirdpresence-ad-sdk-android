@@ -7,7 +7,7 @@ https://firebase.google.com/docs/admob/
 ## Minimum requirements
 
 - Android Studio
-- Android API level 15 (Android 4.0.3)
+- Android API level 16 (Android 4.1)
 - Google Play Services Ads 9.6.1
 
 ## Importing SDK libraries
@@ -30,8 +30,8 @@ repositories {
 
 dependencies {
 	// SDK library and admob mediation plugin
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.1@aar'
-    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.5.1@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.3@aar'
+    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.5.3@aar'
     // Google Play Services 
     compile 'com.google.android.gms:play-services-ads:9.6.1'
     // Google Support libraries

@@ -29,6 +29,8 @@ public class InterstitialActivity extends AppCompatActivity {
     private String mAccountName;
     private String mPlacementId;
     private EditText mStatusField;
+    private boolean mUseStagingServer;
+    private boolean mErrorState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +42,12 @@ public class InterstitialActivity extends AppCompatActivity {
 
         mStatusField = (EditText) findViewById(R.id.statusField);
         mStatusField.setText("IDLE");
+
+        mUseStagingServer = getIntent().getBooleanExtra("use_staging_server", false);
+        if (mUseStagingServer) {
+            TextView placementField = (TextView) findViewById(R.id.placementField);
+            placementField.setText(R.string.staging_interstitial_placement_id);
+        }
 
         // Enable console logs for the SDK
         TLog.enabled = true;
@@ -63,7 +71,7 @@ public class InterstitialActivity extends AppCompatActivity {
         initButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-            initAd();
+                initAd();
             }
         });
 
@@ -71,7 +79,7 @@ public class InterstitialActivity extends AppCompatActivity {
         loadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-            loadAd();
+                loadAd();
             }
         });
 
@@ -124,6 +132,7 @@ public class InterstitialActivity extends AppCompatActivity {
         public void onError(VideoAd.ErrorCode errorCode, String message) {
             Toast.makeText(InterstitialActivity.this, message, Toast.LENGTH_SHORT).show();
             mStatusField.setText("ERROR");
+            mErrorState = true;
         }
     }
 
@@ -133,6 +142,8 @@ public class InterstitialActivity extends AppCompatActivity {
     private void initAd() {
         // Remove previous ad instance if already initialized
         VideoAdManager.getInstance().clear();
+
+        mErrorState = false;
 
         TextView accountField = (TextView) findViewById(R.id.accountField);
         mAccountName = accountField.getText().toString();
@@ -147,13 +158,17 @@ public class InterstitialActivity extends AppCompatActivity {
 
         environment.put(VideoAd.Environment.KEY_ACCOUNT, mAccountName);
         environment.put(VideoAd.Environment.KEY_PLACEMENT_ID, mPlacementId);
-        environment.put(VideoAd.Environment.KEY_SERVER, VideoAd.SERVER_TYPE_PRODUCTION);
+
+        if (mUseStagingServer) {
+            environment.put(VideoAd.Environment.KEY_SERVER, VideoAd.SERVER_TYPE_STAGING);
+        } else {
+            environment.put(VideoAd.Environment.KEY_SERVER, VideoAd.SERVER_TYPE_PRODUCTION);
+        }
 
         HashMap<String, String> params = new HashMap<>();
         params.put(VideoAd.Parameters.KEY_PUBLISHER, "Thirdpresence Sample App");
         params.put(VideoAd.Parameters.KEY_APP_NAME, "Thirdpresence Sample App");
         params.put(VideoAd.Parameters.KEY_APP_VERSION, "1.0");
-        params.put(VideoAd.Parameters.KEY_APP_STORE_URL, "https://play.google.com/store/apps/details?id=com.thirdpresence.adsdk.sampleapp");
 
         // In order to get more targeted ads you shall provide user's gender and year of birth
         // You can use e.g. Google+ API or Facebook Graph API
@@ -182,7 +197,7 @@ public class InterstitialActivity extends AppCompatActivity {
      */
     private void loadAd() {
         VideoAd ad = VideoAdManager.getInstance().get(mPlacementId);
-        if (ad != null) {
+        if (ad != null && !mErrorState) {
             ad.loadAd();
             mStatusField.setText("LOADING");
         } else {
@@ -198,7 +213,7 @@ public class InterstitialActivity extends AppCompatActivity {
      */
     private void displayAd() {
         final VideoAd ad = VideoAdManager.getInstance().get(mPlacementId);
-        if (ad != null) {
+        if (ad != null && !mErrorState) {
             if (ad.isAdLoaded()) {
                 ad.displayAd(null, new Runnable() {
                     @Override

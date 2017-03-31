@@ -30,6 +30,7 @@ public class RewardedVideoActivity extends AppCompatActivity {
     private String mPlacementId;
     private EditText mStatusField;
     private EditText mRewardField;
+    private boolean mUseStagingServer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +45,12 @@ public class RewardedVideoActivity extends AppCompatActivity {
 
         mRewardField = (EditText) findViewById(R.id.rewardField);
         mRewardField.setText("");
+
+        mUseStagingServer = getIntent().getBooleanExtra("use_staging_server", false);
+        if (mUseStagingServer) {
+            TextView placementField = (TextView) findViewById(R.id.placementField);
+            placementField.setText(R.string.staging_rewarded_video_placement_id);
+        }
 
         // Enable console logs for the SDK
         TLog.enabled = true;
@@ -150,7 +157,10 @@ public class RewardedVideoActivity extends AppCompatActivity {
         environment.put(VideoAd.Environment.KEY_PLACEMENT_ID, mPlacementId);
         environment.put(VideoAd.Environment.KEY_REWARD_TITLE, "credits");
         environment.put(VideoAd.Environment.KEY_REWARD_AMOUNT, "10");
-        environment.put(VideoAd.Environment.KEY_SERVER, VideoAd.SERVER_TYPE_PRODUCTION);
+
+        if (mUseStagingServer) {
+            environment.put(VideoAd.Environment.KEY_SERVER, VideoAd.SERVER_TYPE_STAGING);
+        }
 
         HashMap<String, String> params = new HashMap<>();
         params.put(VideoAd.Parameters.KEY_PUBLISHER, "Thirdpresence Sample App");

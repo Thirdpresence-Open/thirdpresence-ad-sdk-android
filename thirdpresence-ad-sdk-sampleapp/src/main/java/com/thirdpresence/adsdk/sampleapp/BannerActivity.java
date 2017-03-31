@@ -37,6 +37,7 @@ public class BannerActivity extends AppCompatActivity {
     private String mPlacementId;
     private EditText mStatusField;
     private boolean mAdLoaded;
+    private boolean mUseStagingServer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +65,12 @@ public class BannerActivity extends AppCompatActivity {
 
         mStatusField = (EditText) findViewById(R.id.statusField);
         mStatusField.setText("IDLE");
+
+        mUseStagingServer = getIntent().getBooleanExtra("use_staging_server", false);
+        if (mUseStagingServer) {
+            TextView placementField = (TextView) findViewById(R.id.placementField);
+            placementField.setText(R.string.staging_banner_placement_id);
+        }
 
         // Enable console logs for the SDK
         TLog.enabled = true;
@@ -179,6 +186,10 @@ public class BannerActivity extends AppCompatActivity {
 
         environment.put(VideoAd.Environment.KEY_ACCOUNT, mAccountName);
         environment.put(VideoAd.Environment.KEY_PLACEMENT_ID, mPlacementId);
+
+        if (mUseStagingServer) {
+            environment.put(VideoAd.Environment.KEY_SERVER, VideoAd.SERVER_TYPE_STAGING);
+        }
 
         // By default the ad in the banner is displayed immediately. In case the banner is
         // in scroll view or similar it is recommended to start playing the ad when it comes

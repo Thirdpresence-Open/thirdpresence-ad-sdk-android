@@ -21,19 +21,10 @@
         android:id="@+id/textView"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
-    <TextView
-        android:text="@string/label_select_placement_type"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-
-        android:layout_marginTop="10dp"
-        android:id="@+id/label_select_placement_type"/>
-
     <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:id="@+id/list_select_placement_type"/>
-
 
 </LinearLayout>

@@ -21,7 +21,7 @@ android {
     useLibrary  'org.apache.http.legacy'
 
     defaultConfig {
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 24
         versionCode buildNum
         versionName versionString
@@ -51,12 +51,12 @@ repositories {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile fileTree(include: ['*.jar'], dir: 'moat/libs')
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:support-compat:24.2.1'
     compile 'com.android.support:support-core-utils:24.2.1'
     compile 'com.android.support:support-annotations:24.2.1'
-    compile project(path: ':thirdpresence-ad-sdk-moat')
     javadocDeps 'com.android.support:support-v4:24.1.1:sources'
     javadocDeps 'com.android.support:support-annotations:24.1.1:sources'
 }
@@ -136,6 +136,8 @@ task javadoc(type: Javadoc, dependsOn: sourcesJar) {
     include("**/VideoAdManager.java")
     include("**/VideoInterstitial.java")
     include("**/RewardedVideo.java")
+    include("**/BannerView.java")
+    include("**/VideoBanner.java")
     failOnError = false
 }
 
@@ -147,4 +149,9 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 artifacts {
     archives sourcesJar
     archives javadocJar
+}
+
+task copyLibs(type: Copy) {
+    from configurations.compile
+    into 'libs'
 }

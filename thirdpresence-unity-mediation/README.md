@@ -5,12 +5,12 @@ The Thirdpresence Ad SDK Unity plugin provides means to display interstitial and
 ## Minimum requirements
 
 - Unity SDK 5 or newer
-- Android API level 15 (Android 4.0.3)
+- Android API level 16 (Android 4.1)
 
 ## Getting Unity plugin package
 
 The pre-built plugin is available here:
-https://thirdpresence-ad-tags.s3.amazonaws.com/sdk/plugins/unity/1.5.1/thirdpresence-ad-sdk-android.unitypackage   
+https://thirdpresence-ad-tags.s3.amazonaws.com/sdk/plugins/unity/1.5.3/thirdpresence-ad-sdk-android.unitypackage   
 
 The plugin is built with the following tools:
 
@@ -147,7 +147,6 @@ private void initRewardedVideo() {
     Dictionary<string, string> playerParams = new Dictionary<string, string>();
     playerParams.Add ("appname", Application.productName);
     playerParams.Add ("appversion", Application.version);
-    playerParams.Add ("appstoreurl", "REPLACEME");
     playerParams.Add ("bundleid", Application.bundleIdentifier);
                         
     // In order to get more targeted ads you shall provide user's gender and year of birth

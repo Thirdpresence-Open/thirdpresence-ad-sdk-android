@@ -16,7 +16,7 @@ android {
     buildToolsVersion "24.0.3"
 
     defaultConfig {
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 24
         versionCode buildNum
         versionName versionString
@@ -97,6 +97,12 @@ task buildUnityPackage << {
         logger.warn('unity.editor is not set in local.properties. The value must be a path to Unity Editor.')
         throw new GradleException('Could not find Unity Editor')
     } else {
+
+        assert file("$sdk_home/extras/android/m2repository/com/android/support/support-compat/24.2.1").exists()
+        assert file("$sdk_home/extras/android/m2repository/com/android/support/support-core-utils/24.2.1").exists()
+        assert file("$sdk_home/extras/google/m2repository/com/google/android/gms/play-services-ads/9.6.1").exists()
+        assert file("$sdk_home/extras/google/m2repository/com/google/android/gms/play-services-basement/9.6.1").exists()
+
         copy {
             from(new File(project(':thirdpresence-ad-sdk').buildDir, 'outputs/aar')) {
                 include '*-release.aar'
@@ -114,6 +120,9 @@ task buildUnityPackage << {
                 include '*.aar'
             }
             from("$sdk_home/extras/google/m2repository/com/google/android/gms/play-services-ads/9.6.1") {
+                include '*.aar'
+            }
+            from("$sdk_home/extras/google/m2repository/com/google/android/gms/play-services-basement/9.6.1") {
                 include '*.aar'
             }
             rename '(.+)-release(.+)', '$1$2'

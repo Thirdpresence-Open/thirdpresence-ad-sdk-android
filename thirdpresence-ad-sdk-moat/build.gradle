@@ -1,5 +1,0 @@
-configurations.create("default")
-
-//Add MOAT SDK library to libs directory
-//artifacts.add("default", file('libs/<REPLACE WITH MOAT SDK LIBRARY FILE NAME>'))
-

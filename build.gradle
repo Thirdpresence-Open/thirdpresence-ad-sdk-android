@@ -23,7 +23,7 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-project.ext.set("buildNumberOverride", 1)
+project.ext.set("buildNumberOverride", 3)
 
 def getVersionName() {
     def versionName = '1.5'

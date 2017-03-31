@@ -10,6 +10,8 @@
     <string name="label_vast_tag">VAST tag</string>
     <string name="label_status">Status</string>
     <string name="label_reward">Reward</string>
+    <string name="label_settings">Settings</string>
+    <string name="label_staging_switch">Use staging server</string>
     <string name="button_init">Init</string>
     <string name="button_load">Load</string>
     <string name="button_display">Display</string>
@@ -22,6 +24,9 @@
     <string name="default_interstitial_placement_id">sa7nvltbrn</string>
     <string name="default_rewarded_video_placement_id">nhdfxqclej</string>
     <string name="default_banner_placement_id">zhlwlm9280</string>
+    <string name="staging_interstitial_placement_id">d6k6wxoqzr</string>
+    <string name="staging_rewarded_video_placement_id">yg2wqqicts</string>
+    <string name="staging_banner_placement_id">2unomz0kwc</string>
     <string name="hint_vast_tag">external VAST (optional)</string>
     <string name="hint_account_field">account name</string>
     <string name="hint_placement_id_field">placement id</string>

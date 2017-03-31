@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -23,8 +24,11 @@ import android.support.v4.content.ContextCompat;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebView;
 import android.widget.RelativeLayout;
+
+import com.moat.analytics.mobile.trdp.MoatAnalytics;
+import com.moat.analytics.mobile.trdp.MoatFactory;
+import com.moat.analytics.mobile.trdp.WebAdTracker;
 
 import com.thirdpresence.adsdk.sdk.VideoAd;
 
@@ -37,6 +41,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
+import static com.thirdpresence.adsdk.sdk.VideoAd.Environment.KEY_MOAT_AD_TRACKING;
+
 /**
  * <h1>VideoPlayer</h1>
  *
@@ -44,7 +50,7 @@ import java.util.concurrent.TimeUnit;
  * It provides means to load and display video ads.
  *
  */
-public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
+public class VideoPlayer implements Application.ActivityLifecycleCallbacks, SystemVolumeManager.ChangeListener {
 
     private VideoAd.Listener mListener;
 
@@ -77,11 +83,13 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
     private boolean mPendingLocationUpdate = false;
     private boolean mDisplayImmediately = false;
 
-    private Object mWebAdTracker;
+    private WebAdTracker mWebAdTracker;
 
     private HandlerThread mLocationHandler;
     private LocationListener mLocationListener;
-    
+
+    private SystemVolumeManager mSystemVolumeManager;
+
     private int mOriginalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
 
     private static final String LOCATION_PERMISSION_WARNING = "Location permission not granted. Consider adding ACCESS_COARSE_LOCATION permission to app's AndroidManifest.xml";
@@ -182,6 +190,10 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
 
         mApplication.registerActivityLifecycleCallbacks(this);
 
+        mSystemVolumeManager = new SystemVolumeManager(mApplication, AudioManager.STREAM_MUSIC);
+        mSystemVolumeManager.setListener(this);
+        mSystemVolumeManager.startObserving();
+
         if (checkLocationPermissions(mApplication)) {
             Location loc = getLocation(mApplication);
             if (loc != null) {
@@ -197,6 +209,8 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
         if (!params.containsKey(VideoAd.Parameters.KEY_BUNDLE_ID)) {
             mParams.put(VideoAd.Parameters.KEY_BUNDLE_ID, mApplication.getPackageName());
         }
+
+        startAdTrackingAnalytics();
 
         mWebView = new VideoWebView(mApplication);
         mWebView.setHandler(mHandler);
@@ -267,6 +281,12 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
             mLocationHandler = null;
         }
 
+        if (mSystemVolumeManager != null) {
+            mSystemVolumeManager.setListener(null);
+            mSystemVolumeManager.stopObserving();
+            mSystemVolumeManager = null;
+        }
+
         if (mApplication != null) {
             mApplication.unregisterActivityLifecycleCallbacks(this);
             mApplication = null;
@@ -291,10 +311,6 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
         }
 
         mHandler.removeCallbacksAndMessages(null);
-
-        if (mWebAdTracker != null) {
-            mWebAdTracker = null;
-        }
 
         mActivity = null;
         TLog.d("Player cleaned up");
@@ -437,12 +453,13 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
         }
 
         mContainer.setVisibility(View.VISIBLE);
-        setAdTracker();
 
         mContainer.postDelayed(new Runnable() {
             @Override
             public void run() {
                 if (mWebView != null) {
+                    startAdTracking();
+                    mWebView.updateVolume(mSystemVolumeManager.getVolume());
                     mWebView.displayAd();
                 }
             }
@@ -527,6 +544,8 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
                     mParams.put(VideoAd.Parameters.KEY_DEVICE_ID, mDeviceId);
                 }
 
+                createAdTrackers();
+
                 mWebView.initPlayer(mEnv, mParams, mPlacementType);
                 changeState(State.INITIALISING);
             }
@@ -554,11 +573,14 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
         } else {
             changeState(State.INITIALIZED);
         }
+
         mAdLoadingPending = false;
         mUsingPlayerActivity = false;
         mVideoClicked = false;
         mVideoCompleted = false;
-        
+
+        stopAdTracking();
+
         if (mWebView != null && mWebViewPaused){
             mWebView.onResume();
             mWebViewPaused = false;
@@ -790,31 +812,50 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
     }
 
     /**
-     * Setup MOAT Ad tracker if MOAT SDK available
+     * Setup ad tracking services
      */
-    private void setAdTracker() {
-        boolean success;
-        try {
-            // Using MOAT Ad tracker is optional
-            Class<?> factoryClass = Class.forName("com.moat.analytics.mobile.MoatFactory");
-            Method createMethod = factoryClass.getMethod("create", Activity.class);
-            Object factory = createMethod.invoke(null, mActivity);
-            Method createWebAdTrackerMethod = factory.getClass().getMethod("createWebAdTracker", WebView.class);
-            mWebAdTracker = createWebAdTrackerMethod.invoke(factory, mWebView);
-            Class<?> trackerClass = Class.forName("com.moat.analytics.mobile.WebAdTracker");
-            Method trackMethod = trackerClass.getMethod("track", (Class<?>[]) null);
-            success = (Boolean) trackMethod.invoke(mWebAdTracker, (Object[]) null);
-            if (success) {
-                TLog.i("MOAT SDK enabled");
-            } else {
-                TLog.w("MOAT SDK failed to initialize");
-            }
-        } catch (Exception e) {
-            // MOAT SDK not available, will continue without tracking
-            TLog.w("MOAT SDK is not available");
+    private void startAdTrackingAnalytics() {
+        // MOAT
+        if (VideoAd.parseBoolean(mEnv.get(KEY_MOAT_AD_TRACKING), true)) {
+            MoatAnalytics.getInstance().start(mApplication);
+            TLog.d("MOAT ad tracking enabled");
         }
-
     }
+
+    /**
+     * Create ad trackers
+     */
+    private void createAdTrackers() {
+        // MOAT
+        if (VideoAd.parseBoolean(mEnv.get(KEY_MOAT_AD_TRACKING), true)) {
+            MoatFactory factory = MoatFactory.create();
+            mWebAdTracker = factory.createWebAdTracker(mWebView);
+            TLog.d("MOAT ad tracker created");
+        }
+    }
+
+    /**
+     * Start Ad tracking
+     */
+    private void startAdTracking() {
+        if (mWebAdTracker != null) {
+            mWebAdTracker.startTracking();
+            TLog.d("MOAT ad tracking started");
+        }
+    }
+
+    /**
+     * Stop Ad tracking
+     */
+    private void stopAdTracking() {
+        if (mWebAdTracker != null) {
+            mWebAdTracker.stopTracking();
+            mWebAdTracker = null;
+            TLog.d("MOAT ad tracking stopped");
+        }
+    }
+
+
 
     /**
      * Changes the player state and executes state change runnables
@@ -1063,6 +1104,16 @@ public class VideoPlayer implements Application.ActivityLifecycleCallbacks {
             }
 
             mActivity = null;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onVolumeChanged(float volume) {
+        if (mWebView != null) {
+            mWebView.updateVolume(volume);
         }
     }
 }
