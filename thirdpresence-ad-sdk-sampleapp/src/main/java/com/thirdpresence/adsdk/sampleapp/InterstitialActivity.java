@@ -120,6 +120,7 @@ public class InterstitialActivity extends AppCompatActivity {
             } else if (eventName.equals(AD_ERROR)) {
                 Toast.makeText(InterstitialActivity.this, "An error occured: " + arg1, Toast.LENGTH_SHORT).show();
                 mStatusField.setText("ERROR");
+                mErrorState = true;
             }
         }
 

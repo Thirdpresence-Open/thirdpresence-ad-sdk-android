@@ -8,7 +8,7 @@ https://firebase.google.com/docs/admob/
 
 - Android Studio
 - Android API level 16 (Android 4.1)
-- Google Play Services Ads 9.6.1
+- Google Play Services Ads 10.2.1
 
 ## Importing SDK libraries
 
@@ -30,13 +30,13 @@ repositories {
 
 dependencies {
 	// SDK library and admob mediation plugin
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.3@aar'
-    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.5.3@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.4@aar'
+    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.5.4@aar'
     // Google Play Services 
-    compile 'com.google.android.gms:play-services-ads:9.6.1'
+    compile 'com.google.android.gms:play-services-ads:10.2.1'
     // Google Support libraries
-    compile 'com.android.support:support-compat:24.2.1'
-    compile 'com.android.support:support-core-utils:24.2.1'
+    compile 'com.android.support:support-compat:25.3.1'
+    compile 'com.android.support:support-core-utils:25.3.1'
 }
 ```
 

@@ -17,13 +17,13 @@ Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion "24.0.3"
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
     useLibrary  'org.apache.http.legacy'
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 24
+        targetSdkVersion 25
         versionCode buildNum
         versionName versionString
     }
@@ -53,18 +53,14 @@ configurations {
 dependencies {
     compile fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
-    compile 'com.android.support:support-compat:24.2.1'
-    compile 'com.android.support:support-core-utils:24.2.1'
-    compile 'com.android.support:preference-v7:24.2.1'
-    compile 'com.android.support:design:24.2.1'
-    compile 'com.android.support:support-annotations:24.2.1'
-    compile 'com.google.android.gms:play-services-ads:9.6.1'
+    compile 'com.android.support:support-compat:25.3.1'
+    compile 'com.android.support:support-core-utils:25.3.1'
+    compile 'com.android.support:preference-v7:25.3.1'
+    compile 'com.android.support:design:25.3.1'
+    compile 'com.android.support:support-annotations:25.3.1'
+    compile 'com.google.android.gms:play-services-ads:10.2.1'
     compile project(':thirdpresence-ad-sdk')
     javadocDeps project(':thirdpresence-ad-sdk').fileTree(include: ['*.jar'], dir: 'build/libs')
-    javadocDeps 'com.android.support:support-v4:24.1.1:sources'
-    javadocDeps 'com.android.support:support-annotations:24.1.1:sources'
-    javadocDeps 'com.android.support:recyclerview-v7:24.1.1:sources'
-
 }
 
 bintray {

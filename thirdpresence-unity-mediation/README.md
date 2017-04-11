@@ -10,13 +10,13 @@ The Thirdpresence Ad SDK Unity plugin provides means to display interstitial and
 ## Getting Unity plugin package
 
 The pre-built plugin is available here:
-https://thirdpresence-ad-tags.s3.amazonaws.com/sdk/plugins/unity/1.5.3/thirdpresence-ad-sdk-android.unitypackage   
+https://thirdpresence-ad-tags.s3.amazonaws.com/sdk/plugins/unity/1.5.4/thirdpresence-ad-sdk-android.unitypackage   
 
 The plugin is built with the following tools:
 
-- Unity SDK 5.5.0
+- Unity SDK 5.6.0
 - Java JDK 1.8
-- Android 6.0
+- Android 7.1 (Api level 25)
 
 Another option is to manually build the SDK and the Unity plugin. All the source code is available in this repository.
 In that case, local.properties must be updated to inform builds tools on the path of the Unity Editor. For example:
@@ -38,7 +38,7 @@ Set the build system to Gradle (new) instead of the internal (default).
 Additionally ensure following settings in the Player settings:
 
 - Select Settings for Android (Android icon)
-- Set minimum API level in the Other settings at least to 15
+- Set minimum API level in the Other settings at least to 16
 - Specify key store and key for the signing in the Publishing settings
 
 ## Integration 

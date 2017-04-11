@@ -31,6 +31,7 @@ public class RewardedVideoActivity extends AppCompatActivity {
     private EditText mStatusField;
     private EditText mRewardField;
     private boolean mUseStagingServer;
+    private boolean mErrorState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,6 +124,7 @@ public class RewardedVideoActivity extends AppCompatActivity {
             } else if (eventName.equals(AD_ERROR)) {
                 Toast.makeText(RewardedVideoActivity.this, "An error occured: " + arg1, Toast.LENGTH_SHORT).show();
                 mStatusField.setText("ERROR");
+                mErrorState = true;
             }
         }
 
@@ -135,6 +137,7 @@ public class RewardedVideoActivity extends AppCompatActivity {
         public void onError(VideoAd.ErrorCode errorCode, String message) {
             Toast.makeText(RewardedVideoActivity.this, message, Toast.LENGTH_SHORT).show();
             mStatusField.setText("ERROR");
+            mErrorState = true;
         }
     }
 
@@ -144,6 +147,8 @@ public class RewardedVideoActivity extends AppCompatActivity {
     private void initAd() {
         // Remove previous ad instance if already initialized
         VideoAdManager.getInstance().clear();
+
+        mErrorState = false;
 
         TextView accountField = (TextView) findViewById(R.id.accountField);
         mAccountName = accountField.getText().toString();
@@ -192,7 +197,7 @@ public class RewardedVideoActivity extends AppCompatActivity {
      */
     private void loadAd() {
         VideoAd ad = VideoAdManager.getInstance().get(mPlacementId);
-        if (ad != null) {
+        if (ad != null && !mErrorState) {
             ad.loadAd();
             mRewardField.setText("");
             mStatusField.setText("LOADING");
@@ -209,7 +214,7 @@ public class RewardedVideoActivity extends AppCompatActivity {
      */
     private void displayAd() {
         final VideoAd ad = VideoAdManager.getInstance().get(mPlacementId);
-        if (ad != null) {
+        if (ad != null && !mErrorState) {
             if (ad.isAdLoaded()) {
                 ad.displayAd(null, new Runnable() {
                     @Override

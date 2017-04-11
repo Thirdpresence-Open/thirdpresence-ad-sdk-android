@@ -8,7 +8,7 @@ http://www.mopub.com/
 
 - Android Studio
 - Android API level 16 (Android 4.1)
-- Google Play Services Ads 9.6.1 (optional, but highly recommended)
+- Google Play Services Ads 10.2.1 (optional, but highly recommended)
     - used for getting the Google Advertising ID
     - for more information, see http://developer.android.com/google/play-services/setup.html
 - MoPub SDK 4.5
@@ -33,13 +33,13 @@ repositories {
 
 dependencies {
 	// SDK library and admob mediation plugin
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.3@aar'
-    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.5.3@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.4@aar'
+    compile 'com.thirdpresence.adsdk.mediation.mopub:thirdpresence-mopub-mediation:1.5.4@aar'
     // Google Play Services 
-    compile 'com.google.android.gms:play-services-ads:9.6.1'
+    compile 'com.google.android.gms:play-services-ads:10.2.1'
     // Google Support libraries
-    compile 'com.android.support:support-compat:24.2.1'
-    compile 'com.android.support:support-core-utils:24.2.1'
+    compile 'com.android.support:support-compat:25.3.1'
+    compile 'com.android.support:support-core-utils:25.3.1'
 }
 ```
 

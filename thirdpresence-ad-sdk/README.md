@@ -6,7 +6,7 @@ Thirdpresence Ad SDK provides an API to display banner, interstitial and rewarde
 
 - Android Studio
 - Android API level 16 (Android 4.1)
-- Google Play Services Ads 9.6.1 (optional, but highly recommended)
+- Google Play Services Ads 10.2.1 (optional, but highly recommended)
     - used for getting Google Advertising ID
     - for more information, see http://developer.android.com/google/play-services/setup.html
 
@@ -27,13 +27,13 @@ repositories {
 
 dependencies {
 	// SDK library
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.3@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.4@aar'
     // Google Play Services 
-    compile 'com.google.android.gms:play-services-ads:9.6.1'
+    compile 'com.google.android.gms:play-services-ads:10.2.1'
     // Google Support libraries
-    compile 'com.android.support:support-compat:24.2.1'
-    compile 'com.android.support:support-core-utils:24.2.1'
-    compile 'com.android.support:support-annotations:24.2.1'
+    compile 'com.android.support:support-compat:25.3.1'
+    compile 'com.android.support:support-core-utils:25.3.1'
+    compile 'com.android.support:support-annotations:25.3.1'
 }
 ```
 
@@ -201,6 +201,6 @@ See Sample App for detailed examples for each placement type.
 
 ### API reference
 
-See Thirdpresence Ad SDK [JavaDoc](https://thirdpresence-ad-tags.s3.amazonaws.com/sdk/javadoc/android/1.5.3/index.html)
+See Thirdpresence Ad SDK [JavaDoc](https://thirdpresence-ad-tags.s3.amazonaws.com/sdk/javadoc/android/1.5.4/index.html)
 
 
