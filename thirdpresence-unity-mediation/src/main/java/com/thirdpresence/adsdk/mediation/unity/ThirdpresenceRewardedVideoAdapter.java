@@ -20,6 +20,7 @@ public class ThirdpresenceRewardedVideoAdapter extends ThirdpresenceAdapterBase 
     private String mPlacementId;
     private String mRewardTitle = null;
     private int mRewardAmount = -1;
+    private boolean mDisplaying = false;
 
     /**
      * A listener implemented in Unity via {@code AndroidJavaProxy} to receive ad events.
@@ -56,8 +57,6 @@ public class ThirdpresenceRewardedVideoAdapter extends ThirdpresenceAdapterBase 
     public void setListener(RewardedVideoListener listener) {
         mRewardedVideoListener = listener;
     }
-
-
 
     /**
      * Inits the rewarded video ad unit
@@ -134,6 +133,7 @@ public class ThirdpresenceRewardedVideoAdapter extends ThirdpresenceAdapterBase 
     public void showRewardedVideo() {
         VideoAd ad = VideoAdManager.getInstance().get(mPlacementId);
         if (ad != null && ad.isAdLoaded()) {
+            mDisplaying = true;
             ad.displayAd(null, null);
         } else if (mRewardedVideoListener != null) {
             mRewardedVideoListener.onRewardedVideoFailed(VideoAd.ErrorCode.INVALID_STATE.getErrorCode(), "Player is not loaded.");
@@ -144,6 +144,7 @@ public class ThirdpresenceRewardedVideoAdapter extends ThirdpresenceAdapterBase 
      * Removes the rewarded video ad unit
      */
     public void removeRewardedVideo() {
+        mDisplaying = false;
         VideoAdManager.getInstance().remove(mPlacementId);
     }
 
@@ -166,8 +167,17 @@ public class ThirdpresenceRewardedVideoAdapter extends ThirdpresenceAdapterBase 
                 mRewardedVideoListener.onRewardedVideoCompleted(mRewardTitle, mRewardAmount);
             } else if (eventName.equals(VideoAd.Events.AD_STOPPED)) {
                 mRewardedVideoListener.onRewardedVideoDismissed();
+                if (mDisplaying) {
+                    mDisplaying = false;
+                    mRewardedVideoListener.onRewardedVideoDismissed();
+                }
             } else if (eventName.equals(VideoAd.Events.AD_ERROR)) {
-                mRewardedVideoListener.onRewardedVideoFailed(VideoAd.ErrorCode.NO_FILL.getErrorCode(), "No ad available");
+                VideoAd ad = VideoAdManager.getInstance().get(mPlacementId);
+                if (ad != null && ad.isAdLoaded()) {
+                    mRewardedVideoListener.onRewardedVideoFailed(VideoAd.ErrorCode.PLAYBACK_FAILED.getErrorCode(), arg1);
+                } else {
+                    mRewardedVideoListener.onRewardedVideoFailed(VideoAd.ErrorCode.NO_FILL.getErrorCode(), arg1);
+                }
             } else if (eventName.equals(VideoAd.Events.AD_CLICKTHRU)) {
                 mRewardedVideoListener.onRewardedVideoClicked();
             } else if (eventName.equals(VideoAd.Events.AD_LEFT_APPLICATION)) {

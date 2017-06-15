@@ -319,6 +319,10 @@ public abstract class VideoAd {
          */
         INVALID_STATE(6),
         /**
+         * Video playback failed
+         */
+        PLAYBACK_FAILED(7),
+        /**
          * Unknown error
          */
         UNKNOWN(9999);

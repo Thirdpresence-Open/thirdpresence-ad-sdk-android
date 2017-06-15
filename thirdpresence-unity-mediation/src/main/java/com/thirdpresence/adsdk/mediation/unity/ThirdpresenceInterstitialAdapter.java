@@ -17,6 +17,7 @@ public class ThirdpresenceInterstitialAdapter extends ThirdpresenceAdapterBase i
 
     private static ThirdpresenceInterstitialAdapter mInstance = null;
     private String mPlacementId;
+    private boolean mDisplaying = false;
 
     /**
      * A listener is implemented in Unity via {@code AndroidJavaProxy} to receive ad events.
@@ -107,6 +108,7 @@ public class ThirdpresenceInterstitialAdapter extends ThirdpresenceAdapterBase i
     public void showInterstitial() {
         VideoAd ad = VideoAdManager.getInstance().get(mPlacementId);
         if (ad != null && ad.isAdLoaded()) {
+            mDisplaying = true;
             ad.displayAd(null, null);
         } else if (mInterstitialListener != null)  {
             mInterstitialListener.onInterstitialFailed(VideoAd.ErrorCode.INVALID_STATE.getErrorCode(), "An ad is not loaded");
@@ -117,6 +119,7 @@ public class ThirdpresenceInterstitialAdapter extends ThirdpresenceAdapterBase i
      * Remove the interstitial ad.
      */
     public void removeInterstitial() {
+        mDisplaying = false;
         VideoAdManager.getInstance().remove(mPlacementId);
     }
 
@@ -144,9 +147,17 @@ public class ThirdpresenceInterstitialAdapter extends ThirdpresenceAdapterBase i
             } else if (eventName.equals(VideoAd.Events.AD_VIDEO_COMPLETE)) {
                 mInterstitialListener.onInterstitialShown();
             } else if (eventName.equals(VideoAd.Events.AD_STOPPED)) {
-                mInterstitialListener.onInterstitialDismissed();
+                if (mDisplaying) {
+                    mDisplaying = false;
+                    mInterstitialListener.onInterstitialDismissed();
+                }
             } else if (eventName.equals(VideoAd.Events.AD_ERROR)) {
-                mInterstitialListener.onInterstitialFailed(VideoAd.ErrorCode.NO_FILL.getErrorCode(), arg1);
+                VideoAd ad = VideoAdManager.getInstance().get(mPlacementId);
+                if (ad != null && ad.isAdLoaded()) {
+                    mInterstitialListener.onInterstitialFailed(VideoAd.ErrorCode.PLAYBACK_FAILED.getErrorCode(), arg1);
+                } else {
+                    mInterstitialListener.onInterstitialFailed(VideoAd.ErrorCode.NO_FILL.getErrorCode(), arg1);
+                }
             } else if (eventName.equals(VideoAd.Events.AD_CLICKTHRU)) {
                 mInterstitialListener.onInterstitialClicked();
             }

@@ -27,7 +27,7 @@ repositories {
 
 dependencies {
 	// SDK library
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.4@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.5@aar'
     // Google Play Services 
     compile 'com.google.android.gms:play-services-ads:10.2.1'
     // Google Support libraries
@@ -201,6 +201,6 @@ See Sample App for detailed examples for each placement type.
 
 ### API reference
 
-See Thirdpresence Ad SDK [JavaDoc](https://thirdpresence-ad-tags.s3.amazonaws.com/sdk/javadoc/android/1.5.4/index.html)
+See Thirdpresence Ad SDK [JavaDoc](https://thirdpresence-ad-tags.s3.amazonaws.com/sdk/javadoc/android/1.5.5/index.html)
 
 
