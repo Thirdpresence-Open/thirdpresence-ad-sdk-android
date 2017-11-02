@@ -71,9 +71,9 @@ bintray {
         userOrg = "thirdpresence"
 
         version {
-            name = version
+            name = rootProject.ext.versionString
             released  = new Date()
-            vcsTag = version
+            vcsTag = rootProject.ext.versionString
         }
 
         licenses = ['Apache-2.0']

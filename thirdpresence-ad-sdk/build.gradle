@@ -58,6 +58,7 @@ dependencies {
 bintray {
     user = properties.getProperty("bintray.user")
     key = properties.getProperty("bintray.apikey")
+    override = false
 
     pkg {
         repo = 'thirdpresence-ad-sdk-android'
@@ -65,9 +66,9 @@ bintray {
         userOrg = "thirdpresence"
 
         version {
-            name = version
+            name = rootProject.ext.versionString
             released  = new Date()
-            vcsTag = version
+            vcsTag = rootProject.ext.versionString
         }
 
         licenses = ['Apache-2.0']
