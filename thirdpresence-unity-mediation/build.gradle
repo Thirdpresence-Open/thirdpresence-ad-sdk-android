@@ -1,25 +1,24 @@
+import org.gradle.internal.os.OperatingSystem;
+import org.gradle.api.GradleException
+
 apply plugin: 'com.android.library'
-apply plugin: 'org.ajoberstar.grgit'
 
 group = 'com.thirdpresence.adsdk.mediation.unity'
 
-def versionString = getVersionName()
-def buildNum = getBuildNumber()
-def fullVersionString = versionString + "." + buildNum
+def fullVersionString = rootProject.ext.versionString
 
-version = fullVersionString
 Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 25
-        versionCode buildNum
-        versionName versionString
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.compileSdkVersion
+        versionCode rootProject.ext.buildNum
+        versionName rootProject.ext.versionString
     }
     buildTypes {
         release {
@@ -34,6 +33,7 @@ android {
 }
 
 repositories {
+    google()
     jcenter()
     flatDir{
         dirs '../external'
@@ -45,13 +45,13 @@ configurations {
 }
 
 dependencies {
-    compile 'com.android.support:support-compat:25.3.1'
-    compile 'com.android.support:support-core-utils:25.3.1'
-    compile 'com.android.support:support-annotations:25.3.1'
-    compile 'com.google.android.gms:play-services-ads:10.2.1'
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
-    compile project(':thirdpresence-ad-sdk')
+    api "com.android.support:support-compat:${rootProject.ext.supportLibVersion}"
+    api "com.android.support:support-core-utils:${rootProject.ext.supportLibVersion}"
+    api "com.android.support:support-annotations:${rootProject.ext.supportLibVersion}"
+    api "com.google.android.gms:play-services-ads:${rootProject.ext.playServicesLibVersion}"
+    api fileTree(dir: 'libs', include: ['*.jar'])
+    testImplementation 'junit:junit:4.12'
+    api project(':thirdpresence-ad-sdk')
     javadocDeps project(':thirdpresence-ad-sdk').fileTree(include: ['*.jar'], dir: 'build/libs')
 }
 
@@ -63,8 +63,7 @@ task sourcesJar(type: Jar) {
 
 task javadoc(type: Javadoc, dependsOn: sourcesJar) {
     source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    classpath += configurations.javadocDeps
+    classpath = configurations.compile
     exclude '**/BuildConfig.java'
     failOnError = false
 }
@@ -79,32 +78,52 @@ artifacts {
     archives javadocJar
 }
 
-def unityeditor = properties.getProperty("unity.editor")
-def xvfb = properties.getProperty("unity.xvfb")
-def sdk_home = properties.getProperty("sdk.dir")
+task buildUnityPackage {
+    def unityeditor = properties.getProperty("unity.editor")
+    def xvfb = properties.getProperty("unity.xvfb")
+    def sdk_home = properties.getProperty("sdk.dir")
 
-if (xvfb != null) {
-    unityeditor = "$xvfb $unityeditor"
-}
+    if (xvfb != null) {
+        unityeditor = "$xvfb $unityeditor"
+    }
 
-def unityPackageBasename = "thirdpresence-ad-sdk-android"
-def unityPackageFile = "${unityPackageBasename}.unitypackage"
-def unityAssetDir = "unity-package/ThirdpresenceAdSDK/Assets"
-def unityPluginDir = "${unityAssetDir}/Plugins/Android"
+    def scriptRunner
+    def scriptArgs
+    if (OperatingSystem.current().isWindows()) {
+        scriptRunner = "cmd"
+        scriptArgs = "/c"
+    } else {
+        scriptRunner = "bash"
+        scriptArgs = "-c"
+    }
 
-task buildUnityPackage << {
+    def unityPackageBasename = "thirdpresence-ad-sdk-android"
+    def unityPackageFile = "${unityPackageBasename}.unitypackage"
+    def unityAssetDir = "unity-package/ThirdpresenceAdSDK/Assets"
+    def unityPluginDir = "${unityAssetDir}/Plugins/Android"
+    def gradleHome = project.gradle.gradleUserHomeDir
+    def gradleLibDir = "${gradleHome}/caches/modules-2/files-2.1"
+    def gmsDir = "${sdk_home}/extras/google/m2repository/com/google/android/gms"
+
+    // Final part of the path must be updated when version changes
+    def supportCompatDir = "${gradleLibDir}/com.android.support/support-compat/26.0.2/342fa9af0dbea4a4d1d92fabd6fcf55a00528db5"
+    def supportCoreUtilsDir = "${gradleLibDir}/com.android.support/support-core-utils/26.0.2/641bb56a309f50fe37ca6c5e48e7665f739e7c19"
+
+
     if (unityeditor == null) {
         logger.warn('unity.editor is not set in local.properties. The value must be a path to Unity Editor.')
         throw new GradleException('Could not find Unity Editor')
-    } else {
+    }
 
-        assert file("$sdk_home/extras/android/m2repository/com/android/support/support-compat/25.3.1").exists()
-        assert file("$sdk_home/extras/android/m2repository/com/android/support/support-core-utils/25.3.1").exists()
-        assert file("$sdk_home/extras/google/m2repository/com/google/android/gms/play-services-ads/10.2.1").exists()
-        assert file("$sdk_home/extras/google/m2repository/com/google/android/gms/play-services-basement/10.2.1").exists()
+    // TODO: Update for Windows...
+    //assert file("$supportCompatDir").exists()
+    //assert file("$supportCoreUtilsDir").exists()
+    //assert file("$gmsDir/play-services-ads/${rootProject.ext.playServicesLibVersion}").exists()
+    //assert file("$gmsDir/play-services-basement/${rootProject.ext.playServicesLibVersion}").exists()
 
+    doLast {
         delete fileTree("$unityPluginDir") {
-            include '**/*'
+            include '*'
         }
 
         copy {
@@ -117,16 +136,16 @@ task buildUnityPackage << {
             from('unity-package') {
                 include 'AndroidManifest.xml'
             }
-            from("$sdk_home/extras/android/m2repository/com/android/support/support-compat/25.3.1") {
+            from("$supportCompatDir") {
                 include '*.aar'
             }
-            from("$sdk_home/extras/android/m2repository/com/android/support/support-core-utils/25.3.1") {
+            from("$supportCoreUtilsDir") {
                 include '*.aar'
             }
-            from("$sdk_home/extras/google/m2repository/com/google/android/gms/play-services-ads/10.2.1") {
+            from("$gmsDir/play-services-ads/${rootProject.ext.playServicesLibVersion}") {
                 include '*.aar'
             }
-            from("$sdk_home/extras/google/m2repository/com/google/android/gms/play-services-basement/10.2.1") {
+            from("$gmsDir/play-services-basement/${rootProject.ext.playServicesLibVersion}") {
                 include '*.aar'
             }
             rename '(.+)-release(.+)', '$1$2'
@@ -138,24 +157,23 @@ task buildUnityPackage << {
         mkdir(new File("$projectDir/build/unity"));
 
         exec {
-            executable "bash"
-            args "-c", "$unityeditor -force-free -nographics -quit -batchmode -projectPath $projectDir/unity-package/ThirdpresenceAdSDK -logFile $projectDir/unity-package/ThirdpresenceAdSDK/setup.log -executeMethod Autobuild.SetToolPaths"
+            executable "$scriptRunner"
+            args "$scriptArgs", "$unityeditor -force-free -nographics -quit -batchmode -projectPath \"$projectDir/unity-package/ThirdpresenceAdSDK\" -logFile \"$projectDir/unity-package/ThirdpresenceAdSDK/setup.log\" -executeMethod Autobuild.SetToolPaths"
         }
 
         exec {
-            executable "bash"
-            args "-c", "$unityeditor -force-free -nographics -quit -batchmode -projectPath $projectDir/unity-package/ThirdpresenceAdSDK -exportPackage Assets/Plugins ../../build/unity/${unityPackageFile} -logFile $projectDir/unity-package/ThirdpresenceAdSDK/export.log"
+            executable "$scriptRunner"
+            args "$scriptArgs", "$unityeditor -force-free -nographics -quit -batchmode -projectPath \"$projectDir/unity-package/ThirdpresenceAdSDK\" -exportPackage Assets/Plugins ../../build/unity/${unityPackageFile} -logFile \"$projectDir/unity-package/ThirdpresenceAdSDK/export.log\""
         }
-
-
     }
 }
 buildUnityPackage.enabled = true
 
-task cleanUnityBuild << {
-    delete fileTree(dir: 'unity-package/export' , include: '*')
-    delete fileTree(dir: 'unity-package/Thirdpresence/Assets' , include: '**/*.meta')
-    delete fileTree(dir: 'unity-package/ThirdpresenceAdSDK/Assets/Plugins/Android' , include: '*.aar')
+clean {
+    doLast {
+        delete fileTree(dir: 'unity-package/export', include: '*')
+        delete fileTree(dir: 'unity-package/Thirdpresence/Assets', include: '**/*.meta')
+        delete fileTree(dir: 'unity-package/ThirdpresenceAdSDK/Assets/Plugins/Android', include: '*')
+    }
 }
-cleanUnityBuild.mustRunAfter(clean)
-cleanUnityBuild.enabled = true
+

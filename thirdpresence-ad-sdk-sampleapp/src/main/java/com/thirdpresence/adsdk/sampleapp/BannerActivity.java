@@ -5,6 +5,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Rect;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -75,21 +77,6 @@ public class BannerActivity extends AppCompatActivity {
         // Enable console logs for the SDK
         TLog.enabled = true;
 
-        // Access to the location data is optional but highly recommended.
-        // Android 6.0 requires user to grant access to location services.
-        // Therefore the app shall request permission from the user before
-        // initialising the interstitial
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M) {
-            if (checkSelfPermission(
-                    Manifest.permission.ACCESS_COARSE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED) {
-
-                requestPermissions(
-                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                        LOCATION_PERMISSION_CHECK);
-            }
-        }
-
         Button reloadButton = (Button) findViewById(R.id.reloadButton);
         reloadButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -98,6 +85,25 @@ public class BannerActivity extends AppCompatActivity {
             }
         });
         loadAd();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Access to the location data is optional but highly recommended.
+        // Android 6.0 requires user to grant access to location services.
+        // Therefore the app shall request permission from the user before
+        // initialising the interstitial
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                        LOCATION_PERMISSION_CHECK);
+            }
+        }
     }
 
     @Override

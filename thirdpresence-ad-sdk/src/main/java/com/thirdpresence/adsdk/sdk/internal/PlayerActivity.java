@@ -84,7 +84,12 @@ public class PlayerActivity extends Activity {
                     @Override
                     public void run() {
                         mDisplayingAd = false;
-                        finish();
+                        if (!isFinishing()) {
+                            TLog.w("PlayerActivity finishing");
+                            finish();
+                        } else {
+                            TLog.w("PlayerActivity already finishing");
+                        }
                     }
                 });
             }

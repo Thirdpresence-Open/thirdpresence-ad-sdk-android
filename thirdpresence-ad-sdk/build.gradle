@@ -4,27 +4,24 @@ apply plugin: 'com.github.dcendents.android-maven'
 
 group = 'com.thirdpresence.adsdk.sdk'
 
-def versionString = getVersionName()
-def buildNum = getBuildNumber()
-def fullVersionString = versionString + "." + buildNum
 def siteUrl = 'https://github.com/Thirdpresence-Open/thirdpresence-ad-sdk-android'
 def gitUrl = 'https://github.com/Thirdpresence-Open/thirdpresence-ad-sdk-android.git'
 
-version = fullVersionString
+def fullVersionString = rootProject.ext.versionString
 
 Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
     useLibrary  'org.apache.http.legacy'
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 25
-        versionCode buildNum
-        versionName versionString
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.compileSdkVersion
+        versionCode rootProject.ext.buildNum
+        versionName rootProject.ext.versionString
     }
     buildTypes {
         release {
@@ -43,20 +40,20 @@ configurations {
 }
 
 repositories {
+    google()
     jcenter()
-    mavenCentral()
     flatDir{
         dirs 'libs'
     }
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile fileTree(include: ['*.jar'], dir: 'moat/libs')
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:support-compat:25.3.1'
-    compile 'com.android.support:support-core-utils:25.3.1'
-    compile 'com.android.support:support-annotations:25.3.1'
+    api fileTree(include: ['*.jar'], dir: 'libs')
+    api fileTree(include: ['*.jar'], dir: 'moat/libs')
+    testImplementation 'junit:junit:4.12'
+    implementation "com.android.support:support-compat:${rootProject.ext.supportLibVersion}"
+    implementation "com.android.support:support-core-utils:${rootProject.ext.supportLibVersion}"
+    implementation "com.android.support:support-annotations:${rootProject.ext.supportLibVersion}"
 }
 
 bintray {
@@ -114,12 +111,17 @@ install {
     }
 }
 
+task writeVersionNumber {
+    doLast {
+        def buildDir = new File("$rootDir/build/")
+        buildDir.mkdirs()
 
-task writeVersionNumber << {
-    def versionFile = new File("build/sdk_version.log")
-    versionFile.write(fullVersionString)
+        def versionFile = new File("$rootDir/build/sdk_version.log")
+        versionFile.createNewFile()
+        versionFile.write(fullVersionString)
+    }
 }
-build.dependsOn writeVersionNumber
+build.dependsOn(writeVersionNumber)
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
@@ -128,8 +130,7 @@ task sourcesJar(type: Jar) {
 
 task javadoc(type: Javadoc, dependsOn: sourcesJar) {
     source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    classpath += configurations.javadocDeps
+    classpath = configurations.compile
     include("**/VideoAd.java")
     include("**/VideoAdManager.java")
     include("**/VideoInterstitial.java")

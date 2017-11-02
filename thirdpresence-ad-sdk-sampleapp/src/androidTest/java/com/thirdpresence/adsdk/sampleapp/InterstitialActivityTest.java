@@ -3,8 +3,6 @@ package com.thirdpresence.adsdk.sampleapp;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.net.wifi.WifiManager;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.ViewInteraction;
@@ -13,10 +11,8 @@ import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
-import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
 
 import com.thirdpresence.adsdk.sampleapp.test.BuildConfig;
@@ -31,12 +27,9 @@ import org.junit.runner.RunWith;
 import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static junit.framework.Assert.assertNotNull;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -47,7 +40,6 @@ public class InterstitialActivityTest {
 
     private UiDevice mDevice;
 
-    private static final String SAMPLE_APP_PACKAGE = "com.thirdpresence.adsdk.sampleapp";
     private static final String STAGING_SERVER_NAME = "staging";
     private static final String STATUS_FIELD_DESC = "status field";
 
@@ -55,23 +47,21 @@ public class InterstitialActivityTest {
     private static final int INIT_TIMEOUT = 10000;
     private static final int LOAD_TIMEOUT = 10000;
     private static final int PLAYER_INIT_TIMEOUT = 1000;
-    private static final int DISPLAY_TIMEOUT = 35000;
+    private static final int DISPLAY_TIMEOUT = 45000;
 
     private static final String STATE_TEXT_READY = "READY";
     private static final String STATE_TEXT_LOADED = "LOADED";
 
-    private static final String TEXT_ALLOW = "Allow";
-    private static final String TEXT_DENY = "Deny";
-    private static final String TEXT_NEVER_ASK_AGAIN = "Never ask again";
-    private static final String TEXT_OK = "OK";
-
     @Rule
-    public ActivityTestRule<InterstitialActivity> mActivityTestRule = new ActivityTestRule<>(InterstitialActivity.class);
+    public ActivityTestRule<InterstitialActivity> mActivityTestRule = new ActivityTestRule<>(InterstitialActivity.class, true, false);
 
     @Before
     public void setUp() {
 
         mDevice = UiDevice.getInstance(getInstrumentation());
+
+        // To close any active dialog
+        mDevice.pressBack();
 
         Context context = InstrumentationRegistry.getContext();
 
@@ -85,7 +75,6 @@ public class InterstitialActivityTest {
             e.printStackTrace();
         }
 
-
         Instrumentation.ActivityMonitor activityMonitor = getInstrumentation().addMonitor(InterstitialActivity.class.getName(), null, false);
 
         Intent i = new Intent();
@@ -97,15 +86,19 @@ public class InterstitialActivityTest {
         InterstitialActivity interstitialActivity = (InterstitialActivity) activityMonitor.waitForActivityWithTimeout(LAUNCH_TIMEOUT);
         assertNotNull(interstitialActivity);
 
+        HelperFunctions.waitFor(2000);
+
         try {
-            allowCurrentPermission(mDevice);
+            HelperFunctions.allowCurrentPermission(mDevice);
         } catch (UiObjectNotFoundException e) {
             // ignore
+            System.out.println("\n\nPermission dialog not found");
         }
     }
 
     @Test
     public void displayInterstitialTest() {
+        HelperFunctions.waitFor(2000);
 
         UiObject2 statusText = mDevice.findObject(By.desc(STATUS_FIELD_DESC));
 
@@ -135,7 +128,7 @@ public class InterstitialActivityTest {
         assertNotNull(nextActivity);
 
         try {
-            confirmFullscreen(mDevice);
+            HelperFunctions.confirmFullscreen(mDevice);
         } catch (UiObjectNotFoundException e) {
             // ignore
         }
@@ -143,6 +136,8 @@ public class InterstitialActivityTest {
         InterstitialActivity interstitialActivity = (InterstitialActivity) activityMonitor2.waitForActivityWithTimeout(DISPLAY_TIMEOUT);
 
         assertNotNull(interstitialActivity);
+
+        HelperFunctions.waitFor(2000);
 
         statusText = mDevice.findObject(By.desc(STATUS_FIELD_DESC));
 
@@ -153,45 +148,4 @@ public class InterstitialActivityTest {
         assertThat(statusText.getText(), is(equalTo(STATE_TEXT_READY)));
     }
 
-    /**
-     * Uses package manager to find the package name of the device launcher. Usually this package
-     * is "com.android.launcher" but can be different at times. This is a generic solution which
-     * works on all platforms.`
-     */
-    private String getLauncherPackageName() {
-        // Create launcher Intent
-        final Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.addCategory(Intent.CATEGORY_HOME);
-
-        // Use PackageManager to get the launcher package name
-        PackageManager pm = InstrumentationRegistry.getContext().getPackageManager();
-        ResolveInfo resolveInfo = pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY);
-        return resolveInfo.activityInfo.packageName;
-    }
-
-    public static void allowCurrentPermission(UiDevice device) throws UiObjectNotFoundException {
-        UiObject allowButton = device.findObject(new UiSelector().text(TEXT_ALLOW));
-        allowButton.click();
-    }
-
-    public static void denyCurrentPermission(UiDevice device) throws UiObjectNotFoundException {
-        UiObject denyButton = device.findObject(new UiSelector().text(TEXT_DENY));
-        denyButton.click();
-    }
-
-    public static void denyCurrentPermissionPermanently(UiDevice device) throws UiObjectNotFoundException {
-        UiObject neverAskAgainCheckbox = device.findObject(new UiSelector().text(TEXT_NEVER_ASK_AGAIN));
-        neverAskAgainCheckbox.click();
-        denyCurrentPermission(device);
-    }
-
-    public static void grantPermission(UiDevice device, String permissionTitle) throws UiObjectNotFoundException {
-        UiObject permissionEntry = device.findObject(new UiSelector().text(permissionTitle));
-        permissionEntry.click();
-    }
-
-    public static void confirmFullscreen(UiDevice device) throws UiObjectNotFoundException {
-        UiObject okButton = device.findObject(new UiSelector().text(TEXT_OK));
-        okButton.click();
-    }
 }

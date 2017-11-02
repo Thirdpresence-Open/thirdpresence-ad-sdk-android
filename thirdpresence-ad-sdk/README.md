@@ -17,9 +17,10 @@ Thirdpresence Ad SDK provides an API to display banner, interstitial and rewarde
 Thirdpresence Ad SDK
 [ ![Download](https://api.bintray.com/packages/thirdpresence/thirdpresence-ad-sdk-android/com.thirdpresence.adsdk.sdk/images/download.svg) ](https://bintray.com/thirdpresence/thirdpresence-ad-sdk-android/com.thirdpresence.adsdk.sdk/_latestVersion)
 
-Check that jcenter is included in the repositories block, and add the required dependencies to the dependencies block:
+Check that google and jcenter are included in the repositories block, and add the required dependencies to the dependencies block:
 ```
 repositories {
+    google()
     jcenter()
     // Backup repository if libraries not available from jcenter
     // maven { url 'http://dl.bintray.com/thirdpresence/thirdpresence-ad-sdk-android' }
@@ -27,7 +28,7 @@ repositories {
 
 dependencies {
 	// SDK library
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.5@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.7@aar'
     // Google Play Services 
     compile 'com.google.android.gms:play-services-ads:10.2.1'
     // Google Support libraries
@@ -201,6 +202,6 @@ See Sample App for detailed examples for each placement type.
 
 ### API reference
 
-See Thirdpresence Ad SDK [JavaDoc](https://thirdpresence-ad-tags.s3.amazonaws.com/sdk/javadoc/android/1.5.5/index.html)
+See Thirdpresence Ad SDK [JavaDoc](https://thirdpresence-ad-tags.s3.amazonaws.com/sdk/javadoc/android/1.5.7/index.html)
 
 

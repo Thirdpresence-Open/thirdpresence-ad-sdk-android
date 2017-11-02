@@ -357,7 +357,7 @@ public class VideoWebView extends WebView {
         String account = environment.get(VideoAd.Environment.KEY_ACCOUNT);
         String playerId = environment.get(VideoAd.Environment.KEY_PLACEMENT_ID);
 
-        String versionString = BuildConfig.VERSION_NAME + "." + BuildConfig.VERSION_CODE;
+        String versionString = BuildConfig.VERSION_NAME;
         if (environment.containsKey(VideoAd.Environment.KEY_EXT_SDK)) {
             versionString += "," + environment.get(VideoAd.Environment.KEY_EXT_SDK);
             if (environment.containsKey(VideoAd.Environment.KEY_EXT_SDK_VERSION)) {

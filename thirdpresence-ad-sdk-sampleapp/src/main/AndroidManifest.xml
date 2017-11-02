@@ -34,14 +34,17 @@
         <activity
             android:name="com.thirdpresence.adsdk.sampleapp.InterstitialActivity"
             android:label="@string/app_name"
+            android:launchMode="singleInstance"
             android:theme="@style/AppTheme"/>
         <activity
             android:name="com.thirdpresence.adsdk.sampleapp.BannerActivity"
             android:label="@string/app_name"
+            android:launchMode="singleInstance"
             android:theme="@style/AppTheme"/>
         <activity
             android:name="com.thirdpresence.adsdk.sampleapp.RewardedVideoActivity"
             android:label="@string/app_name"
+            android:launchMode="singleInstance"
             android:theme="@style/AppTheme"/>
     </application>
 

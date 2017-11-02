@@ -23,6 +23,7 @@ Admob mediation
 Modify the build.gradle file to include the required libraries:
 ```
 repositories {
+    google()
     jcenter()
     // Backup repository if libraries not available from jcenter
     // maven { url 'http://dl.bintray.com/thirdpresence/thirdpresence-ad-sdk-android' }
@@ -30,8 +31,8 @@ repositories {
 
 dependencies {
 	// SDK library and admob mediation plugin
-    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.5@aar'
-    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.5.5@aar'
+    compile 'com.thirdpresence.adsdk.sdk:thirdpresence-ad-sdk:1.5.7@aar'
+    compile 'com.thirdpresence.adsdk.mediation.admob:thirdpresence-admob-mediation:1.5.7@aar'
     // Google Play Services 
     compile 'com.google.android.gms:play-services-ads:10.2.1'
     // Google Support libraries

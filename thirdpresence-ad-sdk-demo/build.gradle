@@ -5,10 +5,10 @@ properties.load(project.rootProject.file('local.properties').newDataInputStream(
 
 def keyData;
 
-def file = properties.getProperty("keystore.file");
+def file = properties.getProperty("keystore.file")
 if (file) {
     keyData = {
-        storeFile project.rootProject.file(file)
+        storeFile new File('../' + file)
         storePassword properties.getProperty("keystore.password")
         keyAlias properties.getProperty("keystore.key.alias")
         keyPassword = properties.getProperty("keystore.key.password")
@@ -19,13 +19,13 @@ else {
 }
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
         applicationId "com.thirdpresence.adsdk.demo"
-        minSdkVersion 16
-        targetSdkVersion 25
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.compileSdkVersion
         versionCode 1
         versionName "1.0"
     }
@@ -47,18 +47,26 @@ android {
     }
 }
 
+repositories {
+    google()
+    jcenter()
+    flatDir {
+        dirs '../external'
+    }
+}
+
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:support-compat:25.3.1'
-    compile 'com.android.support:support-core-utils:25.3.1'
-    compile 'com.android.support:support-core-ui:25.3.1'
-    compile 'com.android.support:support-annotations:25.3.1'
-    compile 'com.android.support:support-fragment:25.3.1'
-    compile 'com.android.support:support-annotations:25.3.1'
-    compile 'com.android.support:preference-v7:25.3.1'
-    compile 'com.android.support:design:25.3.1'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    testImplementation 'junit:junit:4.12'
+    implementation "com.android.support:support-compat:${rootProject.ext.supportLibVersion}"
+    implementation "com.android.support:support-core-utils:${rootProject.ext.supportLibVersion}"
+    implementation "com.android.support:support-core-ui:${rootProject.ext.supportLibVersion}"
+    implementation "com.android.support:support-annotations:${rootProject.ext.supportLibVersion}"
+    implementation "com.android.support:support-fragment:${rootProject.ext.supportLibVersion}"
+    implementation "com.android.support:support-annotations:${rootProject.ext.supportLibVersion}"
+    implementation "com.android.support:preference-v7:${rootProject.ext.supportLibVersion}"
+    implementation "com.android.support:design:${rootProject.ext.supportLibVersion}"
     // Optional for getting Google Advertising ID
-    compile 'com.google.android.gms:play-services-ads:10.2.1'
-    compile project(path: ':thirdpresence-ad-sdk')
+    implementation "com.google.android.gms:play-services-ads:${rootProject.ext.playServicesLibVersion}"
+    implementation project(path: ':thirdpresence-ad-sdk')
 }

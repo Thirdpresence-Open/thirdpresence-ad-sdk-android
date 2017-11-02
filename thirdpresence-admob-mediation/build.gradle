@@ -1,31 +1,27 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.github.dcendents.android-maven'
-apply plugin: 'org.ajoberstar.grgit'
 
 group = 'com.thirdpresence.adsdk.mediation.admob'
 
-def versionString = getVersionName()
-def buildNum = getBuildNumber()
-def fullVersionString = versionString + "." + buildNum
 def siteUrl = 'https://github.com/Thirdpresence-Open/thirdpresence-ad-sdk-android'
 def gitUrl = 'https://github.com/Thirdpresence-Open/thirdpresence-ad-sdk-android.git'
 
-version = fullVersionString
+def fullVersionString = rootProject.ext.versionString
 
 Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
     useLibrary  'org.apache.http.legacy'
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 25
-        versionCode buildNum
-        versionName versionString
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.compileSdkVersion
+        versionCode rootProject.ext.buildNum
+        versionName rootProject.ext.versionString
     }
     buildTypes {
         release {
@@ -41,6 +37,9 @@ android {
 
 repositories {
     jcenter()
+    maven {
+        url "https://maven.google.com"
+    }
     flatDir{
         dirs '../external'
     }
@@ -51,15 +50,15 @@ configurations {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:support-compat:25.3.1'
-    compile 'com.android.support:support-core-utils:25.3.1'
-    compile 'com.android.support:preference-v7:25.3.1'
-    compile 'com.android.support:design:25.3.1'
-    compile 'com.android.support:support-annotations:25.3.1'
-    compile 'com.google.android.gms:play-services-ads:10.2.1'
-    compile project(':thirdpresence-ad-sdk')
+    api fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
+    testImplementation 'junit:junit:4.12'
+    api "com.android.support:support-compat:${rootProject.ext.supportLibVersion}"
+    api "com.android.support:support-core-utils:${rootProject.ext.supportLibVersion}"
+    api "com.android.support:support-annotations:${rootProject.ext.supportLibVersion}"
+    api "com.android.support:preference-v7:${rootProject.ext.supportLibVersion}"
+    api "com.android.support:design:${rootProject.ext.supportLibVersion}"
+    api "com.google.android.gms:play-services-ads:${rootProject.ext.playServicesLibVersion}"
+    api project(':thirdpresence-ad-sdk')
     javadocDeps project(':thirdpresence-ad-sdk').fileTree(include: ['*.jar'], dir: 'build/libs')
 }
 
@@ -126,8 +125,7 @@ task sourcesJar(type: Jar) {
 
 task javadoc(type: Javadoc, dependsOn: sourcesJar) {
     source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    classpath += configurations.javadocDeps
+    classpath = configurations.compile
     include '**/ThirdpresenceCustomEventInterstitial.java'
     include '**/ThirdpresenceRewardedVideoAdapter.java'
     failOnError = false

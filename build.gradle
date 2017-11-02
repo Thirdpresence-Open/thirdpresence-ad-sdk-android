@@ -1,20 +1,19 @@
-import org.ajoberstar.grgit.Grgit
-apply plugin: 'org.ajoberstar.grgit'
 
 buildscript {
     repositories {
+        google()
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.0'
+        classpath 'com.android.tools.build:gradle:3.0.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.1'
         classpath "com.github.dcendents:android-maven-gradle-plugin:1.5"
-        classpath 'org.ajoberstar:gradle-git:1.4.2'
     }
 }
 
 allprojects {
     repositories {
+        google()
         jcenter()
     }
 }
@@ -23,21 +22,12 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-project.ext.set("buildNumberOverride", 5)
-
-def getVersionName() {
-    def versionName = '1.5'
-    return versionName
-}
-
-def getBuildNumber() {
-
-    if (project.buildNumberOverride != null) {
-        return project.buildNumberOverride
-    }
-
-    ext.repo = Grgit.open(dir: '.')
-
-    def numOfCommits = ext.repo.log().size()
-    return numOfCommits
+ext {
+    compileSdkVersion = 26
+    buildToolsVersion = "26.0.2"
+    supportLibVersion = "26.0.2"
+    playServicesLibVersion = "11.0.4"
+    minSdkVersion = 16
+    versionString = "1.5.7"
+    buildNum = 10  // Increase always by one for new release
 }

@@ -5,6 +5,8 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -23,7 +25,7 @@ import com.thirdpresence.sampleapp.R;
 import static com.thirdpresence.adsdk.sdk.VideoAd.Events.AD_ERROR;
 import static com.thirdpresence.adsdk.sdk.VideoAd.Events.AD_LOADED;
 
-public class InterstitialActivity extends AppCompatActivity {
+public class InterstitialActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
 
     private static final int LOCATION_PERMISSION_CHECK = 1;
     private String mAccountName;
@@ -52,21 +54,6 @@ public class InterstitialActivity extends AppCompatActivity {
         // Enable console logs for the SDK
         TLog.enabled = true;
 
-        // Access to the location data is optional but highly recommended.
-        // Android 6.0 requires user to grant access to location services.
-        // Therefore the app shall request permission from the user before
-        // initialising the interstitial
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M) {
-            if (checkSelfPermission(
-                    Manifest.permission.ACCESS_COARSE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED) {
-
-                requestPermissions(
-                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                        LOCATION_PERMISSION_CHECK);
-            }
-        }
-
         Button initButton = (Button) findViewById(R.id.initButton);
         initButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,6 +77,26 @@ public class InterstitialActivity extends AppCompatActivity {
                 displayAd();
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Access to the location data is optional but highly recommended.
+        // Android 6.0 requires user to grant access to location services.
+        // Therefore the app shall request permission from the user before
+        // initialising the interstitial
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M) {
+            Log.d("SampleApp", "Checking permissions");
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Log.d("SampleApp", "Request permissions");
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                        LOCATION_PERMISSION_CHECK);
+            }
+        }
     }
 
     @Override
