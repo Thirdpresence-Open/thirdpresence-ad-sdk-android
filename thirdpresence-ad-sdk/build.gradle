@@ -3,11 +3,10 @@ apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.github.dcendents.android-maven'
 
 group = 'com.thirdpresence.adsdk.sdk'
+version = rootProject.ext.versionString
 
 def siteUrl = 'https://github.com/Thirdpresence-Open/thirdpresence-ad-sdk-android'
 def gitUrl = 'https://github.com/Thirdpresence-Open/thirdpresence-ad-sdk-android.git'
-
-def fullVersionString = rootProject.ext.versionString
 
 Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
@@ -66,9 +65,9 @@ bintray {
         userOrg = "thirdpresence"
 
         version {
-            name = fullVersionString
+            name = version
             released  = new Date()
-            vcsTag = fullVersionString
+            vcsTag = version
         }
 
         licenses = ['Apache-2.0']
@@ -118,7 +117,7 @@ task writeVersionNumber {
 
         def versionFile = new File("$rootDir/build/sdk_version.log")
         versionFile.createNewFile()
-        versionFile.write(fullVersionString)
+        versionFile.write(version)
     }
 }
 build.dependsOn(writeVersionNumber)

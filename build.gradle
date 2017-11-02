@@ -28,6 +28,6 @@ ext {
     supportLibVersion = "26.0.2"
     playServicesLibVersion = "11.0.4"
     minSdkVersion = 16
-    versionString = "1.5.7"
-    buildNum = 10  // Increase always by one for new release
+    versionString = "1.5.8"
+    buildNum = 11  // Increase always by one for new release
 }

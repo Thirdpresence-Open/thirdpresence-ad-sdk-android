@@ -4,8 +4,7 @@ import org.gradle.api.GradleException
 apply plugin: 'com.android.library'
 
 group = 'com.thirdpresence.adsdk.mediation.unity'
-
-def fullVersionString = rootProject.ext.versionString
+version = rootProject.ext.versionString
 
 Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
